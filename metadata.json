@@ -1,0 +1,8 @@
+{
+  "name": "Truefitt & Hill Staff Tools",
+  "description": "Staff tools portal for Truefitt & Hill barbershop, including service calculator, task manager, station checklist, requirements, product catalog, requests, and serial queue.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
