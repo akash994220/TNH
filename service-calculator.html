@@ -1,0 +1,2252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Truefitt &amp; Hill — Bill Calculator</title>
+<style>html,body{background:#080d1e;}</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Tiro+Bangla&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; font-family: 'Poppins', sans-serif; }
+  body { display: flex; flex-direction: row; transition: background 0.3s, color 0.3s; background: #080d1e; color: #eef2ff; }
+  body.light { background: #f0f2f8; color: #0a1f44; }
+
+  /* ── LEFT PANEL ── */
+  .left {
+    flex: 1.6;
+    padding: 28px 28px 100px 28px;
+    overflow-y: auto;
+    height: 100vh;
+    background: linear-gradient(160deg, #0d1535 0%, #080d1e 55%, #120828 100%);
+    transition: background 0.3s;
+    position: relative;
+  }
+  body.light .left { background: linear-gradient(160deg, #e4e8f5, #f0f2f8 55%, #ede8f5); }
+  .left::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, #c9a84c, #ffd166, #c9a84c, transparent);
+  }
+
+  /* ── HEADER ── */
+  .left-header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 20px; padding-bottom: 20px;
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+  }
+
+  .gear-wrap { position: relative; flex-shrink: 0; }
+  .gear-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 1px solid rgba(201,168,76,0.4);
+    background: rgba(201,168,76,0.06);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s, transform 0.35s ease;
+  }
+  .gear-btn:hover { background: rgba(201,168,76,0.15); border-color: #c9a84c; }
+  .gear-btn.active { transform: rotate(60deg); background: rgba(201,168,76,0.18); border-color: #ffd166; }
+  .gear-btn svg { width: 20px; height: 20px; stroke: #c9a84c; fill: none; stroke-width: 1.5; }
+  body.light .gear-btn svg { stroke: #1a3a8f; }
+  body.light .gear-btn { border-color: rgba(26,58,143,0.3); background: rgba(26,58,143,0.05); }
+
+  /* red dot badge on gear */
+  .gear-badge {
+    display: none;
+    position: absolute; top: 1px; right: 1px;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: #e05252;
+    border: 2px solid #080d1e;
+    pointer-events: none;
+  }
+  .gear-badge.visible { display: block; }
+  body.light .gear-badge { border-color: #f0f2f8; }
+
+  .crest {
+    width: 44px; height: 44px; border: 1px solid rgba(201,168,76,0.5);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: rgba(201,168,76,0.06); flex-shrink: 0;
+    box-shadow: 0 0 14px rgba(201,168,76,0.12);
+  }
+  .crest svg { width: 24px; height: 24px; stroke: #c9a84c; fill: none; stroke-width: 1.4; }
+  body.light .crest { border-color: #1a3a8f; background: rgba(26,58,143,0.06); box-shadow: none; }
+  body.light .crest svg { stroke: #1a3a8f; }
+
+  .brand h1 {
+    font-size: 22px; font-weight: 700;
+    letter-spacing: 4px; text-transform: uppercase; line-height: 1.1;
+  }
+  .brand .subtitle {
+    font-size: 10px; color: #c9a84c; letter-spacing: 2.5px;
+    text-transform: uppercase; margin-top: 3px; font-weight: 400; opacity: 0.85;
+  }
+  body.light .brand .subtitle { color: #1a3a8f; }
+
+  /* ── SEARCH BAR ── */
+  .search-wrap {
+    position: relative; margin-bottom: 18px;
+  }
+  .search-icon {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    width: 16px; height: 16px; stroke: rgba(201,168,76,0.5); fill: none; stroke-width: 2;
+    pointer-events: none;
+  }
+  body.light .search-icon { stroke: rgba(26,58,143,0.4); }
+  .search-input {
+    width: 100%; padding: 10px 14px 10px 38px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 10px; color: inherit;
+    font-family: 'Poppins', sans-serif; font-size: 13px;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    outline: none;
+  }
+  .search-input::placeholder { color: rgba(201,168,76,0.3); font-size: 13px; }
+  .search-input:focus {
+    border-color: rgba(201,168,76,0.6);
+    background: rgba(201,168,76,0.04);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.08);
+  }
+  body.light .search-input { background: #fff; border-color: rgba(26,58,143,0.2); color: #0a1f44; }
+  body.light .search-input::placeholder { color: rgba(26,58,143,0.3); }
+  body.light .search-input:focus { border-color: rgba(26,58,143,0.5); box-shadow: 0 0 0 3px rgba(26,58,143,0.07); }
+  .search-clear {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; padding: 4px;
+    color: rgba(201,168,76,0.4); font-size: 16px; line-height: 1;
+    display: none; transition: color 0.15s;
+  }
+  .search-clear:hover { color: #c9a84c; }
+  body.light .search-clear { color: rgba(26,58,143,0.3); }
+  body.light .search-clear:hover { color: #1a3a8f; }
+  .search-clear.visible { display: block; }
+
+  /* search results */
+  .search-results {
+    display: none; flex-direction: column; gap: 5px; margin-bottom: 12px;
+  }
+  .search-results.visible { display: flex; }
+  .search-result-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px; border-radius: 9px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(201,168,76,0.15);
+    cursor: pointer; transition: background 0.15s, border-color 0.15s;
+    gap: 10px;
+  }
+  .search-result-item:hover { background: rgba(201,168,76,0.08); border-color: rgba(201,168,76,0.4); }
+  .search-result-item.active { background: rgba(201,168,76,0.14); border-color: #c9a84c; }
+  body.light .search-result-item { background: #fff; border-color: rgba(26,58,143,0.12); }
+  body.light .search-result-item:hover { border-color: rgba(26,58,143,0.35); }
+  body.light .search-result-item.active { background: rgba(26,58,143,0.08); border-color: #1a3a8f; }
+  .sri-left { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+  .sri-name { font-size: 13px; font-weight: 500; }
+  .sri-cat { font-size: 11px; opacity: 0.45; }
+  .sri-price { font-size: 13px; font-weight: 700; color: #c9a84c; white-space: nowrap; }
+  body.light .sri-price { color: #1a3a8f; }
+  .search-result-item.active .sri-price { color: #ffd166; }
+  body.light .search-result-item.active .sri-price { color: #0a1f44; }
+  .search-no-results {
+    display: none; text-align: center; padding: 20px;
+    font-size: 13px; opacity: 0.35; letter-spacing: 0.3px;
+  }
+  .search-no-results.visible { display: block; }
+
+  /* ── VIEW TABS (Services / Products) ── */
+  .view-tabs {
+    display: flex; gap: 8px; margin-bottom: 16px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 10px; padding: 4px;
+  }
+  body.light .view-tabs { background: rgba(255,255,255,0.6); border-color: rgba(26,58,143,0.15); }
+  .view-tab {
+    flex: 1; padding: 9px 10px; border: none; border-radius: 8px;
+    background: transparent; color: inherit; opacity: 0.55;
+    font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 600;
+    letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer;
+    transition: background 0.15s, opacity 0.15s, color 0.15s;
+  }
+  .view-tab:hover { opacity: 0.85; }
+  .view-tab.active {
+    background: rgba(201,168,76,0.16); color: #ffd166; opacity: 1;
+    box-shadow: 0 0 0 1px rgba(201,168,76,0.35);
+  }
+  body.light .view-tab.active { background: rgba(26,58,143,0.09); color: #1a3a8f; box-shadow: 0 0 0 1px rgba(26,58,143,0.3); }
+
+  /* ── CATEGORY ── */
+  #menu, #product-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; align-items: start; }
+  .cat-section { margin-bottom: 6px; grid-column: span 1; min-width: 0; }
+  .cat-section.cat-full { grid-column: 1 / -1; }
+  @media (max-width: 480px) {
+    #menu, #product-menu { grid-template-columns: 1fr; }
+  }
+  .cat-header {
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; padding: 9px 12px; border-radius: 8px;
+    margin: 14px 0 8px;
+    background: rgba(201,168,76,0.05); border: 1px solid rgba(201,168,76,0.15);
+    transition: background 0.15s, border-color 0.15s; user-select: none;
+  }
+  .cat-header:hover { background: rgba(201,168,76,0.1); border-color: rgba(201,168,76,0.3); }
+  body.light .cat-header { background: rgba(26,58,143,0.04); border-color: rgba(26,58,143,0.15); }
+  body.light .cat-header:hover { background: rgba(26,58,143,0.08); border-color: rgba(26,58,143,0.3); }
+  .cat-header-left { display: flex; align-items: center; gap: 10px; }
+  .cat-dot { width: 6px; height: 6px; border-radius: 50%; background: #c9a84c; flex-shrink: 0; }
+  body.light .cat-dot { background: #1a3a8f; }
+  .cat-title { font-size: 11px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: #c9a84c; }
+  body.light .cat-title { color: #1a3a8f; }
+  .cat-count { font-size: 11px; color: rgba(201,168,76,0.55); letter-spacing: 0; font-weight: 500; }
+  body.light .cat-count { color: rgba(26,58,143,0.45); }
+  .cat-chevron { width: 16px; height: 16px; stroke: rgba(201,168,76,0.6); fill: none; stroke-width: 2; transition: transform 0.25s ease; flex-shrink: 0; }
+  body.light .cat-chevron { stroke: rgba(26,58,143,0.5); }
+  .cat-header.collapsed .cat-chevron { transform: rotate(-90deg); }
+  .cat-body { overflow: hidden; transition: max-height 0.3s ease, opacity 0.25s ease; }
+  .cat-body.collapsed { max-height: 0 !important; opacity: 0; pointer-events: none; }
+
+  /* ── LIST ── */
+  .grid { display: flex; flex-direction: column; gap: 5px; padding: 2px 0 6px; }
+  .item {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 9px; padding: 10px 14px; cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+    display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 10px;
+    min-width: 0;
+  }
+  .item:hover { background: rgba(201,168,76,0.08); border-color: rgba(201,168,76,0.4); box-shadow: 0 2px 12px rgba(201,168,76,0.08); }
+  .item:active { transform: scale(0.98); }
+  .item.active { background: rgba(201,168,76,0.14); border-color: #c9a84c; box-shadow: 0 2px 14px rgba(201,168,76,0.15); }
+  body.light .item { background: rgba(255,255,255,0.7); border-color: rgba(26,58,143,0.12); }
+  body.light .item:hover { background: #fff; border-color: rgba(26,58,143,0.35); box-shadow: 0 2px 12px rgba(26,58,143,0.08); }
+  body.light .item.active { background: rgba(26,58,143,0.08); border-color: #1a3a8f; }
+  .item-name { font-weight: 500; line-height: 1.3; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item-price { font-weight: 700; color: #c9a84c; font-size: 0.92em; white-space: nowrap; flex-shrink: 0; }
+  body.light .item-price { color: #1a3a8f; }
+  .item.active .item-price { color: #ffd166; }
+  body.light .item.active .item-price { color: #0a1f44; }
+
+  /* ── SETTINGS ── */
+  .settings-section-title {
+    font-size: 10px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase;
+    color: #c9a84c; margin: 20px 0 10px; padding-bottom: 6px;
+    border-bottom: 1px solid rgba(201,168,76,0.2);
+  }
+  body.light .settings-section-title { color: #1a3a8f; border-bottom-color: rgba(26,58,143,0.15); }
+  .settings-section-title:first-child { margin-top: 0; }
+  .toggle-row {
+    display: flex; justify-content: space-between; align-items: center;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(201,168,76,0.12);
+    border-radius: 8px; padding: 10px 14px; margin-bottom: 5px; font-size: 13px;
+    transition: background 0.15s;
+  }
+  .toggle-row:hover { background: rgba(201,168,76,0.05); }
+  body.light .toggle-row { background: rgba(255,255,255,0.6); border-color: rgba(26,58,143,0.12); }
+  body.light .toggle-row:hover { background: #fff; }
+  .switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider { position: absolute; cursor: pointer; inset: 0; background: rgba(255,255,255,0.12); border-radius: 22px; transition: background 0.2s; }
+
+  .staff-manage-group { margin-bottom: 16px; }
+  .staff-manage-label { font-size: 11px; font-weight: 600; opacity: 0.55; letter-spacing: 1px; margin-bottom: 8px; }
+  .staff-chip-list { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 9px; }
+  .staff-chip-list:empty::after {
+    content: 'No names added yet'; font-size: 12px; opacity: 0.35; font-style: italic;
+  }
+  .staff-chip {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: rgba(201,168,76,0.08); border: 1px solid rgba(201,168,76,0.25);
+    border-radius: 16px; padding: 6px 8px 6px 13px; font-size: 13px;
+  }
+  body.light .staff-chip { background: rgba(26,58,143,0.05); border-color: rgba(26,58,143,0.18); }
+  .staff-chip-remove {
+    width: 18px; height: 18px; border-radius: 50%; border: none; cursor: pointer;
+    background: rgba(255,255,255,0.1); color: inherit; font-size: 13px; line-height: 1;
+    display: flex; align-items: center; justify-content: center; opacity: 0.7;
+    transition: background 0.15s, opacity 0.15s;
+  }
+  .staff-chip-remove:hover { background: #c0392b; color: #fff; opacity: 1; }
+  body.light .staff-chip-remove { background: rgba(26,58,143,0.1); }
+  .staff-add-row { display: flex; gap: 8px; }
+  .staff-add-row input {
+    flex: 1; min-width: 0; padding: 9px 12px; border-radius: 8px; font-size: 13px;
+    border: 1px solid rgba(201,168,76,0.25); background: rgba(255,255,255,0.03); color: inherit;
+    outline: none; transition: border-color 0.15s;
+  }
+  .staff-add-row input:focus { border-color: #c9a84c; }
+  body.light .staff-add-row input { background: #fff; border-color: rgba(26,58,143,0.2); }
+  body.light .staff-add-row input:focus { border-color: #1a3a8f; }
+  .staff-add-btn {
+    padding: 9px 16px; border-radius: 8px; border: 1px solid #c9a84c; background: rgba(201,168,76,0.12);
+    color: #ffd166; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .staff-add-btn:hover { background: rgba(201,168,76,0.22); }
+  body.light .staff-add-btn { border-color: #1a3a8f; background: rgba(26,58,143,0.07); color: #1a3a8f; }
+  body.light .staff-add-btn:hover { background: rgba(26,58,143,0.14); }
+  body.light .slider { background: rgba(26,58,143,0.12); }
+  .slider:before {
+    content: ""; position: absolute; height: 16px; width: 16px;
+    left: 3px; bottom: 3px; background: #eef2ff; border-radius: 50%;
+    transition: transform 0.2s, background 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  }
+  body.light .slider:before { background: #fff; }
+  .switch input:checked + .slider { background: #c9a84c; }
+  body.light .switch input:checked + .slider { background: #1a3a8f; }
+  .switch input:checked + .slider:before { transform: translateX(18px); background: #080d1e; }
+  body.light .switch input:checked + .slider:before { background: #fff; }
+  .font-controls {
+    display: flex; align-items: center; gap: 12px;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(201,168,76,0.12);
+    border-radius: 8px; padding: 12px 14px; margin-bottom: 6px;
+  }
+  body.light .font-controls { background: rgba(255,255,255,0.6); border-color: rgba(26,58,143,0.12); }
+  .font-controls .fc-label { font-size: 13px; flex: 1; }
+  .fc-btn {
+    width: 32px; height: 32px; border-radius: 8px;
+    border: 1px solid rgba(201,168,76,0.35); background: rgba(201,168,76,0.07);
+    color: inherit; font-size: 17px; font-family: inherit; cursor: pointer; transition: background 0.15s;
+  }
+  body.light .fc-btn { border-color: rgba(26,58,143,0.3); background: rgba(26,58,143,0.05); }
+  .fc-btn:hover { background: rgba(201,168,76,0.18); }
+  body.light .fc-btn:hover { background: rgba(26,58,143,0.12); }
+  .fc-val { font-size: 13px; color: #c9a84c; min-width: 34px; text-align: center; }
+  body.light .fc-val { color: #1a3a8f; }
+
+  /* ── RIGHT PANEL ── */
+  .right {
+    flex: 1; border-left: 1px solid rgba(201,168,76,0.18);
+    padding: 32px 28px; display: flex; flex-direction: column;
+    height: 100vh; background: rgba(255,255,255,0.015);
+    transition: background 0.3s, border-color 0.3s; position: relative;
+  }
+  .right::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, #c9a84c, transparent);
+  }
+  body.light .right { background: #ffffff; border-left-color: rgba(26,58,143,0.15); }
+
+  .right-title {
+    font-size: 11px; font-weight: 600; letter-spacing: 4px;
+    text-transform: uppercase; color: #c9a84c; margin-bottom: 22px;
+  }
+  body.light .right-title { color: #1a3a8f; }
+
+  /* ── TOTAL BLOCK ── */
+  .total-block {
+    padding-bottom: 20px; border-bottom: 1px solid rgba(201,168,76,0.2);
+    margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  body.light .total-block { border-bottom-color: rgba(26,58,143,0.15); }
+  .total-label { font-size: 10px; opacity: 0.4; letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 4px; font-weight: 500; }
+  .total-value {
+    font-size: 58px; font-weight: 700; color: #c9a84c; letter-spacing: 1px; line-height: 1;
+    transition: transform 0.15s ease;
+  }
+  body.light .total-value { color: #1a3a8f; }
+
+  .subtotal-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px; padding: 5px 0; opacity: 0.75;
+  }
+  .subtotal-row .sr-label { letter-spacing: 0.5px; }
+  .subtotal-row .sr-value { font-weight: 600; }
+  .subtotal-row.vat-row { opacity: 0.55; }
+  .breakdown-block {
+    margin-bottom: 10px; padding-bottom: 10px;
+    border-bottom: 1px dashed rgba(201,168,76,0.25);
+  }
+  body.light .breakdown-block { border-bottom-color: rgba(26,58,143,0.2); }
+  @keyframes goldPulse {
+    0%   { text-shadow: 0 0 0px #c9a84c; transform: scale(1); }
+    40%  { text-shadow: 0 0 18px rgba(201,168,76,0.7); transform: scale(1.04); }
+    100% { text-shadow: 0 0 0px #c9a84c; transform: scale(1); }
+  }
+  .total-value.pulse { animation: goldPulse 0.4s ease forwards; }
+
+  .total-count { font-size: 11px; opacity: 0.35; margin-top: 6px; letter-spacing: 0.5px; font-weight: 400; }
+  .total-count.zero { opacity: 0.18; }
+
+  .reset-btn {
+    background: transparent; border: 1px solid rgba(201,168,76,0.2);
+    color: rgba(201,168,76,0.45); font-size: 11px; font-weight: 600;
+    letter-spacing: 2px; text-transform: uppercase; font-family: inherit;
+    padding: 9px 16px; border-radius: 6px; cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s; flex-shrink: 0;
+  }
+  body.light .reset-btn { border-color: rgba(26,58,143,0.15); color: rgba(26,58,143,0.4); }
+  .reset-btn:hover {
+    background: rgba(224,82,82,0.12); border-color: #e05252;
+    color: #ff8a8a; box-shadow: 0 0 14px rgba(224,82,82,0.25);
+  }
+  body.light .reset-btn:hover { background: rgba(180,30,30,0.08); border-color: #b03030; color: #b03030; box-shadow: 0 0 12px rgba(180,30,30,0.15); }
+
+  /* ── BILL LIST ── */
+  .list { flex: 1; overflow-y: auto; padding-right: 2px; }
+  .list-empty { font-size: 13px; opacity: 0.2; text-align: center; margin-top: 48px; letter-spacing: 0.5px; font-weight: 300; }
+
+  /* slide-in animation */
+  @keyframes slideIn {
+    from { transform: translateX(10px); }
+    to   { transform: translateX(0); }
+  }
+  .list-row {
+    padding: 13px 0; border-bottom: 1px solid rgba(201,168,76,0.1);
+    display: flex; flex-direction: column; gap: 7px;
+    animation: slideIn 0.22s ease forwards;
+  }
+  body.light .list-row { border-bottom-color: rgba(26,58,143,0.08); }
+
+  .name-row { display: flex; justify-content: space-between; align-items: center; width: 100%; gap: 10px; }
+  .list-row .name { font-weight: 500; font-size: 14px; flex: 1; min-width: 0; }
+  .list-row .price { font-weight: 700; color: #c9a84c; white-space: nowrap; flex-shrink: 0; font-size: 14px; }
+  body.light .list-row .price { color: #1a3a8f; }
+
+  /* remove button */
+  .remove-btn {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 1px solid rgba(224,82,82,0.3);
+    background: transparent; color: rgba(224,82,82,0.5);
+    font-size: 14px; line-height: 1; cursor: pointer; flex-shrink: 0;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .remove-btn:hover { background: rgba(224,82,82,0.15); color: #ff6b6b; border-color: #e05252; }
+
+  .qty-ctrl {
+    display: inline-flex; align-items: center; gap: 6px;
+    flex-shrink: 0;
+  }
+  .qty-btn {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1px solid rgba(201,168,76,0.4);
+    background: rgba(201,168,76,0.08);
+    color: #c9a84c; font-size: 15px; line-height: 1;
+    cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, border-color 0.15s;
+    font-family: inherit;
+  }
+  .qty-btn:hover { background: rgba(201,168,76,0.22); border-color: #c9a84c; }
+  body.light .qty-btn { border-color: rgba(26,58,143,0.35); background: rgba(26,58,143,0.06); color: #1a3a8f; }
+  body.light .qty-btn:hover { background: rgba(26,58,143,0.15); }
+  .qty-num {
+    font-size: 14px; font-weight: 600; min-width: 18px; text-align: center; color: #ffd166;
+  }
+  body.light .qty-num { color: #1a3a8f; }
+
+
+  .assign-box {
+    position: relative; display: inline-flex; align-items: center; gap: 6px;
+    border: 1px solid rgba(201,168,76,0.25); border-radius: 14px; padding: 4px 11px;
+    font-size: 11px; cursor: pointer; background: rgba(201,168,76,0.04);
+    transition: background 0.15s, border-color 0.15s; white-space: nowrap; align-self: flex-start;
+  }
+  .assign-box:hover { background: rgba(201,168,76,0.12); border-color: #c9a84c; }
+  .assign-box.set { border-color: rgba(201,168,76,0.6); background: rgba(201,168,76,0.1); }
+  .assign-box.set .assign-name { color: #ffd166; font-weight: 600; }
+  body.light .assign-box { border-color: rgba(26,58,143,0.2); background: rgba(26,58,143,0.03); }
+  body.light .assign-box:hover { background: rgba(26,58,143,0.08); border-color: #1a3a8f; }
+  body.light .assign-box.set { border-color: #1a3a8f; background: rgba(26,58,143,0.07); }
+  body.light .assign-box.set .assign-name { color: #1a3a8f; }
+  .assign-box .arrow { font-size: 9px; opacity: 0.45; }
+  .assign-dropdown {
+    position: absolute; top: calc(100% + 5px); left: 0; z-index: 1000;
+    background: #0d1535; border: 1px solid rgba(201,168,76,0.3); border-radius: 10px;
+    min-width: 150px; max-height: 220px; overflow-y: auto; opacity: 1;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+  body.light .assign-dropdown { background: #fff; border-color: rgba(26,58,143,0.2); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+  .assign-option { padding: 8px 14px; font-size: 13px; cursor: pointer; transition: background 0.1s; }
+  .assign-option:hover { background: rgba(201,168,76,0.12); }
+  body.light .assign-option:hover { background: rgba(26,58,143,0.07); }
+  .assign-option.selected { color: #ffd166; font-weight: 600; }
+  body.light .assign-option.selected { color: #1a3a8f; }
+
+  /* ── MOBILE sticky total ── */
+  @media (max-width: 900px) {
+    body { flex-direction: column; }
+    .left { height: auto; flex: none; padding-bottom: 20px; }
+    .right { height: auto; flex: none; border-left: none; border-top: 1px solid rgba(201,168,76,0.18); }
+    .total-block { position: sticky; bottom: 0; z-index: 50; padding: 14px 20px; margin: 0 -28px -32px; background: rgba(12,20,50,0.97); border-top: 1px solid rgba(201,168,76,0.2); border-bottom: none; border-radius: 0; }
+    body.light .total-block { background: rgba(240,242,248,0.97); }
+    .total-value { font-size: 38px; }
+    .list { overflow: visible; }
+    .right { padding-bottom: 90px; }
+  }
+</style>
+</head>
+<body>
+<script>try{if(localStorage.getItem('th-theme')==='light')document.body.classList.add('light');}catch(e){}</script>
+
+<!-- LEFT -->
+<div class="left" id="left-panel">
+  <div class="left-header">
+    <div class="gear-wrap">
+      <div class="gear-btn" id="gear" title="Settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 7.04 4.29l.06.06A1.65 1.65 0 0 0 8.92 4.7 1.65 1.65 0 0 0 9.92 3.2V3a2 2 0 0 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </div>
+      <div class="gear-badge" id="gear-badge"></div>
+    </div>
+    <div class="crest">
+      <svg viewBox="0 0 24 24"><path d="M12 2l8 3v5c0 5-3.5 9-8 11C7.5 19 4 15 4 10V5l8-3z"/><path d="M9 12l2 2 4-4"/></svg>
+    </div>
+    <div class="brand">
+      <h1>Truefitt &amp; Hill</h1>
+      <div class="subtitle">The Royal Barbershop — Bill Calculator</div>
+    </div>
+  </div>
+
+  <!-- MENU VIEW -->
+  <div id="menu-view">
+    <div class="view-tabs">
+      <button class="view-tab active" id="tab-services">Services</button>
+      <button class="view-tab" id="tab-products">Products</button>
+    </div>
+
+    <!-- SERVICES PANEL -->
+    <div id="services-panel">
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" id="search-input" type="text" placeholder="Search services… (press / to focus)" autocomplete="off">
+        <button class="search-clear" id="search-clear" title="Clear">✕</button>
+      </div>
+      <div class="search-results" id="search-results"></div>
+      <div class="search-no-results" id="search-no-results">No services found</div>
+      <div id="menu"></div>
+    </div>
+
+    <!-- PRODUCTS PANEL -->
+    <div id="products-panel" style="display:none;">
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" id="product-search-input" type="text" placeholder="Search products…" autocomplete="off">
+        <button class="search-clear" id="product-search-clear" title="Clear">✕</button>
+      </div>
+      <div class="search-results" id="product-search-results"></div>
+      <div class="search-no-results" id="product-search-no-results">No products found</div>
+      <div id="product-menu"></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS VIEW -->
+  <div id="settings-view" style="display:none;">
+    <div class="settings-section-title">Appearance</div>
+    <div class="toggle-row">
+      <span>Light mode</span>
+      <label class="switch"><input type="checkbox" id="theme-toggle"><span class="slider"></span></label>
+    </div>
+    <div class="font-controls">
+      <span class="fc-label">Service text size</span>
+      <button class="fc-btn" id="fc-minus">−</button>
+      <span class="fc-val" id="fc-val">14px</span>
+      <button class="fc-btn" id="fc-plus">+</button>
+    </div>
+
+    <div class="settings-section-title">Staff Assignment</div>
+    <div class="toggle-row">
+      <span>Show "Assign Barber" on bill</span>
+      <label class="switch"><input type="checkbox" id="assign-barber-toggle" checked><span class="slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <span>Show "Assign Therapist" on bill</span>
+      <label class="switch"><input type="checkbox" id="assign-therapist-toggle" checked><span class="slider"></span></label>
+    </div>
+
+    <div class="settings-section-title">Manage Staff</div>
+    <div class="staff-manage-group">
+      <div class="staff-manage-label">Barbers</div>
+      <div class="staff-chip-list" id="barber-chip-list"></div>
+      <div class="staff-add-row">
+        <input type="text" id="barber-add-input" placeholder="Add barber name" maxlength="40">
+        <button id="barber-add-btn" class="staff-add-btn">Add</button>
+      </div>
+    </div>
+    <div class="staff-manage-group">
+      <div class="staff-manage-label">Therapists</div>
+      <div class="staff-chip-list" id="therapist-chip-list"></div>
+      <div class="staff-add-row">
+        <input type="text" id="therapist-add-input" placeholder="Add therapist name" maxlength="40">
+        <button id="therapist-add-btn" class="staff-add-btn">Add</button>
+      </div>
+    </div>
+
+    <div class="settings-section-title">Toggle Services</div>
+    <div id="settings-list"></div>
+  </div>
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+  <div class="right-title">Bill Summary</div>
+  <div class="total-block">
+    <div>
+      <div class="breakdown-block">
+        <div class="subtotal-row">
+          <span class="sr-label">Subtotal</span>
+          <span class="sr-value" id="subtotal">৳0</span>
+        </div>
+        <div class="subtotal-row vat-row">
+          <span class="sr-label">VAT (15%)</span>
+          <span class="sr-value" id="vat">৳0</span>
+        </div>
+      </div>
+      <div class="total-label">Total Amount</div>
+      <div class="total-value" id="total">৳0</div>
+      <div class="total-count zero" id="cnt-wrap"><span id="cnt">0</span> items selected</div>
+    </div>
+    <button class="reset-btn" id="reset">Reset</button>
+  </div>
+  <div class="list" id="list">
+    <div class="list-empty">No services selected yet</div>
+  </div>
+</div>
+
+<script>
+const data = {
+  "Hair Treatment": [
+    ["The Royal Haircut", 3500], ["The Classic Haircut", 2400], ["Head Shave", 1750],
+    ["Kid's Haircut", 1650], ["Hair Colour (Inoa)", 5500], ["Colour (Sidelocks/Beard)", 1800],
+    ["Colour (Root Touch Up)", 3000], ["Hair Spa", 4500], ["Hair Styling", 1000]
+  ],
+  "Facial Hair Grooming": [
+    ["The Royal Shave", 3000], ["The Classic Shave", 2400], ["Moustache Trim", 1000],
+    ["Beard Trim", 1800], ["Beard Styling", 2200], ["Waxing (Nose)", 800], ["Waxing (Ears)", 800]
+  ],
+  "Nails": [
+    ["Royal Manicure", 2900], ["Royal Pedicure", 3400], ["Royal Candle Pedicure", 3700],
+    ["Royal Candle Manicure", 3100], ["Classic Manicure", 2000], ["Classic Pedicure", 2500],
+    ["Express Manicure", 1400], ["Express Pedicure", 1700]
+  ],
+  "Massages": [
+    ["Head Massage", 2000], ["Face Massage", 2000], ["Hand Massage", 2000], ["Foot Massage", 2000]
+  ],
+  "Facials": [
+    ["Royal Facial", 6500], ["Classic Facial", 5000], ["Peel-Off Mask", 2600]
+  ],
+  "TFH Spa Massage": [
+    ["Thai Massage (60 Min)", 4500], ["Thai Massage (90 Min)", 6500],
+    ["Aromatherapy Massage (60 Min)", 4500], ["Aromatherapy Massage (90 Min)", 6500],
+    ["Deep Tissue Sports Massage (60 Min)", 5000], ["Deep Tissue Sports Massage (90 Min)", 7500],
+    ["Balinese Massage (60 Min)", 4700], ["Balinese Massage (90 Min)", 7000],
+    ["Reflexology Foot Massage (45 Min)", 2500], ["Reflexology Foot Massage (60 Min)", 3100],
+    ["Back, Shoulder, Neck & Head (60 Min)", 4500], ["Back, Shoulder, Neck & Head (90 Min)", 6500],
+    ["Detox Herbal Compress (75 Min)", 5500],
+    ["Lemon Grass & Green Tea Scrub (45 Min)", 4000],
+    ["Milk, Honey & White Chocolate Scrub (45 Min)", 4000],
+    ["The Jet Lag Package (110 Min)", 7700]
+  ]
+};
+
+// Static fallback so the calculator works instantly, offline, and before Firestore
+// responds. Once the Products page's live catalog (th-staff-tools/products) loads,
+// this is replaced in place — see loadLiveProductCatalog() below.
+let PRODUCTS = {
+  "Truefitt & Hill Signature": [
+    [
+      "1805 (Triple) Soap",
+      6250
+    ],
+    [
+      "1805 Aftershave Balm",
+      9300
+    ],
+    [
+      "1805 Bath And Shower Gel 100mL",
+      3000
+    ],
+    [
+      "1805 Bath And Shower Gel 200mL",
+      4000
+    ],
+    [
+      "1805 Cologne",
+      9000
+    ],
+    [
+      "1805 Cologne Tester",
+      2748
+    ],
+    [
+      "1805 Cologne Travel Size 50mL",
+      7300
+    ],
+    [
+      "1805 Luxury Shaving Soap In Wooden Bowl",
+      4255
+    ],
+    [
+      "1805 Luxury Shaving Soap Refill",
+      2850
+    ],
+    [
+      "1805 Shave Cream Bowl",
+      6400
+    ],
+    [
+      "1805 Shave Cream Bowl C",
+      2700
+    ],
+    [
+      "1805 Shave Cream Tube",
+      1955
+    ],
+    [
+      "1L Pre Shave Oil",
+      8100
+    ],
+    [
+      "Advanced Treatment Serum",
+      4945
+    ],
+    [
+      "Almond Shave Cream Bowl",
+      2600
+    ],
+    [
+      "Almond Shave Cream Tube",
+      1700
+    ],
+    [
+      "Apsley Bath And Shower Cream 100mL",
+      3300
+    ],
+    [
+      "Apsley Cologne",
+      10700
+    ],
+    [
+      "Apsley Cologne Travel Size 50mL",
+      8600
+    ],
+    [
+      "Apsley Shave Cream Bowl",
+      6400
+    ],
+    [
+      "Athenian Water",
+      5750
+    ],
+    [
+      "Authentic No 10 Post Shave Cologne Balm",
+      3105
+    ],
+    [
+      "Authentic No. 10 Cleansing Scrub",
+      4000
+    ],
+    [
+      "Authentic No. 10 Finest Shaving Cream",
+      6400
+    ],
+    [
+      "Authentic No. 10 Sensitive Moisturiser",
+      2300
+    ],
+    [
+      "Authentic No. 10 Sensitive Shaving Gel",
+      1800
+    ],
+    [
+      "Bathroom Gift Set 1805- Bowl, B&S Gel, Soap",
+      8750
+    ],
+    [
+      "Bathroom Gift Set Grafton- Bowl, B&S Gel, Soap",
+      7000
+    ],
+    [
+      "Bathroom Gift Set Limes- Bowl, B&S Gel, Soap",
+      7000
+    ],
+    [
+      "Bathroom Gift Set Sandalwood-Bowl, B&S Gel, Soap",
+      7000
+    ],
+    [
+      "Bathroom Gift Set Trafalgar- Bowl, B&S Gel, Soap",
+      7000
+    ],
+    [
+      "Beard Balm",
+      3100
+    ],
+    [
+      "C.A.R Lotion",
+      5750
+    ],
+    [
+      "C.A.R lotion C",
+      3500
+    ],
+    [
+      "C.A.R. Cream (Without Oil)",
+      5750
+    ],
+    [
+      "Classic Aftershave Balm",
+      5000
+    ],
+    [
+      "Classic Gift Set 1805- Bowl, Balm, Cologne",
+      13300
+    ],
+    [
+      "Classic Gift Set Grafton- Bowl, Balm, Cologne",
+      13300
+    ],
+    [
+      "Classic Gift Set Limes- Bowl, Balm, Cologne",
+      13300
+    ],
+    [
+      "Classic Gift Set Sandalwood- Bowl, Balm, Cologne",
+      13300
+    ],
+    [
+      "Classic Gift Set Trafalgar- Bowl, Balm, Cologne",
+      13300
+    ],
+    [
+      "Clubman Cologne",
+      9000
+    ],
+    [
+      "Clubman Cologne Tester",
+      2748
+    ],
+    [
+      "Cone Razor Stand Chrome",
+      14600
+    ],
+    [
+      "Curved Razor And Brush Stand Chrome",
+      15750
+    ],
+    [
+      "Double Wire Brush Stand Chrome",
+      12500
+    ],
+    [
+      "Double Wire Razor Stand Chrome",
+      12500
+    ],
+    [
+      "Double Wire Razor and Brush Stand Chrome",
+      12500
+    ],
+    [
+      "EAU MARINE LOTION",
+      8337
+    ],
+    [
+      "Eau de Portugal",
+      4600
+    ],
+    [
+      "Edwardiansetfauxblueopal-Badgerbrush-Machiiirazor-Stand",
+      30300
+    ],
+    [
+      "Edwardiansetfauxebony-Badgerbrush-Machiiirazor-Stand",
+      30300
+    ],
+    [
+      "Edwardiansetfauxhorn-Badgerbrush-Machiiirazor-Stand",
+      30300
+    ],
+    [
+      "Edwardiansetfauxivory-Badgerbrush-Machiiirazor-Stand",
+      30300
+    ],
+    [
+      "Faux Blue Opal/Super Badger/ Shave Brush/Wellington",
+      16500
+    ],
+    [
+      "Faux Ebony - EDWARDIAN SET MACHIII RAZOR BRUSH STAND",
+      30300
+    ],
+    [
+      "Faux Ebony / Super Badger/ Shave Brush/ Regency",
+      17300
+    ],
+    [
+      "Faux Ebony- Fusion- Razor- Chrome- Wellington",
+      20700
+    ],
+    [
+      "Faux Ebony- Machiii- Razor- Chrome-Regency",
+      13600
+    ],
+    [
+      "Faux Horn / Super Badger/ Shave Brush/ Regency",
+      17300
+    ],
+    [
+      "Faux Horn- Fusion- Razor- Chrome- Wellington",
+      20700
+    ],
+    [
+      "Faux Horn-Machiii- Razor- Chrome- Wellington",
+      14400
+    ],
+    [
+      "Faux Ivory / Mach III / Razor / Chrome / Regency",
+      13600
+    ],
+    [
+      "Faux Ivory / Super Badger/ Shave Brush/ Regency",
+      17300
+    ],
+    [
+      "Faux Ivory- Fusion- Razor- Chrome- Wellington",
+      20700
+    ],
+    [
+      "Faux Ivory- Machiii- Razor- Chrome- Wellington",
+      11500
+    ],
+    [
+      "Faux Porcelain- Fusion- Razor- Chrome- Wellington",
+      20700
+    ],
+    [
+      "Faux Porcelain- Machiii- Razor- Chrome- Wellington",
+      11500
+    ],
+    [
+      "Freshman Cologne",
+      9000
+    ],
+    [
+      "Freshman Cologne Tester",
+      2748
+    ],
+    [
+      "Freshman Friction",
+      4650
+    ],
+    [
+      "Grafton (Triple) Soap",
+      6250
+    ],
+    [
+      "Grafton Aftershave Balm",
+      9300
+    ],
+    [
+      "Grafton Aftershave Balm Tester",
+      2459
+    ],
+    [
+      "Grafton Bath And Shower Gel 100mL",
+      3000
+    ],
+    [
+      "Grafton Bath And Shower Gel 200mL",
+      4000
+    ],
+    [
+      "Grafton Cologne",
+      9000
+    ],
+    [
+      "Grafton Cologne Tester",
+      6700
+    ],
+    [
+      "Grafton Shave Cream Bowl",
+      6400
+    ],
+    [
+      "Grafton Shave Cream Tube",
+      1955
+    ],
+    [
+      "Green Shaving Mug",
+      11800
+    ],
+    [
+      "Hair Management Clay 100mL",
+      6200
+    ],
+    [
+      "Hair Management Coconut Shampoo 100mL",
+      3250
+    ],
+    [
+      "Hair Management Coconut Shampoo 1L",
+      3200
+    ],
+    [
+      "Hair Management Coconut Shampoo 365 ML",
+      6000
+    ],
+    [
+      "Hair Management Frequent Use Shampoo 100mL",
+      2600
+    ],
+    [
+      "Hair Management Frequent Use Shampoo 1L",
+      2600
+    ],
+    [
+      "Hair Management Frequent Use Shampoo 365mL",
+      6000
+    ],
+    [
+      "Hair Management Moisturizing Vitamin E Shampoo 100mL",
+      2600
+    ],
+    [
+      "Hair Management Moisturizing Vitamin E Shampoo 1L",
+      2600
+    ],
+    [
+      "Hair Management Moisturizing Vitamin E Shampoo 365mL",
+      6000
+    ],
+    [
+      "Hair Management Pomade 100mL",
+      6200
+    ],
+    [
+      "Hair Management Replenishing Conditioner 1L",
+      2598
+    ],
+    [
+      "Hair Management Replenishing Conditioner 365mL",
+      7000
+    ],
+    [
+      "Hair Management Styling Wax",
+      2700
+    ],
+    [
+      "Hair Management Thickening Shampoo 100mL",
+      2750
+    ],
+    [
+      "Hair Management Thickening Shampoo 365 ML",
+      6000
+    ],
+    [
+      "Hair Spa - Repairing Cream Bath - 500 ml",
+      950
+    ],
+    [
+      "Intensive Skin Renewal Booster",
+      4600
+    ],
+    [
+      "Lavender Shave Cream Bowl",
+      2700
+    ],
+    [
+      "Limnol",
+      5750
+    ],
+    [
+      "Luxury Edition 1805- Bowl, Balm, Razor, Brush",
+      25200
+    ],
+    [
+      "Luxury Edition Grafton- Bowl, Balm, Razor, Brush",
+      25200
+    ],
+    [
+      "Luxury Edition Limes- Bowl, Balm, Razor, Brush",
+      25200
+    ],
+    [
+      "Luxury Edition Trafalgar- Bowl, Balm, Razor, Brush",
+      25200
+    ],
+    [
+      "Luxury Shaving Soap In Wooden Bowl",
+      4140
+    ],
+    [
+      "Luxury Shaving Soap Refill",
+      2850
+    ],
+    [
+      "Luxury Shaving Soap Refill (For Mug)",
+      1000
+    ],
+    [
+      "Monte Carlo With Oil",
+      5150
+    ],
+    [
+      "Moustache Wax",
+      3500
+    ],
+    [
+      "NEW Sandalwood Shave Cream Tube",
+      1955
+    ],
+    [
+      "Natural Conditioning Beard Oil",
+      5700
+    ],
+    [
+      "Navy Shaving Mug",
+      8300
+    ],
+    [
+      "Razor And Brush Stand With Bowl Chrome",
+      15600
+    ],
+    [
+      "Red Shaving Mug",
+      11850
+    ],
+    [
+      "SMOOTHING CREAMBATH-500 ML",
+      943
+    ],
+    [
+      "Sandalwood (Triple) Soap",
+      6250
+    ],
+    [
+      "Sandalwood Aftershave Balm",
+      9300
+    ],
+    [
+      "Sandalwood Aftershave Balm Tester",
+      2459
+    ],
+    [
+      "Sandalwood Bath And Shower Gel 100mL",
+      3000
+    ],
+    [
+      "Sandalwood Bath And Shower Gel 200mL",
+      4000
+    ],
+    [
+      "Sandalwood Bath And Shower Gel C",
+      2400
+    ],
+    [
+      "Sandalwood Cologne",
+      9000
+    ],
+    [
+      "Sandalwood Cologne Tester",
+      2748
+    ],
+    [
+      "Sandalwood Cologne Travel Size 50mL",
+      7300
+    ],
+    [
+      "Sandalwood Luxury Shaving Soap In Wooden Bowl",
+      5300
+    ],
+    [
+      "Sandalwood Luxury Shaving Soap In Wooden Bowl C",
+      5300
+    ],
+    [
+      "Sandalwood Luxury Shaving Soap Refill",
+      2850
+    ],
+    [
+      "Sandalwood Shave Cream Bowl",
+      3500
+    ],
+    [
+      "Shave Brush- Black Color",
+      16500
+    ],
+    [
+      "Shave Brush- Brown Color",
+      16500
+    ],
+    [
+      "Shave Brush- Cream Color",
+      16500
+    ],
+    [
+      "Shave Brush- White Color",
+      13455
+    ],
+    [
+      "Skin Control Advanced Facial Moisturizer 100mL",
+      7700
+    ],
+    [
+      "Skin Control Daily Cleanser C",
+      2600
+    ],
+    [
+      "Skin Control Facial Cleanser 100mL",
+      4400
+    ],
+    [
+      "Skin Control Invigorating Bath & Shower Scrub",
+      2500
+    ],
+    [
+      "Slate Shaving Mug",
+      11800
+    ],
+    [
+      "Spanish Leather Cologne",
+      9000
+    ],
+    [
+      "Spanish Leather Cologne Tester",
+      2748
+    ],
+    [
+      "Tonic Lotion Special",
+      5300
+    ],
+    [
+      "Trafalgar (Triple) Soap",
+      6250
+    ],
+    [
+      "Trafalgar Aftershave Balm",
+      6750
+    ],
+    [
+      "Trafalgar Aftershave Balm Tester",
+      2459
+    ],
+    [
+      "Trafalgar Bath And Shower Gel",
+      4000
+    ],
+    [
+      "Trafalgar Cologne",
+      9000
+    ],
+    [
+      "Trafalgar Cologne Tester",
+      2748
+    ],
+    [
+      "Trafalgar Shave Cream Bowl",
+      6400
+    ],
+    [
+      "Trafalgar Shave Cream Bowl C",
+      3500
+    ],
+    [
+      "Trafalgar Shave Cream Tube",
+      1955
+    ],
+    [
+      "Tube Traveler Shave Brush- Faux Ebony- Super Badger",
+      9300
+    ],
+    [
+      "Tube Traveler Shave Brush- Faux Ivory- Super Badger",
+      9300
+    ],
+    [
+      "Turnback Travel Shave Brush- Faux Ebony- Super Badger",
+      12600
+    ],
+    [
+      "Turnback Travel Shave Brush- Faux Ivory- Super Badger",
+      12600
+    ],
+    [
+      "Ultimate Comfort Aftershave Balm (Travel Tube)",
+      4750
+    ],
+    [
+      "Ultimate Comfort Gift Set- Cream, Balm, Oil & Scrub",
+      13900
+    ],
+    [
+      "Ultimate Comfort Pre-Shave Oil",
+      5600
+    ],
+    [
+      "Ultimate Comfort Shaving Cream",
+      6400
+    ],
+    [
+      "Ultimate Comfort Shaving Cream (Travel Tube)",
+      4200
+    ],
+    [
+      "Ultimate Comfort Shaving Cream Bowl C",
+      3500
+    ],
+    [
+      "West Indian Limes (Triple)",
+      6250
+    ],
+    [
+      "West Indian Limes Aftershave Balm",
+      6750
+    ],
+    [
+      "West Indian Limes Bath And Shower Gel",
+      4000
+    ],
+    [
+      "West Indian Limes Cologne",
+      9000
+    ],
+    [
+      "West Indian Limes Cologne Tester",
+      2748
+    ],
+    [
+      "West Indian Limes Shave Cream Bowl",
+      6400
+    ],
+    [
+      "West Indian Limes Shave Cream Bowl C",
+      2700
+    ],
+    [
+      "West Indian Limes Shave Cream Tube",
+      1955
+    ]
+  ],
+  "Hair Care": [
+    [
+      "Inoa 2 Parts Shade 1",
+      732
+    ],
+    [
+      "Inoa 2 Parts Shade 2",
+      732
+    ],
+    [
+      "Inoa 2 Parts Shade 3",
+      766
+    ],
+    [
+      "Inoa 2 Parts Shade 4",
+      732
+    ],
+    [
+      "Inoa 2 Parts Shade 5",
+      766
+    ],
+    [
+      "Inoa 2 Parts Shade 6",
+      766
+    ],
+    [
+      "Inoa 2 Parts Shade 7",
+      766
+    ],
+    [
+      "Inoa 2 Parts Shade 8",
+      766
+    ],
+    [
+      "MAJIREL (NEW) SHADE NO 4.15",
+      553
+    ],
+    [
+      "MAJIREL (NEW) SHADE NO. 2.10",
+      553
+    ],
+    [
+      "MAJIREL (NEW) SHADE NO. 5",
+      553
+    ],
+    [
+      "MAJIREL (NEW) SHADE NO. 5.35",
+      559
+    ],
+    [
+      "MAJIREL (NEW) SHADE NO. 5.52",
+      553
+    ],
+    [
+      "MAJIREL (NEW) SHADE NO. 6",
+      553
+    ],
+    [
+      "MAJIREL (NEW) SHADE NO. 6.34",
+      553
+    ],
+    [
+      "MAJIREL (NEW) SHADE NO. 8",
+      553
+    ],
+    [
+      "MAJIREL (NEW) SHADE NO.1",
+      553
+    ],
+    [
+      "MAJIREL (NEW) SHADE NO.3",
+      553
+    ],
+    [
+      "MAJIREL SHADE NO 4.00",
+      553
+    ],
+    [
+      "OREOR DEVELOPER-20VOL-1000ML",
+      1408
+    ],
+    [
+      "OREOR DEVELOPER-40 VOL-1000ML",
+      1408
+    ],
+    [
+      "Pro Classic Shmp (Post Colour Optimiser) 1.5L",
+      1358
+    ],
+    [
+      "SE CLEAR DOSE 15ML",
+      2001
+    ],
+    [
+      "SE HS.NOURISHING CREAM B",
+      943
+    ],
+    [
+      "SER.EXP H.SPA HYD CONC 6x8 ML",
+      828
+    ],
+    [
+      "SER.EXP H.SPA PUR CONC.6x8 ML",
+      828
+    ],
+    [
+      "SER.EXP H.SPA VITA CB 500 ML",
+      1591
+    ]
+  ],
+  "Professional Use": [
+    [
+      "Blade for WAHL Beret Trimmer USA",
+      100
+    ],
+    [
+      "Cream Shaving Mug",
+      11850
+    ],
+    [
+      "GIFT BOX",
+      1000
+    ],
+    [
+      "Hydra Melting Massage Cream",
+      6838
+    ],
+    [
+      "Hydra Original Non-Oily Ultra-Moisturizing Fluid",
+      5654
+    ],
+    [
+      "OLIGOFORCE PURIFYING SERUM",
+      8287
+    ],
+    [
+      "OLIGOPUR SEA WATER LYPHOLIZED",
+      3053
+    ],
+    [
+      "Oligoforce Moisturizing Serum",
+      8287
+    ],
+    [
+      "Oligopur Hydra-Matifying Control Cream - 100 Ml",
+      3797
+    ],
+    [
+      "Oligopur Purifying Cleansing Gel - 250 Ml",
+      3763
+    ],
+    [
+      "PERFECT VISAGE GENTLE CLENSING MILK",
+      5916
+    ],
+    [
+      "ROSE visage TONING CLEANSING LOTION",
+      5916
+    ],
+    [
+      "Relaxing Serum - 100 Ml",
+      6163
+    ],
+    [
+      "Rose Shave Cream Bowl",
+      2700
+    ],
+    [
+      "Rose Shave Cream Tube",
+      1800
+    ],
+    [
+      "VEGETAL EXFOLIALT",
+      5552
+    ],
+    [
+      "White Lumination Complexion Recovery Moisturizing Cream",
+      5905
+    ],
+    [
+      "White Lumination Remineralizing Lightening Mask",
+      6553
+    ],
+    [
+      "White Lumination Spot Correction Brightening Serum",
+      9394
+    ]
+  ],
+  "After Shave": [
+    [
+      "Faux Horn / Mach III / Razor / Chrome / Regency",
+      13600
+    ],
+    [
+      "Freshman Friction C",
+      3500
+    ],
+    [
+      "Luxury Edition sandal wood- Bowl, Balm, Razor, Brush",
+      25200
+    ],
+    [
+      "Monte Carlo With Oil C",
+      5100
+    ],
+    [
+      "Oligopur Flawless Skin Mask",
+      4630
+    ],
+    [
+      "West Indian Limes Balm Tester",
+      2459
+    ],
+    [
+      "puriso - Diffuser Oil",
+      138
+    ]
+  ],
+  "Shaving Accessories": [
+    [
+      "Faux Ebony / Super Badger/ Shave Brush/ Wellington",
+      16500
+    ],
+    [
+      "Faux Ebony- Machiii- Razor- Chrome- Wellington",
+      11500
+    ],
+    [
+      "Faux Horn / Super Badger / Shave Brush / Wellington",
+      16500
+    ],
+    [
+      "Faux Ivory / Super Badger/ Shave Brush/ Wellington",
+      16500
+    ],
+    [
+      "Faux Porcelain / Super Badger/ Shave Brush/ Wellington",
+      16500
+    ]
+  ],
+  "Facial & Pedi-Mani": [
+    [
+      "Black Mask (Remy Laure)",
+      20
+    ],
+    [
+      "Manicure/Pedicure ROYAL Kit",
+      150
+    ],
+    [
+      "Manicure/Pedicure ROYAL Kit - CANDLE",
+      222
+    ],
+    [
+      "Peel Off Mask (Serenite)",
+      170
+    ]
+  ],
+  "Spa Lifestyle": [
+    [
+      "Puriso - Turkish Lime - Mist",
+      3967
+    ]
+  ]
+};
+
+let PRODUCT_CATEGORIES = new Set(Object.keys(PRODUCTS));
+
+const STAFF_BY_CATEGORY = {
+  "Facial Hair Grooming": "barber", "Hair Treatment": "barber",
+  "Nails": "therapist", "Massages": "therapist",
+  "Facials": "both", "TFH Spa Massage": "therapist"
+};
+const BARBERS    = ["Ashutosh","Poritosh","Sushanto","Sanjit","Nasir","Kaium","Dipok","Nitol","Sumon"];
+const THERAPISTS = ["Rana","Rasel","Privan","Tipu","Arup","Maki","Hemar"];
+
+const hidden       = new Set();
+const selected     = new Map();
+const assignments  = new Map();
+const collapsedCats = new Set();
+Object.keys(PRODUCTS).forEach(cat => collapsedCats.add('product::'+cat));
+let openDropdownKey = null;
+let fontSize = 14;
+let showAssignBarber    = true;
+let showAssignTherapist = true;
+let searchQuery = '';
+
+function getStaffOptions(cat) {
+  const t = STAFF_BY_CATEGORY[cat] || "both";
+  return t === "barber" ? BARBERS : t === "therapist" ? THERAPISTS : [...BARBERS, ...THERAPISTS];
+}
+function shouldShowAssign(cat) {
+  if (PRODUCT_CATEGORIES.has(cat)) return false;
+  const t = STAFF_BY_CATEGORY[cat] || "both";
+  if (t === "barber")     return showAssignBarber;
+  if (t === "therapist")  return showAssignTherapist;
+  return showAssignBarber || showAssignTherapist;
+}
+
+// ── GEAR BADGE ──
+function updateGearBadge() {
+  const badge = document.getElementById('gear-badge');
+  badge.classList.toggle('visible', !showAssignBarber || !showAssignTherapist);
+}
+
+// ── SEARCH ──
+const searchInput   = document.getElementById('search-input');
+const searchClear   = document.getElementById('search-clear');
+const searchResults = document.getElementById('search-results');
+const searchNoRes   = document.getElementById('search-no-results');
+const menuDiv       = document.getElementById('menu');
+
+searchInput.addEventListener('input', () => {
+  searchQuery = searchInput.value.trim().toLowerCase();
+  searchClear.classList.toggle('visible', searchQuery.length > 0);
+  renderSearch();
+});
+
+searchClear.addEventListener('click', () => {
+  searchInput.value = '';
+  searchQuery = '';
+  searchClear.classList.remove('visible');
+  renderSearch();
+  searchInput.focus();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === '/' && document.activeElement !== searchInput) {
+    e.preventDefault();
+    searchInput.focus();
+    searchInput.select();
+  }
+  if (e.key === 'Escape' && document.activeElement === searchInput) {
+    searchInput.blur();
+  }
+});
+
+function renderSearch() {
+  if (!searchQuery) {
+    searchResults.classList.remove('visible');
+    searchNoRes.classList.remove('visible');
+    menuDiv.style.display = 'grid';
+    return;
+  }
+  menuDiv.style.display = 'none';
+  const matches = [];
+  Object.entries(data).forEach(([cat, items]) => {
+    items.forEach(([name, price]) => {
+      if (hidden.has(cat+'|'+name)) return;
+      if (name.toLowerCase().includes(searchQuery) || cat.toLowerCase().includes(searchQuery)) {
+        matches.push({ cat, name, price, key: cat+'|'+name });
+      }
+    });
+  });
+  if (matches.length === 0) {
+    searchResults.classList.remove('visible');
+    searchResults.innerHTML = '';
+    searchNoRes.classList.add('visible');
+    return;
+  }
+  searchNoRes.classList.remove('visible');
+  searchResults.classList.add('visible');
+  searchResults.innerHTML = '';
+  matches.forEach(({ cat, name, price, key }) => {
+    const isActive = selected.has(key);
+    const div = document.createElement('div');
+    div.className = 'search-result-item' + (isActive ? ' active' : '');
+    div.innerHTML = `
+      <div class="sri-left">
+        <div class="sri-name">${highlight(name, searchQuery)}</div>
+        <div class="sri-cat">${cat}</div>
+      </div>
+      <div class="sri-price">৳${price.toLocaleString()}</div>
+    `;
+    div.onclick = () => {
+      if (selected.has(key)) { const e = selected.get(key); e.qty = (e.qty||1)+1; }
+      else selected.set(key, { name, price, cat, qty: 1 });
+      renderSearch();
+      renderMenu();
+      updateTotal();
+    };
+    searchResults.appendChild(div);
+  });
+}
+
+function highlight(text, q) {
+  const idx = text.toLowerCase().indexOf(q);
+  if (idx === -1) return text;
+  return text.slice(0, idx) + `<mark style="background:rgba(201,168,76,0.35);color:inherit;border-radius:2px;">${text.slice(idx, idx + q.length)}</mark>` + text.slice(idx + q.length);
+}
+
+// ── VIEW TABS (Services / Products) ──
+const tabServices    = document.getElementById('tab-services');
+const tabProducts    = document.getElementById('tab-products');
+const servicesPanel  = document.getElementById('services-panel');
+const productsPanel  = document.getElementById('products-panel');
+
+tabServices.onclick = () => {
+  tabServices.classList.add('active');
+  tabProducts.classList.remove('active');
+  servicesPanel.style.display = 'block';
+  productsPanel.style.display = 'none';
+};
+tabProducts.onclick = () => {
+  tabProducts.classList.add('active');
+  tabServices.classList.remove('active');
+  productsPanel.style.display = 'block';
+  servicesPanel.style.display = 'none';
+  renderProductMenu();
+};
+
+// ── PRODUCT SEARCH ──
+const productSearchInput   = document.getElementById('product-search-input');
+const productSearchClear   = document.getElementById('product-search-clear');
+const productSearchResults = document.getElementById('product-search-results');
+const productSearchNoRes   = document.getElementById('product-search-no-results');
+const productMenuDiv       = document.getElementById('product-menu');
+let productSearchQuery = '';
+
+productSearchInput.addEventListener('input', () => {
+  productSearchQuery = productSearchInput.value.trim().toLowerCase();
+  productSearchClear.classList.toggle('visible', productSearchQuery.length > 0);
+  renderProductSearch();
+});
+
+productSearchClear.addEventListener('click', () => {
+  productSearchInput.value = '';
+  productSearchQuery = '';
+  productSearchClear.classList.remove('visible');
+  renderProductSearch();
+  productSearchInput.focus();
+});
+
+function renderProductSearch() {
+  if (!productSearchQuery) {
+    productSearchResults.classList.remove('visible');
+    productSearchNoRes.classList.remove('visible');
+    productMenuDiv.style.display = 'grid';
+    return;
+  }
+  productMenuDiv.style.display = 'none';
+  const matches = [];
+  Object.entries(PRODUCTS).forEach(([cat, items]) => {
+    items.forEach(([name, price]) => {
+      if (name.toLowerCase().includes(productSearchQuery) || cat.toLowerCase().includes(productSearchQuery)) {
+        matches.push({ cat, name, price, key: cat+'|'+name });
+      }
+    });
+  });
+  if (matches.length === 0) {
+    productSearchResults.classList.remove('visible');
+    productSearchResults.innerHTML = '';
+    productSearchNoRes.classList.add('visible');
+    return;
+  }
+  productSearchNoRes.classList.remove('visible');
+  productSearchResults.classList.add('visible');
+  productSearchResults.innerHTML = '';
+  matches.forEach(({ cat, name, price, key }) => {
+    const isActive = selected.has(key);
+    const div = document.createElement('div');
+    div.className = 'search-result-item' + (isActive ? ' active' : '');
+    div.innerHTML = `
+      <div class="sri-left">
+        <div class="sri-name">${highlight(name, productSearchQuery)}</div>
+        <div class="sri-cat">${cat}</div>
+      </div>
+      <div class="sri-price">৳${price.toLocaleString()}</div>
+    `;
+    div.onclick = () => {
+      if (selected.has(key)) { const e = selected.get(key); e.qty = (e.qty||1)+1; }
+      else selected.set(key, { name, price, cat, qty: 1 });
+      renderProductSearch();
+      renderProductMenu();
+      updateTotal();
+    };
+    productSearchResults.appendChild(div);
+  });
+}
+
+// ── PRODUCT MENU ──
+function renderProductMenu() {
+  productMenuDiv.innerHTML = '';
+  productMenuDiv.style.display = productSearchQuery ? 'none' : 'grid';
+  Object.entries(PRODUCTS).forEach(([cat, items]) => {
+    const isCollapsed   = collapsedCats.has('product::'+cat);
+    const selectedCount = items.filter(([name]) => selected.has(cat+'|'+name)).length;
+
+    const section = document.createElement('div');
+    section.className = 'cat-section cat-full';
+
+    const header = document.createElement('div');
+    header.className = 'cat-header' + (isCollapsed ? ' collapsed' : '');
+    header.innerHTML = `
+      <div class="cat-header-left">
+        <div class="cat-dot"></div>
+        <div class="cat-title">${cat}</div>
+        <div class="cat-count">${items.length}${selectedCount > 0 ? ` · ✦ ${selectedCount}` : ''}</div>
+      </div>
+      <svg class="cat-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    `;
+    header.onclick = () => {
+      const ck = 'product::'+cat;
+      if (collapsedCats.has(ck)) collapsedCats.delete(ck); else collapsedCats.add(ck);
+      renderProductMenu();
+    };
+
+    const body = document.createElement('div');
+    body.className = 'cat-body' + (isCollapsed ? ' collapsed' : '');
+    if (!isCollapsed) { body.style.maxHeight = '4000px'; body.style.opacity = '1'; }
+
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+
+    items.forEach(([name, price]) => {
+      const key = cat+'|'+name;
+      const box = document.createElement('div');
+      box.className = 'item' + (selected.has(key) ? ' active' : '');
+      box.style.fontSize = fontSize + 'px';
+      box.innerHTML = `<div class="item-name">${name}</div><div class="item-price">৳${price.toLocaleString()}</div>`;
+      box.onclick = () => {
+        if (selected.has(key)) {
+          const entry = selected.get(key);
+          entry.qty = (entry.qty || 1) + 1;
+        } else {
+          selected.set(key, { name, price, cat, qty: 1 });
+        }
+        renderProductMenu();
+        renderProductSearch();
+        updateTotal();
+      };
+      grid.appendChild(box);
+    });
+
+    body.appendChild(grid);
+    section.appendChild(header);
+    section.appendChild(body);
+    productMenuDiv.appendChild(section);
+  });
+}
+
+// ── MENU ──
+function renderMenu() {
+  const menu = document.getElementById('menu');
+  menu.innerHTML = '';
+  Object.entries(data).forEach(([cat, items]) => {
+    const visible = items.filter(([name]) => !hidden.has(cat+'|'+name));
+    if (visible.length === 0) return;
+    const isCollapsed   = collapsedCats.has(cat);
+    const selectedCount = visible.filter(([name]) => selected.has(cat+'|'+name)).length;
+
+    const section = document.createElement('div');
+    section.className = 'cat-section' + (cat === 'TFH Spa Massage' ? ' cat-full' : '');
+
+    const header = document.createElement('div');
+    header.className = 'cat-header' + (isCollapsed ? ' collapsed' : '');
+    header.innerHTML = `
+      <div class="cat-header-left">
+        <div class="cat-dot"></div>
+        <div class="cat-title">${cat}</div>
+        ${selectedCount > 0 ? `<div class="cat-count">✦ ${selectedCount}</div>` : ''}
+      </div>
+      <svg class="cat-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    `;
+    header.onclick = () => {
+      if (collapsedCats.has(cat)) collapsedCats.delete(cat); else collapsedCats.add(cat);
+      renderMenu();
+    };
+
+    const body = document.createElement('div');
+    body.className = 'cat-body' + (isCollapsed ? ' collapsed' : '');
+    if (!isCollapsed) { body.style.maxHeight = '2000px'; body.style.opacity = '1'; }
+
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+
+    visible.forEach(([name, price]) => {
+      const key = cat+'|'+name;
+      const box = document.createElement('div');
+      box.className = 'item' + (selected.has(key) ? ' active' : '');
+      box.style.fontSize = fontSize + 'px';
+      box.innerHTML = `<div class="item-name">${name}</div><div class="item-price">৳${price.toLocaleString()}</div>`;
+      box.onclick = () => {
+        if (selected.has(key)) {
+          const entry = selected.get(key);
+          entry.qty = (entry.qty || 1) + 1;
+        } else {
+          selected.set(key, { name, price, cat, qty: 1 });
+          if ((STAFF_BY_CATEGORY[cat]||"both") === "barber") {
+            for (const [k, v] of selected) {
+              if (k !== key && (STAFF_BY_CATEGORY[v.cat]||"both") === "barber" && assignments.has(k)) {
+                assignments.set(key, assignments.get(k)); break;
+              }
+            }
+          }
+        }
+        renderMenu();
+        renderSearch();
+        updateTotal();
+      };
+      grid.appendChild(box);
+    });
+
+    body.appendChild(grid);
+    section.appendChild(header);
+    section.appendChild(body);
+    menu.appendChild(section);
+  });
+}
+
+// ── STAFF MANAGEMENT ──
+function renderStaffManager() {
+  const renderGroup = (listEl, names, type) => {
+    listEl.innerHTML = '';
+    names.forEach((staffName, idx) => {
+      const chip = document.createElement('div');
+      chip.className = 'staff-chip';
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = staffName;
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'staff-chip-remove';
+      removeBtn.innerHTML = '×';
+      removeBtn.title = 'Remove ' + staffName;
+      removeBtn.onclick = () => {
+        names.splice(idx, 1);
+        // Clear any current assignments that pointed at the removed name
+        for (const [k, v] of assignments) { if (v === staffName) assignments.delete(k); }
+        renderStaffManager();
+        updateTotal();
+      };
+      chip.appendChild(nameSpan);
+      chip.appendChild(removeBtn);
+      listEl.appendChild(chip);
+    });
+  };
+  renderGroup(document.getElementById('barber-chip-list'), BARBERS, 'barber');
+  renderGroup(document.getElementById('therapist-chip-list'), THERAPISTS, 'therapist');
+}
+
+function setupStaffAdder(inputId, btnId, namesArr) {
+  const input = document.getElementById(inputId);
+  const btn   = document.getElementById(btnId);
+  const addName = () => {
+    const val = input.value.trim();
+    if (!val) return;
+    if (namesArr.some(n => n.toLowerCase() === val.toLowerCase())) { input.value = ''; return; }
+    namesArr.push(val);
+    input.value = '';
+    renderStaffManager();
+  };
+  btn.onclick = addName;
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') addName(); });
+}
+setupStaffAdder('barber-add-input', 'barber-add-btn', BARBERS);
+setupStaffAdder('therapist-add-input', 'therapist-add-btn', THERAPISTS);
+
+// ── SETTINGS ──
+function renderSettings() {
+  renderStaffManager();
+  const list = document.getElementById('settings-list');
+  list.innerHTML = '';
+  Object.entries(data).forEach(([cat, items]) => {
+    const h = document.createElement('div');
+    h.className = 'settings-section-title';
+    h.style.fontSize = '10px';
+    h.textContent = cat;
+    list.appendChild(h);
+    items.forEach(([name]) => {
+      const key = cat+'|'+name;
+      const row = document.createElement('div');
+      row.className = 'toggle-row';
+      row.innerHTML = `<span>${name}</span><label class="switch"><input type="checkbox" ${hidden.has(key)?'':'checked'}><span class="slider"></span></label>`;
+      row.querySelector('input').onchange = (e) => {
+        if (e.target.checked) hidden.delete(key);
+        else { hidden.add(key); if (selected.has(key)) { selected.delete(key); assignments.delete(key); } }
+        renderMenu(); updateTotal();
+      };
+      list.appendChild(row);
+    });
+  });
+}
+
+// ── TOTAL PULSE ──
+let pulseTimeout;
+function triggerPulse() {
+  const el = document.getElementById('total');
+  el.classList.remove('pulse');
+  void el.offsetWidth;
+  el.classList.add('pulse');
+  clearTimeout(pulseTimeout);
+  pulseTimeout = setTimeout(() => el.classList.remove('pulse'), 450);
+}
+
+// ── UPDATE TOTAL ──
+const VAT_RATE = 0.15;
+function updateTotal() {
+  let subtotal = 0;
+  let vatable = 0;
+  selected.forEach(v => {
+    const lineTotal = v.price * (v.qty || 1);
+    subtotal += lineTotal;
+    if (PRODUCT_CATEGORIES.has(v.cat)) vatable += lineTotal;
+  });
+  const vat   = vatable * VAT_RATE;
+  const total = subtotal + vat;
+
+  document.getElementById('subtotal').textContent = '৳' + Math.round(subtotal).toLocaleString();
+  document.getElementById('vat').textContent = '৳' + Math.round(vat).toLocaleString();
+
+  const prev = document.getElementById('total').textContent;
+  const next  = '৳' + Math.round(total).toLocaleString();
+  if (prev !== next) { document.getElementById('total').textContent = next; triggerPulse(); }
+
+  const cntWrap = document.getElementById('cnt-wrap');
+  let totalQty = 0; selected.forEach(v => totalQty += (v.qty||1));
+  document.getElementById('cnt').textContent = totalQty;
+  cntWrap.classList.toggle('zero', selected.size === 0);
+
+  const list = document.getElementById('list');
+  if (selected.size === 0) {
+    list.innerHTML = '<div class="list-empty">No services selected yet</div>';
+    const stray = document.getElementById('assign-dropdown-overlay');
+    if (stray) stray.remove();
+    return;
+  }
+  list.innerHTML = '';
+  let pendingDropdown = null;
+  selected.forEach(({ name, price, cat, qty = 1 }, key) => {
+    const showAssign = shouldShowAssign(cat);
+    const row = document.createElement('div');
+    row.className = 'list-row';
+
+    const nameRow = document.createElement('div');
+    nameRow.className = 'name-row';
+
+    const nameSpan  = document.createElement('span');
+    nameSpan.className = 'name';
+    nameSpan.textContent = name;
+
+    const priceSpan = document.createElement('span');
+    priceSpan.className = 'price';
+    priceSpan.textContent = '৳' + (price * qty).toLocaleString();
+
+    // qty controls: − qty +
+    const qtyCtrl = document.createElement('div');
+    qtyCtrl.className = 'qty-ctrl';
+
+    const minusBtn = document.createElement('button');
+    minusBtn.className = 'qty-btn';
+    minusBtn.textContent = '−';
+    minusBtn.title = 'Remove one';
+    minusBtn.onclick = (e) => {
+      e.stopPropagation();
+      const entry = selected.get(key);
+      if (entry.qty <= 1) { selected.delete(key); assignments.delete(key); renderMenu(); renderSearch(); renderProductMenu(); renderProductSearch(); }
+      else { entry.qty--; }
+      updateTotal();
+    };
+
+    const qtyNum = document.createElement('span');
+    qtyNum.className = 'qty-num';
+    qtyNum.textContent = qty;
+
+    const plusBtn = document.createElement('button');
+    plusBtn.className = 'qty-btn';
+    plusBtn.textContent = '+';
+    plusBtn.title = 'Add one more';
+    plusBtn.onclick = (e) => {
+      e.stopPropagation();
+      selected.get(key).qty = (selected.get(key).qty || 1) + 1;
+      updateTotal();
+    };
+
+    qtyCtrl.appendChild(minusBtn);
+    qtyCtrl.appendChild(qtyNum);
+    qtyCtrl.appendChild(plusBtn);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.className = 'remove-btn';
+    removeBtn.innerHTML = '×';
+    removeBtn.title = 'Remove';
+    removeBtn.onclick = (e) => {
+      e.stopPropagation();
+      selected.delete(key); assignments.delete(key);
+      renderMenu(); renderSearch(); renderProductMenu(); renderProductSearch(); updateTotal();
+    };
+
+    nameRow.appendChild(nameSpan);
+    nameRow.appendChild(qtyCtrl);
+    nameRow.appendChild(priceSpan);
+    nameRow.appendChild(removeBtn);
+    row.appendChild(nameRow);
+
+    if (showAssign) {
+      const assignBox = document.createElement('div');
+      const assigned  = assignments.get(key);
+      const staffType = STAFF_BY_CATEGORY[cat] || "both";
+      const label     = assigned || (staffType==="barber" ? 'Assign barber' : staffType==="therapist" ? 'Assign therapist' : 'Assign staff');
+      assignBox.className = 'assign-box' + (assigned ? ' set' : '');
+      assignBox.innerHTML = `<span class="assign-name">${label}</span><span class="arrow">▾</span>`;
+      assignBox.onclick = (e) => {
+        e.stopPropagation();
+        openDropdownKey = (openDropdownKey === key) ? null : key;
+        updateTotal();
+      };
+      row.appendChild(assignBox);
+      if (openDropdownKey === key) {
+        pendingDropdown = { anchor: assignBox, cat, key, assigned };
+      }
+    }
+    list.appendChild(row);
+  });
+
+  // Mount the open dropdown (if any) on <body> as a fixed-position overlay.
+  // This avoids it being trapped inside a list-row's stacking context
+  // (each .list-row creates one because of its slideIn animation), which
+  // was causing later rows to paint over the dropdown.
+  const oldOverlay = document.getElementById('assign-dropdown-overlay');
+  if (oldOverlay) oldOverlay.remove();
+  if (pendingDropdown) {
+    const { anchor, cat, key, assigned } = pendingDropdown;
+    const rect = anchor.getBoundingClientRect();
+    const dropdown = document.createElement('div');
+    dropdown.id = 'assign-dropdown-overlay';
+    dropdown.className = 'assign-dropdown';
+    dropdown.style.position = 'fixed';
+    dropdown.style.top = (rect.bottom + 5) + 'px';
+    dropdown.style.left = rect.left + 'px';
+    getStaffOptions(cat).forEach(staffName => {
+      const opt = document.createElement('div');
+      opt.className = 'assign-option' + (assigned===staffName ? ' selected' : '');
+      opt.textContent = staffName;
+      opt.onclick = (e) => {
+        e.stopPropagation();
+        if ((STAFF_BY_CATEGORY[cat]||"both") === "barber") {
+          selected.forEach((v,k) => { if ((STAFF_BY_CATEGORY[v.cat]||"both")==="barber") assignments.set(k,staffName); });
+        } else { assignments.set(key, staffName); }
+        openDropdownKey = null; updateTotal();
+      };
+      dropdown.appendChild(opt);
+    });
+    dropdown.onclick = (e) => e.stopPropagation();
+    document.body.appendChild(dropdown);
+  }
+}
+
+// ── GEAR TOGGLE ──
+const gear        = document.getElementById('gear');
+const menuView    = document.getElementById('menu-view');
+const settingsView = document.getElementById('settings-view');
+gear.onclick = () => {
+  const show = settingsView.style.display === 'none';
+  menuView.style.display    = show ? 'none'  : 'block';
+  settingsView.style.display = show ? 'block' : 'none';
+  gear.classList.toggle('active', show);
+};
+
+document.getElementById('theme-toggle').checked = document.body.classList.contains('light');
+document.getElementById('theme-toggle').onchange = (e) => {
+  const t = e.target.checked ? 'light' : 'dark';
+  try { localStorage.setItem('th-theme', t); } catch(err) {}
+  document.body.classList.toggle('light', e.target.checked);
+  const drawerToggle = document.getElementById('th-theme-toggle');
+  if (drawerToggle) drawerToggle.checked = e.target.checked;
+};
+
+document.getElementById('assign-barber-toggle').onchange = (e) => {
+  showAssignBarber = e.target.checked; updateGearBadge(); updateTotal();
+};
+document.getElementById('assign-therapist-toggle').onchange = (e) => {
+  showAssignTherapist = e.target.checked; updateGearBadge(); updateTotal();
+};
+
+document.getElementById('fc-minus').onclick = () => {
+  fontSize = Math.max(11, fontSize-1);
+  document.getElementById('fc-val').textContent = fontSize+'px'; renderMenu(); renderProductMenu();
+};
+document.getElementById('fc-plus').onclick = () => {
+  fontSize = Math.min(24, fontSize+1);
+  document.getElementById('fc-val').textContent = fontSize+'px'; renderMenu(); renderProductMenu();
+};
+
+document.getElementById('reset').onclick = () => {
+  selected.clear(); assignments.clear(); renderMenu(); renderSearch(); renderProductMenu(); renderProductSearch(); updateTotal();
+};
+
+document.addEventListener('click', () => {
+  if (openDropdownKey !== null) { openDropdownKey = null; updateTotal(); }
+});
+document.getElementById('list').addEventListener('scroll', () => {
+  if (openDropdownKey !== null) { openDropdownKey = null; updateTotal(); }
+}, { passive: true });
+
+renderMenu();
+renderProductMenu();
+renderSettings();
+updateTotal();
+
+// ── Live product catalog sync ──
+// The Products page (products.html) is the single source of truth for the
+// physical-product catalog. On load we swap the static PRODUCTS fallback
+// above for whatever's live there, and keep listening for edits/adds/deletes
+// made on that page so this bill screen never goes stale.
+function loadLiveProductCatalog(){
+  window.thAuthReady.then(function(){
+    window.thDB.collection('th-staff-tools').doc('products').onSnapshot(function(snap){
+      if(!snap.exists || !Array.isArray(snap.data().items)) return;
+      const grouped = {};
+      snap.data().items.forEach(p => {
+        const cat = p.category || 'Uncategorised';
+        if(!grouped[cat]) grouped[cat] = [];
+        const price = (p.price === null || p.price === undefined || p.price === '') ? 0 : Number(p.price);
+        grouped[cat].push([p.name, isFinite(price) ? price : 0]);
+      });
+      PRODUCTS = grouped;
+      PRODUCT_CATEGORIES = new Set(Object.keys(PRODUCTS));
+      Object.keys(PRODUCTS).forEach(cat => collapsedCats.add('product::'+cat));
+      renderProductMenu();
+      renderProductSearch();
+    }, function(err){ console.error('Product catalog sync error', err); });
+  });
+}
+loadLiveProductCatalog();
+</script>
+<script src="nav.js"></script>
+<script src="shared.js"></script>
+</body>
+</html>

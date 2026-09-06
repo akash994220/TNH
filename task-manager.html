@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T&H Task Manager</title>
+<style>html,body{background:#0d1535;}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Tiro+Bangla&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<style>
+  :root{
+    --ink:#f3efe4;
+    --ink-soft:rgba(243,239,228,0.62);
+    --ink-faint:rgba(243,239,228,0.4);
+    --gold:#d9b872;
+    --gold-soft:#a9884f;
+    --green-glow:#2f6b4f;
+    --glass:rgba(255,255,255,0.055);
+    --glass-strong:rgba(255,255,255,0.09);
+    --glass-border:rgba(255,255,255,0.14);
+    --done:rgba(243,239,228,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    font-family:'Poppins',sans-serif;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:48px 16px;
+    background:
+      radial-gradient(900px 560px at 15% -8%, rgba(217,184,114,0.16), transparent 60%),
+      radial-gradient(1000px 700px at 100% 10%, rgba(26,58,143,0.35), transparent 55%),
+      radial-gradient(800px 600px at 50% 120%, rgba(26,58,143,0.22), transparent 55%),
+      linear-gradient(160deg, #0d1535 0%, #080d1e 45%, #120828 100%);
+    background-attachment:fixed;
+  }
+
+  .app{
+    width:100%;
+    max-width:560px;
+  }
+
+  /* Header */
+  header{
+    text-align:center;
+    margin-bottom:26px;
+  }
+  .crest{
+    display:inline-flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:10px;
+  }
+  .crest-line{
+    width:30px;
+    height:1px;
+    background:linear-gradient(90deg, transparent, var(--gold));
+  }
+  .crest-line.right{background:linear-gradient(90deg, var(--gold), transparent);}
+  .brand{
+    font-family:'Poppins',sans-serif;
+    font-size:12px;
+    letter-spacing:4.5px;
+    text-transform:uppercase;
+    color:var(--gold);
+    font-weight:400;
+  }
+  h1{
+    font-family:'Poppins',sans-serif;
+    font-weight:400;
+    font-size:28px;
+    letter-spacing:0.3px;
+    margin:0;
+    color:var(--ink);
+    text-shadow:0 2px 20px rgba(0,0,0,0.4);
+  }
+  .subtitle{
+    font-size:12.5px;
+    color:var(--ink-faint);
+    margin-top:6px;
+    letter-spacing:0.4px;
+  }
+
+  /* Glass panel wrapper */
+  .panel{
+    background:var(--glass);
+    border:1px solid var(--glass-border);
+    border-radius:28px;
+    padding:20px;
+    backdrop-filter:blur(24px) saturate(140%);
+    -webkit-backdrop-filter:blur(24px) saturate(140%);
+    box-shadow:
+      0 24px 60px -20px rgba(0,0,0,0.6),
+      0 2px 0 rgba(255,255,255,0.05) inset,
+      0 -1px 0 rgba(0,0,0,0.3) inset;
+  }
+
+  /* Tabs */
+  .tabs-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .tabs{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    overflow-x:auto;
+    flex:1 1 auto;
+    min-width:0;
+    padding:5px;
+    scrollbar-width:none;
+    background:rgba(0,0,0,0.18);
+    border:1px solid rgba(255,255,255,0.06);
+    border-radius:999px;
+    box-shadow:inset 0 2px 6px rgba(0,0,0,0.35);
+  }
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{
+    flex:0 0 auto;
+    padding:9px 18px;
+    font-size:13px;
+    letter-spacing:0.3px;
+    color:var(--ink-soft);
+    background:transparent;
+    border:none;
+    border-radius:999px;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:all .2s ease;
+  }
+  .tab:hover{color:var(--ink);}
+  .tab.active{
+    background:linear-gradient(135deg, #3a8562, #1f4a35);
+    color:#fbf7ea;
+    box-shadow:
+      0 6px 16px -4px rgba(31,74,53,0.7),
+      0 0 0 1px rgba(217,184,114,0.25) inset;
+  }
+  .tab-count{
+    font-size:10.5px;
+    opacity:.8;
+    margin-left:5px;
+  }
+  .tab-add{
+    flex:0 0 auto;
+    width:32px;
+    height:32px;
+    border-radius:999px;
+    border:1px dashed rgba(217,184,114,0.55);
+    background:transparent;
+    color:var(--gold);
+    font-size:16px;
+    line-height:1;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:all .2s ease;
+  }
+  .tab-add:hover{
+    background:rgba(217,184,114,0.15);
+    box-shadow:0 0 0 1px rgba(217,184,114,0.4) inset;
+  }
+
+  /* tab management row */
+  .tab-manage{
+    display:flex;
+    justify-content:flex-end;
+    gap:14px;
+    margin:0 4px 16px;
+  }
+  .tab-manage button{
+    font-size:11px;
+    color:var(--ink-faint);
+    background:none;
+    border:none;
+    cursor:pointer;
+    letter-spacing:0.2px;
+    transition:color .15s ease;
+  }
+  .tab-manage button:hover{color:var(--gold);}
+  .tab-manage button.danger:hover{color:#e08b7d;}
+
+  /* Add task — capsule input */
+  .add-row{
+    display:flex;
+    gap:10px;
+    margin-bottom:18px;
+  }
+  .add-row input{
+    flex:1;
+    padding:14px 20px;
+    font-size:14px;
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:999px;
+    background:rgba(0,0,0,0.2);
+    color:var(--ink);
+    font-family:inherit;
+    box-shadow:inset 0 2px 6px rgba(0,0,0,0.3);
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  .add-row input::placeholder{color:var(--ink-faint);}
+  .add-row input:focus{
+    outline:none;
+    border-color:rgba(217,184,114,0.5);
+    box-shadow:inset 0 2px 6px rgba(0,0,0,0.3), 0 0 0 3px rgba(217,184,114,0.12);
+  }
+  .add-row button{
+    padding:0 24px;
+    background:linear-gradient(135deg, #e3c684, var(--gold-soft));
+    color:#1b1a15;
+    border:none;
+    border-radius:999px;
+    font-size:13px;
+    font-weight:600;
+    letter-spacing:0.4px;
+    cursor:pointer;
+    box-shadow:0 8px 18px -6px rgba(217,184,114,0.55);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .add-row button:hover{
+    transform:translateY(-1px);
+    box-shadow:0 10px 22px -6px rgba(217,184,114,0.7);
+  }
+  .add-row button:active{transform:translateY(0);}
+
+  /* Category cards (home view) */
+  .cards-list{
+    display:flex; flex-direction:column; gap:10px; margin-bottom:14px;
+  }
+  .task-cat-card{
+    display:flex; align-items:center; gap:14px; padding:15px 16px; border-radius:18px;
+    background:var(--glass-strong); border:1px solid var(--glass-border);
+    cursor:pointer; text-align:left; width:100%; font-family:inherit; color:inherit;
+    transition:border-color .18s ease, background .18s ease, transform .15s ease;
+  }
+  .task-cat-card:hover{ border-color:rgba(217,184,114,0.45); transform:translateY(-1px); }
+  .task-cat-icon{
+    flex:0 0 auto; width:38px; height:38px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg, rgba(201,168,76,0.18), rgba(201,168,76,0.04));
+    border:1px solid rgba(201,168,76,0.35);
+  }
+  .task-cat-icon svg{ width:17px; height:17px; stroke:var(--gold); fill:none; stroke-width:1.8; }
+  .task-cat-info{ flex:1 1 auto; min-width:0; }
+  .task-cat-name{ font-size:14.5px; font-weight:600; letter-spacing:0.1px; word-break:break-word; }
+  .task-cat-meta{ font-size:11px; color:var(--ink-faint); margin-top:2px; }
+  .task-cat-chevron{ flex:0 0 auto; }
+  .task-cat-chevron svg{ width:14px; height:14px; stroke:rgba(217,184,114,0.7); fill:none; stroke-width:2; }
+  .add-card-btn{
+    width:100%; padding:13px; font-size:13px; letter-spacing:0.3px; text-align:center;
+    border-radius:16px; cursor:pointer; background:rgba(217,184,114,0.06);
+    border:1px dashed rgba(217,184,114,0.5); color:var(--gold);
+    transition:all .15s ease; font-family:inherit; font-weight:600;
+  }
+  .add-card-btn:hover{ background:rgba(217,184,114,0.14); border-color:rgba(217,184,114,0.8); }
+
+  /* Detail screen (inside a category) */
+  .detail-topbar{
+    display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:16px;
+  }
+  .back-btn{
+    display:flex; align-items:center; gap:6px; background:none; border:none; cursor:pointer;
+    color:var(--gold); font-size:12.5px; letter-spacing:0.2px; font-family:inherit; padding:6px 4px 6px 0;
+  }
+  .back-btn svg{ width:15px; height:15px; stroke:currentColor; fill:none; stroke-width:2; }
+  .detail-title{
+    flex:1 1 auto; min-width:0; text-align:center; font-size:15px; font-weight:600;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 6px;
+  }
+  .detail-actions{ display:flex; gap:4px; flex:0 0 auto; }
+  .detail-actions button{
+    width:30px; height:30px; border-radius:50%; background:none; border:none; cursor:pointer;
+    color:var(--ink-faint); display:flex; align-items:center; justify-content:center; transition:all .15s ease;
+  }
+  .detail-actions button svg{ width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:1.8; }
+  .detail-actions button:hover{ color:var(--gold); background:rgba(217,184,114,0.12); }
+  .detail-actions button.danger:hover{ color:#e08b7d; background:rgba(224,139,125,0.14); }
+
+  .empty-cards{
+    text-align:center; padding:40px 20px; color:var(--ink-faint); font-size:13px;
+    border:1px dashed rgba(255,255,255,0.14); border-radius:20px; background:rgba(255,255,255,0.02);
+  }
+
+  .list{
+    list-style:none;
+    margin:0;
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .task{
+    display:flex;
+    align-items:flex-start;
+    gap:14px;
+    background:var(--glass-strong);
+    padding:15px 16px;
+    border:1px solid var(--glass-border);
+    border-radius:20px;
+    box-shadow:
+      0 10px 26px -14px rgba(0,0,0,0.65),
+      0 1px 0 rgba(255,255,255,0.06) inset;
+    transition:transform .15s ease, box-shadow .15s ease, background .2s ease;
+  }
+  .task:hover{
+    transform:translateY(-1px);
+    box-shadow:
+      0 14px 30px -14px rgba(0,0,0,0.7),
+      0 1px 0 rgba(255,255,255,0.08) inset;
+  }
+  .check{
+    flex:0 0 auto;
+    width:22px;
+    height:22px;
+    margin-top:1px;
+    border:1.5px solid rgba(217,184,114,0.65);
+    border-radius:50%;
+    background:rgba(255,255,255,0.03);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:all .2s ease;
+  }
+  .check:hover{box-shadow:0 0 0 4px rgba(217,184,114,0.12);}
+  .check svg{
+    width:11px;
+    height:11px;
+    opacity:0;
+    transition:opacity .15s ease;
+  }
+  .task.done .check{
+    background:linear-gradient(135deg, #3a8562, #1f4a35);
+    border-color:#3a8562;
+  }
+  .task.done .check svg{opacity:1;}
+  .task-text{
+    flex:1;
+    font-size:14.5px;
+    line-height:1.5;
+    padding-top:2px;
+    word-break:break-word;
+  }
+  .task.done .task-text{
+    color:var(--done);
+    text-decoration:line-through;
+  }
+  .task-time{
+    flex:0 0 auto;
+    font-size:10px;
+    letter-spacing:0.2px;
+    color:var(--ink-faint);
+    white-space:nowrap;
+    padding-top:4px;
+  }
+  .task.done .task-time{color:var(--done);}
+  .task-edit-btn{
+    flex:0 0 auto;
+    width:24px;
+    height:24px;
+    border-radius:50%;
+    background:none;
+    border:none;
+    color:var(--ink-faint);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:all .15s ease;
+  }
+  .task-edit-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.8;}
+  .task-edit-btn:hover{color:var(--gold); background:rgba(217,184,114,0.12);}
+  .task-edit-input{
+    flex:1;
+    font-size:14.5px;
+    line-height:1.5;
+    font-family:inherit;
+    color:var(--ink);
+    background:rgba(0,0,0,0.25);
+    border:1px solid rgba(217,184,114,0.5);
+    border-radius:8px;
+    padding:5px 9px;
+    outline:none;
+  }
+  .task-edit-save, .task-edit-cancel{
+    flex:0 0 auto;
+    width:26px;
+    height:26px;
+    border-radius:50%;
+    border:none;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition:all .15s ease;
+  }
+  .task-edit-save{background:linear-gradient(135deg, #3a8562, #1f4a35); color:#fbf7ea;}
+  .task-edit-save svg{width:12px;height:12px;}
+  .task-edit-save:hover{opacity:0.85;}
+  .task-edit-cancel{background:none; color:var(--ink-faint); font-size:16px;}
+  .task-edit-cancel:hover{color:#e08b7d; background:rgba(224,139,125,0.12);}
+  .task-del{
+    flex:0 0 auto;
+    width:24px;
+    height:24px;
+    border-radius:50%;
+    background:none;
+    border:none;
+    color:var(--ink-faint);
+    font-size:16px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    transition:all .15s ease;
+  }
+  .task:hover .task-del{opacity:1;}
+  .task-del:hover{color:#e08b7d; background:rgba(224,139,125,0.12);}
+
+  .empty{
+    text-align:center;
+    padding:50px 20px;
+    color:var(--ink-faint);
+    font-size:13px;
+    border:1px dashed rgba(255,255,255,0.14);
+    border-radius:20px;
+    background:rgba(255,255,255,0.02);
+  }
+  .empty span{
+    display:block;
+    font-family:'Poppins',sans-serif;
+    font-size:16px;
+    color:var(--gold);
+    margin-bottom:5px;
+  }
+
+  footer{
+    text-align:center;
+    margin-top:24px;
+    font-size:11px;
+    color:var(--ink-faint);
+    letter-spacing:0.3px;
+  }
+  .footer-gold{color:var(--gold);}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+
+  @media (max-width:420px){
+    .panel{border-radius:22px; padding:16px;}
+    h1{font-size:24px;}
+  }
+
+  /* ── Light mode (navy blue) ── */
+  body.light{
+    --ink:#0a1f44; --ink-soft:rgba(10,31,68,0.68); --ink-faint:rgba(10,31,68,0.42);
+    --gold:#1a3a8f; --gold-soft:#15316f; --done:rgba(10,31,68,0.35);
+    --glass:rgba(255,255,255,0.7); --glass-strong:rgba(255,255,255,0.85); --glass-border:rgba(26,58,143,0.15);
+    background:
+      radial-gradient(900px 560px at 15% -8%, rgba(26,58,143,0.06), transparent 60%),
+      radial-gradient(1000px 700px at 100% 10%, rgba(26,58,143,0.08), transparent 55%),
+      linear-gradient(160deg, #f5f7fc 0%, #eef1fa 55%, #f2effa 100%);
+  }
+  body.light .tabs{ background:rgba(255,255,255,0.5); border-color:rgba(26,58,143,0.1); }
+  body.light .add-row input{ background:#fff; border-color:rgba(26,58,143,0.15); }
+  body.light .task-edit-input{ background:#fff; }
+  body.light .empty{ background:rgba(255,255,255,0.4); border-color:rgba(26,58,143,0.18); }
+  body.light .task-cat-card{ background:rgba(255,255,255,0.7); border-color:rgba(26,58,143,0.14); }
+  body.light .task-cat-icon{ background:rgba(26,58,143,0.08); border-color:rgba(26,58,143,0.3); }
+  body.light .task-cat-icon svg{ stroke:#1a3a8f; }
+  body.light .add-card-btn{ background:rgba(26,58,143,0.05); border-color:rgba(26,58,143,0.4); color:#1a3a8f; }
+  body.light .back-btn{ color:#1a3a8f; }
+  body.light .empty-cards{ background:rgba(255,255,255,0.4); border-color:rgba(26,58,143,0.18); }
+</style>
+</head>
+<body>
+<script>try{if(localStorage.getItem('th-theme')==='light')document.body.classList.add('light');}catch(e){}</script>
+<div class="app">
+  <header>
+    <div class="crest">
+      <span class="crest-line"></span>
+      <span class="brand">Truefitt &amp; Hill</span>
+      <span class="crest-line right"></span>
+    </div>
+    <h1>Daily Task Manager</h1>
+    <div class="subtitle" id="subtitle">Loading&hellip;</div>
+  </header>
+
+  <div class="panel" id="cardsPanel">
+    <div class="cards-list" id="cardsList"></div>
+    <button class="add-card-btn" id="addCardBtn">+ Add category</button>
+  </div>
+
+  <div class="panel" id="detailPanel" style="display:none;">
+    <div class="detail-topbar">
+      <button class="back-btn" id="backBtn">
+        <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Categories
+      </button>
+      <div class="detail-title" id="detailTitle"></div>
+      <div class="detail-actions">
+        <button id="renameTabBtn" title="Rename category">
+          <svg viewBox="0 0 24 24"><path d="M12 20h9" stroke-linecap="round"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke-linejoin="round"/></svg>
+        </button>
+        <button id="deleteTabBtn" class="danger" title="Delete category">
+          <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="add-row">
+      <input type="text" id="taskInput" placeholder="Add a task&hellip;" maxlength="140">
+      <button id="addBtn">Add</button>
+    </div>
+
+    <ul class="list" id="list"></ul>
+  </div>
+
+  <footer>Staff Task Manager &nbsp;<span class="footer-gold">&middot;</span>&nbsp; Truefitt &amp; Hill</footer>
+</div>
+
+<script>
+(function(){
+  const DOC_COLLECTION = 'th-staff-tools';
+  const DOC_ID = 'task-manager';
+  const DEFAULT_STATE = {
+    tabs: ['Salon Floor', 'Front Desk', 'Closing'],
+    active: 'Salon Floor',
+    tasks: {
+      'Salon Floor': [],
+      'Front Desk': [],
+      'Closing': []
+    }
+  };
+
+  let state = null;
+  let docRef = null;
+  let editingTaskId = null;
+
+  const cardsPanelEl = document.getElementById('cardsPanel');
+  const detailPanelEl = document.getElementById('detailPanel');
+  const cardsListEl = document.getElementById('cardsList');
+  const detailTitleEl = document.getElementById('detailTitle');
+  const backBtn = document.getElementById('backBtn');
+  const listEl = document.getElementById('list');
+  const inputEl = document.getElementById('taskInput');
+  const addBtn = document.getElementById('addBtn');
+  const subtitleEl = document.getElementById('subtitle');
+  const renameBtn = document.getElementById('renameTabBtn');
+  const deleteBtn = document.getElementById('deleteTabBtn');
+  let currentView = 'cards'; // 'cards' | 'detail' — local-only, not synced
+
+  function uid(){
+    return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  }
+
+  function applyIncoming(data){
+    if(data && Array.isArray(data.tabs) && typeof data.tasks === 'object'){
+      state = data;
+    } else {
+      state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    }
+    if(!state.tasks[state.active]) state.active = state.tabs[0];
+    render();
+  }
+
+  function load(){
+    subtitleEl.textContent = 'Connecting\u2026';
+    window.thAuthReady.then(function(){
+      docRef = window.thDB.collection(DOC_COLLECTION).doc(DOC_ID);
+      docRef.onSnapshot(function(snap){
+        if(snap.metadata.hasPendingWrites) return; // ignore this device's own echo
+        if(snap.exists){
+          applyIncoming(snap.data());
+        } else {
+          state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+          save();
+          render();
+        }
+      }, function(err){
+        console.error('Sync error', err);
+        subtitleEl.textContent = 'Could not connect \u2014 check your internet connection.';
+      });
+    });
+  }
+
+  function save(){
+    if(!docRef || !state) return;
+    const payload = Object.assign({}, state, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    docRef.set(payload).catch(e => console.error('Could not save', e));
+  }
+
+  function activeTasks(){
+    if(!state.tasks[state.active]) state.tasks[state.active] = [];
+    return state.tasks[state.active];
+  }
+
+  function updateSubtitle(){
+    if(currentView === 'detail'){
+      const tasks = activeTasks();
+      const remaining = tasks.filter(t => !t.done).length;
+      if(tasks.length === 0){
+        subtitleEl.textContent = 'Nothing on the list yet';
+      } else if(remaining === 0){
+        subtitleEl.textContent = 'All tasks complete';
+      } else {
+        subtitleEl.textContent = remaining + ' of ' + tasks.length + ' remaining';
+      }
+      return;
+    }
+    const totalRemaining = state.tabs.reduce((sum, name) => sum + (state.tasks[name] || []).filter(t => !t.done).length, 0);
+    if(state.tabs.length === 0){
+      subtitleEl.textContent = 'Add a category to get started';
+    } else if(totalRemaining === 0){
+      subtitleEl.textContent = 'All caught up across ' + state.tabs.length + (state.tabs.length === 1 ? ' category' : ' categories');
+    } else {
+      subtitleEl.textContent = totalRemaining + ' open across ' + state.tabs.length + (state.tabs.length === 1 ? ' category' : ' categories');
+    }
+  }
+
+  function openCategory(name){
+    state.active = name;
+    currentView = 'detail';
+    save();
+    render();
+  }
+
+  function renderCards(){
+    cardsListEl.innerHTML = '';
+    if(state.tabs.length === 0){
+      const empty = document.createElement('div');
+      empty.className = 'empty-cards';
+      cardsListEl.style.display = 'none';
+      empty.innerHTML = '<span>No categories yet</span>Tap "Add category" below to create one';
+      cardsPanelEl.insertBefore(empty, cardsListEl);
+      return;
+    }
+    cardsListEl.style.display = 'flex';
+    const stray = cardsPanelEl.querySelector('.empty-cards');
+    if(stray) stray.remove();
+
+    state.tabs.forEach(name => {
+      const tasks = state.tasks[name] || [];
+      const open = tasks.filter(t => !t.done).length;
+      const card = document.createElement('button');
+      card.className = 'task-cat-card';
+      card.type = 'button';
+
+      const meta = tasks.length === 0 ? 'No tasks yet' : (open === 0 ? 'All complete' : open + ' of ' + tasks.length + ' remaining');
+
+      card.innerHTML =
+        '<div class="task-cat-icon"><svg viewBox="0 0 24 24"><path d="M9 11l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="4" width="18" height="16" rx="3"/></svg></div>' +
+        '<div class="task-cat-info"><div class="task-cat-name"></div><div class="task-cat-meta"></div></div>' +
+        '<div class="task-cat-chevron"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>';
+      card.querySelector('.task-cat-name').textContent = name;
+      card.querySelector('.task-cat-meta').textContent = meta;
+      card.addEventListener('click', () => openCategory(name));
+      cardsListEl.appendChild(card);
+    });
+  }
+
+  function renderList(){
+    listEl.innerHTML = '';
+    const tasks = activeTasks();
+    if(tasks.length === 0){
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.innerHTML = '<span>All clear</span>Add a task above to get started';
+      listEl.appendChild(empty);
+      updateSubtitle();
+      return;
+    }
+    tasks.forEach(task => {
+      const li = document.createElement('li');
+      li.className = 'task' + (task.done ? ' done' : '');
+
+      const check = document.createElement('button');
+      check.className = 'check';
+      check.innerHTML = '<svg viewBox="0 0 16 16" fill="none"><path d="M2 8.5L6 12.5L14 3.5" stroke="#fbf7ea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      check.addEventListener('click', () => {
+        task.done = !task.done;
+        save();
+        render();
+      });
+
+      if(editingTaskId === task.id){
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'task-edit-input';
+        input.maxLength = 140;
+        input.value = task.text;
+
+        const commitEdit = () => {
+          const val = input.value.trim();
+          if(val) task.text = val;
+          editingTaskId = null;
+          save();
+          render();
+        };
+        const cancelEdit = () => {
+          editingTaskId = null;
+          render();
+        };
+
+        input.addEventListener('keydown', (e) => {
+          if(e.key === 'Enter'){ e.preventDefault(); commitEdit(); }
+          else if(e.key === 'Escape'){ e.preventDefault(); cancelEdit(); }
+        });
+
+        const saveEditBtn = document.createElement('button');
+        saveEditBtn.className = 'task-edit-save';
+        saveEditBtn.title = 'Save';
+        saveEditBtn.innerHTML = '<svg viewBox="0 0 16 16" fill="none"><path d="M2 8.5L6 12.5L14 3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        saveEditBtn.addEventListener('click', commitEdit);
+
+        const cancelEditBtn = document.createElement('button');
+        cancelEditBtn.className = 'task-edit-cancel';
+        cancelEditBtn.title = 'Cancel';
+        cancelEditBtn.innerHTML = '&times;';
+        cancelEditBtn.addEventListener('click', cancelEdit);
+
+        li.appendChild(check);
+        li.appendChild(input);
+        li.appendChild(saveEditBtn);
+        li.appendChild(cancelEditBtn);
+        listEl.appendChild(li);
+
+        setTimeout(() => { input.focus(); input.select(); }, 0);
+        return;
+      }
+
+      const text = document.createElement('div');
+      text.className = 'task-text';
+      text.textContent = task.text;
+
+      const time = document.createElement('div');
+      time.className = 'task-time';
+      time.textContent = task.createdAt ? formatTaskTime(task.createdAt) : '';
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'task-edit-btn';
+      editBtn.title = 'Edit task';
+      editBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 20h9" stroke-linecap="round"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke-linejoin="round"/></svg>';
+      editBtn.addEventListener('click', () => {
+        editingTaskId = task.id;
+        render();
+      });
+
+      const del = document.createElement('button');
+      del.className = 'task-del';
+      del.innerHTML = '&times;';
+      del.title = 'Delete task';
+      del.addEventListener('click', () => {
+        const arr = activeTasks();
+        const idx = arr.findIndex(t => t.id === task.id);
+        if(idx > -1) arr.splice(idx, 1);
+        save();
+        render();
+      });
+
+      li.appendChild(check);
+      li.appendChild(text);
+      li.appendChild(time);
+      li.appendChild(editBtn);
+      li.appendChild(del);
+      listEl.appendChild(li);
+    });
+    updateSubtitle();
+  }
+
+  function render(){
+    if(currentView === 'detail' && state.tabs.includes(state.active)){
+      cardsPanelEl.style.display = 'none';
+      detailPanelEl.style.display = 'block';
+      detailTitleEl.textContent = state.active;
+      renderList();
+    } else {
+      currentView = 'cards';
+      detailPanelEl.style.display = 'none';
+      cardsPanelEl.style.display = 'block';
+      renderCards();
+      updateSubtitle();
+    }
+  }
+
+  function formatTaskTime(ts){
+    return new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  }
+
+  function escapeHtml(s){
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  async function addTask(){
+    if(!state){ await THDialog.alert('Still connecting to your account \u2014 please wait a moment.'); return; }
+    const val = inputEl.value.trim();
+    if(!val) return;
+    activeTasks().push({ id: uid(), text: val, done: false, createdAt: Date.now() });
+    inputEl.value = '';
+    save();
+    render();
+    inputEl.focus();
+  }
+
+  async function addTab(){
+    const name = await THDialog.prompt('Name for the new category:', '', { title: 'Add category' });
+    if(!name) return;
+    const trimmed = name.trim();
+    if(!trimmed) return;
+    if(state.tabs.includes(trimmed)){
+      openCategory(trimmed);
+      return;
+    }
+    state.tabs.push(trimmed);
+    state.tasks[trimmed] = [];
+    state.active = trimmed;
+    currentView = 'detail';
+    save();
+    render();
+  }
+
+  async function renameTab(){
+    const current = state.active;
+    const name = await THDialog.prompt('Rename category:', current, { title: 'Rename category' });
+    if(!name) return;
+    const trimmed = name.trim();
+    if(!trimmed || trimmed === current) return;
+    if(state.tabs.includes(trimmed)){
+      await THDialog.alert('A category with that name already exists.');
+      return;
+    }
+    const idx = state.tabs.indexOf(current);
+    state.tabs[idx] = trimmed;
+    state.tasks[trimmed] = state.tasks[current];
+    delete state.tasks[current];
+    state.active = trimmed;
+    save();
+    render();
+  }
+
+  async function deleteTab(){
+    const current = state.active;
+    const ok = await THDialog.confirm('Delete "' + current + '" and all its tasks?', { title: 'Delete category', okText: 'Delete', danger: true });
+    if(!ok) return;
+    state.tabs = state.tabs.filter(t => t !== current);
+    delete state.tasks[current];
+    state.active = state.tabs[0] || null;
+    currentView = 'cards';
+    save();
+    render();
+  }
+
+  addBtn.addEventListener('click', addTask);
+  inputEl.addEventListener('keydown', e => {
+    if(e.key === 'Enter') addTask();
+  });
+  renameBtn.addEventListener('click', renameTab);
+  deleteBtn.addEventListener('click', deleteTab);
+  document.getElementById('addCardBtn').addEventListener('click', addTab);
+  backBtn.addEventListener('click', () => { currentView = 'cards'; render(); });
+
+  load();
+})();
+</script>
+<script src="nav.js"></script>
+<script src="shared.js"></script>
+</body>
+</html>

@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T&H Requirements</title>
+<style>html,body{background:#0d1535;}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Tiro+Bangla&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<script src="catalog.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<style>
+  :root{
+    --ink:#f3efe4;
+    --ink-soft:rgba(243,239,228,0.62);
+    --ink-faint:rgba(243,239,228,0.4);
+    --gold:#d9b872;
+    --gold-soft:#a9884f;
+    --green:#3a8562;
+    --green-deep:#1f4a35;
+    --red:#e08b7d;
+    --amber:#d9a45c;
+    --glass:rgba(255,255,255,0.055);
+    --glass-strong:rgba(255,255,255,0.09);
+    --glass-border:rgba(255,255,255,0.14);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    font-family:'Poppins',sans-serif;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:48px 16px;
+    background:
+      radial-gradient(900px 560px at 15% -8%, rgba(217,184,114,0.16), transparent 60%),
+      radial-gradient(1000px 700px at 100% 10%, rgba(26,58,143,0.35), transparent 55%),
+      radial-gradient(800px 600px at 50% 120%, rgba(26,58,143,0.22), transparent 55%),
+      linear-gradient(160deg, #0d1535 0%, #080d1e 45%, #120828 100%);
+    background-attachment:fixed;
+  }
+
+  .app{ width:100%; max-width:560px; }
+
+  header{ text-align:center; margin-bottom:22px; }
+  .crest{ display:inline-flex; align-items:center; gap:12px; margin-bottom:10px; }
+  .crest-line{ width:30px; height:1px; background:linear-gradient(90deg, transparent, var(--gold)); }
+  .crest-line.right{background:linear-gradient(90deg, var(--gold), transparent);}
+  .brand{
+    font-family:'Poppins',sans-serif;
+    font-size:12px; letter-spacing:4.5px; text-transform:uppercase;
+    color:var(--gold); font-weight:400;
+  }
+  h1{
+    font-family:'Poppins',sans-serif;
+    font-weight:400; font-size:28px; letter-spacing:0.3px; margin:0;
+    color:var(--ink); text-shadow:0 2px 20px rgba(0,0,0,0.4);
+  }
+  .subtitle{ font-size:12.5px; color:var(--ink-faint); margin-top:6px; letter-spacing:0.4px; }
+
+  .panel{
+    background:var(--glass);
+    border:1px solid var(--glass-border);
+    border-radius:28px;
+    padding:20px;
+    backdrop-filter:blur(24px) saturate(140%);
+    -webkit-backdrop-filter:blur(24px) saturate(140%);
+    box-shadow:
+      0 24px 60px -20px rgba(0,0,0,0.6),
+      0 2px 0 rgba(255,255,255,0.05) inset,
+      0 -1px 0 rgba(0,0,0,0.3) inset;
+    margin-bottom:16px;
+  }
+
+  .empty-hint{
+    text-align:center; padding:36px 20px; color:var(--ink-faint); font-size:13px;
+    border:1px dashed rgba(255,255,255,0.14); border-radius:20px; background:rgba(255,255,255,0.02);
+  }
+  .empty-hint span{ display:block; font-family:'Poppins',sans-serif; font-size:16px; color:var(--gold); margin-bottom:5px; }
+
+  .req-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .req-item{
+    background:rgba(0,0,0,0.16); border:1px solid rgba(255,255,255,0.08); border-radius:14px;
+    padding:12px 14px; display:flex; flex-direction:column; gap:0;
+  }
+  .req-item-top{ display:flex; align-items:center; gap:10px; }
+  .req-name{ flex:1 1 auto; min-width:0; font-size:13.5px; line-height:1.4; word-break:break-word; }
+  .req-source{ display:block; font-size:10.5px; color:var(--ink-faint); margin-top:3px; letter-spacing:0.2px; }
+  .req-count{
+    flex:0 0 auto; min-width:34px; height:34px; padding:0 8px; border-radius:12px;
+    background:rgba(224,139,125,0.16); border:1px solid rgba(224,139,125,0.4); color:var(--red);
+    font-size:15px; font-weight:700; display:flex; align-items:center; justify-content:center;
+  }
+  .req-count.manual-only{ background:rgba(217,184,114,0.14); border-color:rgba(217,184,114,0.4); color:var(--gold); }
+  .req-controls{ flex:0 0 auto; display:flex; align-items:center; gap:5px; }
+  .req-btn{
+    width:26px; height:26px; border-radius:50%; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14);
+    color:var(--ink-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px;
+    transition:all .15s ease;
+  }
+  .req-btn:hover{ color:var(--gold); background:rgba(217,184,114,0.14); border-color:rgba(217,184,114,0.4); }
+  .req-btn.danger:hover{ color:var(--red); background:rgba(224,139,125,0.14); border-color:rgba(224,139,125,0.4); }
+
+  .req-ache-row{
+    display:flex; gap:8px; align-items:center; margin-top:10px; padding-top:10px;
+    border-top:1px solid rgba(255,255,255,0.07);
+  }
+  .req-ache-select{
+    flex:1 1 auto; min-width:0; padding:8px 10px; font-size:11.5px; border-radius:10px;
+    background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.14); color:var(--ink);
+    font-family:inherit; outline:none;
+  }
+  .req-ache-select:focus{ border-color:rgba(217,184,114,0.5); }
+  .req-ache-btn{
+    flex:0 0 auto; padding:8px 16px; font-size:11.5px; font-weight:700; letter-spacing:0.2px;
+    border-radius:999px; cursor:pointer; font-family:inherit;
+    background:rgba(58,133,98,0.18); border:1px solid rgba(58,133,98,0.55); color:var(--green);
+    transition:all .15s ease;
+  }
+  .req-ache-btn:hover{ background:rgba(58,133,98,0.3); }
+  .req-ache-btn:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  .add-item-btn{
+    width:100%; padding:10px; font-size:12px; letter-spacing:0.3px; text-align:center;
+    border-radius:12px; cursor:pointer; background:transparent;
+    border:1px dashed rgba(217,184,114,0.4); color:var(--gold);
+    transition:all .15s ease; margin-top:14px; font-family:inherit;
+  }
+  .add-item-btn:hover{ background:rgba(217,184,114,0.08); border-color:rgba(217,184,114,0.7); }
+
+  .print-btn{
+    width:100%; padding:12px; font-size:12.5px; letter-spacing:0.3px; text-align:center;
+    border-radius:14px; cursor:pointer; background:rgba(217,184,114,0.06);
+    border:1px solid rgba(217,184,114,0.3); color:var(--gold); font-weight:600;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    margin-bottom:16px; font-family:inherit;
+    transition:all .15s ease;
+  }
+  .print-btn:hover{ background:rgba(217,184,114,0.14); border-color:rgba(217,184,114,0.55); }
+  .print-btn:disabled{ opacity:0.55; cursor:default; }
+  .print-btn svg{ width:15px; height:15px; stroke:var(--gold); fill:none; stroke-width:1.6; flex:0 0 auto; }
+
+  .picker{
+    margin-top:12px; padding:12px; border-radius:14px;
+    background:rgba(0,0,0,0.22); border:1px solid rgba(217,184,114,0.25);
+  }
+  .picker-row{ display:flex; gap:8px; margin-bottom:8px; }
+  .picker-row input{
+    flex:1; padding:10px 14px; font-size:13px; border:1px solid rgba(255,255,255,0.12);
+    border-radius:999px; background:rgba(0,0,0,0.25); color:var(--ink); font-family:inherit;
+    outline:none;
+  }
+  .picker-row input:focus{ border-color:rgba(217,184,114,0.5); }
+  .picker-row button{
+    flex:0 0 auto; padding:0 14px; font-size:12px; border-radius:999px; cursor:pointer;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); color:var(--ink-soft);
+  }
+  .picker-results{ display:flex; flex-direction:column; gap:5px; max-height:230px; overflow-y:auto; }
+  .picker-result{
+    display:flex; flex-direction:column; padding:9px 12px; border-radius:10px; cursor:pointer;
+    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .picker-result:hover{ background:rgba(217,184,114,0.1); border-color:rgba(217,184,114,0.4); }
+  .picker-result-name{ font-size:13px; }
+  .picker-result-cat{ font-size:10.5px; color:var(--ink-faint); margin-top:1px; }
+  .picker-custom{
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    padding:10px 12px; border-radius:10px; cursor:pointer; margin-top:2px;
+    background:rgba(217,184,114,0.08); border:1px dashed rgba(217,184,114,0.5); color:var(--gold);
+    font-size:12.5px; text-align:center;
+  }
+  .picker-custom:hover{ background:rgba(217,184,114,0.16); }
+  .picker-empty{ text-align:center; font-size:11.5px; color:var(--ink-faint); padding:8px; }
+
+  .legend{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; font-size:10.5px; color:var(--ink-faint); margin-bottom:14px; }
+  .legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .legend i{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .legend i.from-checklist{ background:var(--red); }
+  .legend i.manual{ background:var(--gold); }
+
+  footer{ text-align:center; margin-top:24px; font-size:11px; color:var(--ink-faint); letter-spacing:0.3px; }
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(10px);
+    background:#16204a; border:1px solid rgba(217,184,114,0.4); color:var(--ink);
+    padding:12px 20px; border-radius:999px; font-size:12.5px; z-index:600;
+    opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
+    box-shadow:0 8px 24px rgba(0,0,0,0.4); text-align:center; max-width:90vw;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .footer-gold{color:var(--gold);}
+
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+  @media (max-width:420px){
+    .panel{border-radius:22px; padding:16px;}
+    h1{font-size:24px;}
+  }
+
+  /* ── Light mode (navy blue) ── */
+  body.light{
+    --ink:#0a1f44; --ink-soft:rgba(10,31,68,0.68); --ink-faint:rgba(10,31,68,0.42);
+    --gold:#1a3a8f; --gold-soft:#15316f;
+    --glass:rgba(255,255,255,0.7); --glass-strong:rgba(255,255,255,0.85); --glass-border:rgba(26,58,143,0.15);
+    background:
+      radial-gradient(900px 560px at 15% -8%, rgba(26,58,143,0.06), transparent 60%),
+      radial-gradient(1000px 700px at 100% 10%, rgba(26,58,143,0.08), transparent 55%),
+      linear-gradient(160deg, #f5f7fc 0%, #eef1fa 55%, #f2effa 100%);
+  }
+  body.light .remark-input{ background:rgba(255,255,255,0.6); border-color:rgba(26,58,143,0.15); }
+  body.light .picker-custom{ background:rgba(26,58,143,0.05); }
+  body.light .empty-hint{ background:rgba(255,255,255,0.4); border-color:rgba(26,58,143,0.18); }
+</style>
+</head>
+<body>
+<script>try{if(localStorage.getItem('th-theme')==='light')document.body.classList.add('light');}catch(e){}</script>
+<div class="app">
+  <header>
+    <div class="crest">
+      <span class="crest-line"></span>
+      <span class="brand">Truefitt &amp; Hill</span>
+      <span class="crest-line right"></span>
+    </div>
+    <h1>Requirements</h1>
+    <div class="subtitle" id="subtitle">Loading&hellip;</div>
+  </header>
+
+  <div class="legend">
+    <span><i class="from-checklist"></i> Missing or needs refill (checklist)</span>
+    <span><i class="manual"></i> Added manually</span>
+  </div>
+
+  <div class="panel">
+    <button class="print-btn" id="exportExcelBtn">
+      <svg viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2" stroke-linecap="round" stroke-linejoin="round"/><rect x="6" y="14" width="12" height="7" stroke-linejoin="round"/></svg>
+      Print requirements (Excel)
+    </button>
+    <div id="viewBody"></div>
+  </div>
+
+  <footer>Requirements &nbsp;<span class="footer-gold">&middot;</span>&nbsp; Truefitt &amp; Hill</footer>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script>
+(function(){
+  const CHECKLIST_COLLECTION = 'th-staff-tools';
+  const CHECKLIST_DOC_ID = 'station-checklist';
+  const REQ_DOC_ID = 'requirements';
+
+  let CATALOG = (window.TH_CATALOG || []).slice();
+
+  let checklistState = null;   // raw station-checklist doc (mostly read-only, except Ache writes)
+  let checklistDocRef = null;  // used only to write status flips back from "Ache"
+  let reqState = null;         // { extras: { name: qty } }
+  let reqDocRef = null;
+
+  const toastEl = document.getElementById('toastEl');
+  let toastTimer = null;
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3200);
+  }
+
+  let openPicker = false;
+  let pickerQuery = '';
+
+  const subtitleEl = document.getElementById('subtitle');
+  const viewBodyEl = document.getElementById('viewBody');
+  const exportExcelBtn = document.getElementById('exportExcelBtn');
+
+  function escapeHtml(s){
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function normName(s){ return (s || '').trim(); }
+  function keyOf(s){ return normName(s).toLowerCase(); }
+
+  // ---------- Load: checklist (read-only) + requirements doc ----------
+  function load(){
+    subtitleEl.textContent = 'Connecting\u2026';
+    window.thAuthReady.then(function(){
+      const db = window.thDB;
+
+      db.collection(CHECKLIST_COLLECTION).doc(CHECKLIST_DOC_ID).onSnapshot(function(snap){
+        checklistState = snap.exists ? snap.data() : null;
+        render();
+      }, function(err){
+        console.error('Checklist sync error', err);
+      });
+      checklistDocRef = db.collection(CHECKLIST_COLLECTION).doc(CHECKLIST_DOC_ID);
+
+      reqDocRef = db.collection(CHECKLIST_COLLECTION).doc(REQ_DOC_ID);
+      reqDocRef.onSnapshot(function(snap){
+        if(snap.metadata.hasPendingWrites) return;
+        reqState = snap.exists ? snap.data() : { extras: {} };
+        if(!reqState.extras) reqState.extras = {};
+        render();
+      }, function(err){
+        console.error('Requirements sync error', err);
+        subtitleEl.textContent = 'Could not connect \u2014 check your internet connection.';
+      });
+
+      db.collection(CHECKLIST_COLLECTION).doc('products').onSnapshot(function(snap){
+        if(snap.exists && Array.isArray(snap.data().items)){
+          CATALOG.length = 0;
+          snap.data().items.forEach(p => CATALOG.push([p.name, p.category || '']));
+          if(openPicker) render();
+        }
+      }, function(err){ console.error('Product catalog sync error', err); });
+    });
+  }
+
+  function saveReq(){
+    if(!reqDocRef || !reqState) return;
+    const payload = Object.assign({}, reqState, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    reqDocRef.set(payload).catch(e => console.error('Could not save requirements', e));
+  }
+
+  // ---------- Derive auto counts from checklist (status === 'no') ----------
+  function stationTitleMap(){
+    const map = {};
+    if(checklistState && Array.isArray(checklistState.stations)){
+      checklistState.stations.forEach(st => { map[st.id] = st.title || st.id; });
+    }
+    return map;
+  }
+
+  function autoCounts(){
+    const counts = {};      // key -> { name, count, byStation: { stationName: qty }, occurrences: [...] }
+    if(!checklistState || !checklistState.data) return counts;
+    const stNames = stationTitleMap();
+    Object.keys(checklistState.data).forEach(stationId => {
+      const stationName = stNames[stationId] || stationId;
+      const cats = checklistState.data[stationId] || [];
+      cats.forEach(cat => {
+        (cat.items || []).forEach(item => {
+          if(item.status === 'no' || item.status === 'refill'){
+            const k = keyOf(item.name);
+            if(!k) return;
+            if(!counts[k]) counts[k] = { name: normName(item.name), count: 0, byStation: {}, occurrences: [] };
+            counts[k].count++;
+            counts[k].byStation[stationName] = (counts[k].byStation[stationName] || 0) + 1;
+            counts[k].occurrences.push({
+              stationId: stationId,
+              stationName: stationName,
+              categoryId: cat.id,
+              categoryTitle: cat.title,
+              itemId: item.id,
+              status: item.status
+            });
+          }
+        });
+      });
+    });
+    return counts;
+  }
+
+  function combinedList(){
+    const auto = autoCounts();
+    const extras = (reqState && reqState.extras) || {};
+    const keys = new Set([...Object.keys(auto), ...Object.keys(extras).map(keyOf)]);
+    const list = [];
+    keys.forEach(k => {
+      const autoEntry = auto[k];
+      const extraName = Object.keys(extras).find(n => keyOf(n) === k);
+      const manualQty = extraName ? (extras[extraName] || 0) : 0;
+      const name = (autoEntry && autoEntry.name) || extraName || k;
+      const autoCount = autoEntry ? autoEntry.count : 0;
+      const total = autoCount + manualQty;
+      if(total <= 0) return;
+      list.push({ key: k, name, autoCount, manualQty, total, storedExtraName: extraName || name, byStation: (autoEntry && autoEntry.byStation) || {}, occurrences: (autoEntry && autoEntry.occurrences) || [] });
+    });
+    list.sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
+    return list;
+  }
+
+  // ---------- Ache: flip one checklist item to "there" from Requirements ----------
+  async function markAche(occ, productLabel){
+    if(!checklistState || !checklistDocRef){
+      await THDialog.alert('Still connecting \u2014 please wait a moment.');
+      return;
+    }
+    const clone = JSON.parse(JSON.stringify(checklistState));
+    const cats = clone.data && clone.data[occ.stationId];
+    const cat = cats && cats.find(c => c.id === occ.categoryId);
+    const item = cat && (cat.items || []).find(i => i.id === occ.itemId);
+    if(!item){
+      await THDialog.alert('Couldn\u2019t find that item \u2014 it may have just changed on the checklist. Refresh and try again.');
+      return;
+    }
+    item.status = 'yes';
+    const payload = Object.assign({}, clone, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    try{
+      await checklistDocRef.set(payload);
+      showToast('Marked \u201c' + productLabel + '\u201d as there on ' + occ.stationName + '.');
+    }catch(e){
+      console.error('Could not update checklist', e);
+      await THDialog.alert('Could not save that change. Check your connection and try again.');
+    }
+  }
+
+  function setManualQty(storedName, key, qty){
+    if(!reqState) return;
+    if(!reqState.extras) reqState.extras = {};
+    // Remove any pre-existing key variant (case-insensitive) before writing the canonical one
+    Object.keys(reqState.extras).forEach(n => { if(keyOf(n) === key) delete reqState.extras[n]; });
+    if(qty > 0){
+      reqState.extras[storedName] = qty;
+    }
+    saveReq();
+    render();
+  }
+
+  // ---------- Render ----------
+  function render(){
+    if(!checklistState && !reqState){
+      subtitleEl.textContent = 'Connecting\u2026';
+      viewBodyEl.innerHTML = '';
+      return;
+    }
+
+    const list = combinedList();
+    subtitleEl.textContent = list.length === 0
+      ? 'Nothing needed right now'
+      : list.length + ' item' + (list.length === 1 ? '' : 's') + ' to bring';
+
+    viewBodyEl.innerHTML = '';
+
+    if(list.length === 0 && !openPicker){
+      const hint = document.createElement('div');
+      hint.className = 'empty-hint';
+      hint.innerHTML = '<span>All clear</span>Items marked Missing or Refill in the checklist will show up here automatically.';
+      viewBodyEl.appendChild(hint);
+    } else if(list.length > 0){
+      const ul = document.createElement('ul');
+      ul.className = 'req-list';
+      list.forEach(entry => {
+        const li = document.createElement('li');
+        li.className = 'req-item';
+
+        const top = document.createElement('div');
+        top.className = 'req-item-top';
+
+        const nameWrap = document.createElement('div');
+        nameWrap.className = 'req-name';
+        const missingCount = entry.occurrences.filter(o => o.status === 'no').length;
+        const refillCount = entry.occurrences.filter(o => o.status === 'refill').length;
+        const sourceBits = [];
+        if(missingCount) sourceBits.push(missingCount + ' missing');
+        if(refillCount) sourceBits.push(refillCount + ' refill');
+        if(entry.manualQty) sourceBits.push(entry.manualQty + ' added manually');
+        nameWrap.innerHTML = escapeHtml(entry.name) + '<span class="req-source">' + escapeHtml(sourceBits.join(' + ')) + '</span>';
+
+        const count = document.createElement('div');
+        count.className = 'req-count' + (entry.autoCount ? '' : ' manual-only');
+        count.textContent = entry.total;
+
+        const controls = document.createElement('div');
+        controls.className = 'req-controls';
+
+        const minus = document.createElement('button');
+        minus.className = 'req-btn';
+        minus.textContent = '\u2212';
+        minus.title = 'Decrease manually-added amount';
+        minus.disabled = entry.manualQty <= 0;
+        minus.style.opacity = entry.manualQty <= 0 ? '0.35' : '1';
+        minus.addEventListener('click', () => setManualQty(entry.storedExtraName, entry.key, entry.manualQty - 1));
+
+        const plus = document.createElement('button');
+        plus.className = 'req-btn';
+        plus.textContent = '+';
+        plus.title = 'Increase manually-added amount';
+        plus.addEventListener('click', () => setManualQty(entry.storedExtraName, entry.key, entry.manualQty + 1));
+
+        controls.appendChild(minus);
+        controls.appendChild(plus);
+
+        if(entry.manualQty > 0){
+          const clear = document.createElement('button');
+          clear.className = 'req-btn danger';
+          clear.innerHTML = '&times;';
+          clear.title = 'Remove manually-added amount';
+          clear.addEventListener('click', () => setManualQty(entry.storedExtraName, entry.key, 0));
+          controls.appendChild(clear);
+        }
+
+        top.appendChild(nameWrap);
+        top.appendChild(count);
+        top.appendChild(controls);
+        li.appendChild(top);
+
+        if(entry.occurrences.length > 0){
+          const acheRow = document.createElement('div');
+          acheRow.className = 'req-ache-row';
+
+          const select = document.createElement('select');
+          select.className = 'req-ache-select';
+          entry.occurrences.forEach((occ, idx) => {
+            const opt = document.createElement('option');
+            opt.value = idx;
+            const statusLabel = occ.status === 'refill' ? 'Refill' : 'Missing';
+            opt.textContent = occ.stationName + ' \u2014 ' + occ.categoryTitle + ' (' + statusLabel + ')';
+            select.appendChild(opt);
+          });
+
+          const acheBtn = document.createElement('button');
+          acheBtn.className = 'req-ache-btn';
+          acheBtn.textContent = 'Ache';
+          acheBtn.title = 'Mark this item as present on that station\u2019s checklist';
+          acheBtn.addEventListener('click', () => {
+            const occ = entry.occurrences[Number(select.value)];
+            if(occ) markAche(occ, entry.name);
+          });
+
+          acheRow.appendChild(select);
+          acheRow.appendChild(acheBtn);
+          li.appendChild(acheRow);
+        }
+
+        ul.appendChild(li);
+      });
+      viewBodyEl.appendChild(ul);
+    }
+
+    if(openPicker){
+      viewBodyEl.appendChild(renderPicker());
+    } else {
+      const addBtn = document.createElement('button');
+      addBtn.className = 'add-item-btn';
+      addBtn.textContent = '+ Add product';
+      addBtn.addEventListener('click', () => { openPicker = true; pickerQuery = ''; render(); });
+      viewBodyEl.appendChild(addBtn);
+    }
+  }
+
+  function renderPicker(){
+    const wrap = document.createElement('div');
+    wrap.className = 'picker';
+
+    const row = document.createElement('div');
+    row.className = 'picker-row';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Search products\u2026';
+    input.value = pickerQuery;
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.addEventListener('click', () => { openPicker = false; pickerQuery = ''; render(); });
+    row.appendChild(input);
+    row.appendChild(closeBtn);
+    wrap.appendChild(row);
+
+    const resultsWrap = document.createElement('div');
+    resultsWrap.className = 'picker-results';
+    wrap.appendChild(resultsWrap);
+
+    function addProduct(name){
+      const k = keyOf(name);
+      const extras = (reqState && reqState.extras) || {};
+      const existingName = Object.keys(extras).find(n => keyOf(n) === k);
+      const currentQty = existingName ? (extras[existingName] || 0) : 0;
+      setManualQty(existingName || normName(name), k, currentQty + 1);
+      openPicker = false;
+      pickerQuery = '';
+    }
+
+    function renderResults(){
+      resultsWrap.innerHTML = '';
+      const q = pickerQuery.trim().toLowerCase();
+      if(!q){
+        const hint = document.createElement('div');
+        hint.className = 'picker-empty';
+        hint.textContent = 'Start typing to search the product catalog.';
+        resultsWrap.appendChild(hint);
+        return;
+      }
+      const matches = CATALOG.filter(([name]) => name.toLowerCase().includes(q)).slice(0, 8);
+      if(matches.length === 0){
+        const empty = document.createElement('div');
+        empty.className = 'picker-empty';
+        empty.textContent = 'No matches in the catalog.';
+        resultsWrap.appendChild(empty);
+      } else {
+        matches.forEach(([name, cat]) => {
+          const r = document.createElement('div');
+          r.className = 'picker-result';
+          r.innerHTML = '<div class="picker-result-name">' + escapeHtml(name) + '</div><div class="picker-result-cat">' + escapeHtml(cat) + '</div>';
+          r.addEventListener('click', () => addProduct(name));
+          resultsWrap.appendChild(r);
+        });
+      }
+      const custom = document.createElement('div');
+      custom.className = 'picker-custom';
+      custom.textContent = 'Add \u201c' + pickerQuery.trim() + '\u201d as a new item';
+      custom.addEventListener('click', () => addProduct(pickerQuery.trim()));
+      resultsWrap.appendChild(custom);
+    }
+
+    input.addEventListener('input', () => {
+      pickerQuery = input.value;
+      renderResults();
+    });
+    setTimeout(() => input.focus(), 0);
+
+    renderResults();
+    return wrap;
+  }
+
+  // ---------- Excel export (with real borders, via ExcelJS) ----------
+  const THIN = { style: 'thin', color: { argb: 'FFB8B8B8' } };
+  const CELL_BORDER = { top: THIN, left: THIN, bottom: THIN, right: THIN };
+
+  function borderRow(row, colCount){
+    for(let c = 1; c <= colCount; c++){
+      row.getCell(c).border = CELL_BORDER;
+    }
+  }
+
+  async function exportRequirementsExcel(){
+    const list = combinedList();
+    if(list.length === 0){
+      await THDialog.alert('Nothing to bring right now \u2014 the list is empty.');
+      return;
+    }
+    if(typeof ExcelJS === 'undefined'){
+      await THDialog.alert('Excel export library failed to load. Check your internet connection and try again.');
+      return;
+    }
+
+    exportExcelBtn.disabled = true;
+    const originalLabel = exportExcelBtn.innerHTML;
+    exportExcelBtn.innerHTML = 'Preparing file\u2026';
+
+    try{
+      const wb = new ExcelJS.Workbook();
+      wb.creator = 'Truefitt & Hill';
+      const ws = wb.addWorksheet('Requirements');
+      ws.columns = [
+        { width: 40 }, { width: 14 }, { width: 32 }, { width: 30 }
+      ];
+
+      ws.mergeCells(1, 1, 1, 4);
+      const titleCell = ws.getCell(1, 1);
+      const stamp = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+      titleCell.value = 'Requirements \u2014 To Bring (' + stamp + ')';
+      titleCell.font = { bold: true, size: 14, color: { argb: 'FF1F4A35' } };
+      titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
+      ws.getRow(1).height = 26;
+
+      ws.addRow([]);
+
+      const headerRow = ws.addRow(['Item', 'Qty Needed', 'Station', 'Remarks']);
+      headerRow.eachCell({ includeEmpty: true }, (cell) => {
+        cell.font = { bold: true };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEFE6D0' } };
+      });
+      borderRow(headerRow, 4);
+
+      list.forEach(entry => {
+        const stationLines = Object.keys(entry.byStation)
+          .sort((a, b) => entry.byStation[b] - entry.byStation[a])
+          .map(name => name + ': ' + entry.byStation[name]);
+        if(entry.manualQty) stationLines.push('Manually added: ' + entry.manualQty);
+        const stationText = stationLines.join('\n');
+
+        const row = ws.addRow([entry.name, entry.total, stationText, '']);
+        const stationCell = row.getCell(3);
+        stationCell.alignment = { wrapText: true, vertical: 'top' };
+        row.getCell(1).alignment = { wrapText: true, vertical: 'top' };
+        row.height = Math.max(18, stationLines.length * 15);
+        borderRow(row, 4);
+      });
+
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const fileStamp = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = 'th-requirements-' + fileStamp + '.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }catch(err){
+      console.error('Excel export failed', err);
+      await THDialog.alert('Could not generate the Excel file. Please try again.');
+    }finally{
+      exportExcelBtn.disabled = false;
+      exportExcelBtn.innerHTML = originalLabel;
+    }
+  }
+
+  exportExcelBtn.addEventListener('click', exportRequirementsExcel);
+
+  load();
+})();
+</script>
+<script src="nav.js"></script>
+<script src="shared.js"></script>
+</body>
+</html>

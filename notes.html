@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T&H Notes</title>
+<style>html,body{background:#0d1535;}</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600&family=Tiro+Bangla&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    font-family:'Poppins',sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:40px 16px 40px;
+    color:#eef2ff;
+    background:
+      radial-gradient(900px 560px at 12% -6%, rgba(201,168,76,0.16), transparent 60%),
+      radial-gradient(1000px 700px at 105% 8%, rgba(26,58,143,0.35), transparent 55%),
+      radial-gradient(800px 620px at 50% 118%, rgba(201,168,76,0.10), transparent 55%),
+      linear-gradient(160deg, #0d1535 0%, #080d1e 55%, #120828 100%);
+    background-attachment:fixed;
+  }
+
+  .app{ width:100%; max-width:640px; position:relative; }
+
+  /* ── shared header ── */
+  header{ text-align:center; margin-bottom:22px; position:relative; }
+  .crest-row{ display:inline-flex; align-items:center; gap:14px; margin-bottom:12px; }
+  .crest{
+    width:46px;height:46px;border-radius:50%;
+    border:1px solid rgba(201,168,76,0.5);
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(201,168,76,0.06);
+    box-shadow:0 0 18px rgba(201,168,76,0.14);
+  }
+  .crest svg{width:22px;height:22px;stroke:#c9a84c;fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round;}
+  .brand{ font-size:11px; letter-spacing:5px; text-transform:uppercase; color:#c9a84c; font-weight:500; }
+  h1{
+    font-family:'Playfair Display',serif; font-weight:600; font-size:30px;
+    letter-spacing:0.3px; text-shadow:0 2px 24px rgba(0,0,0,0.5); margin-top:4px;
+  }
+  .subtitle{ font-size:12.5px; color:rgba(238,242,255,0.5); margin-top:8px; letter-spacing:0.4px; }
+
+  .add-btn{
+    position:absolute; top:0; right:0;
+    width:44px; height:44px; border-radius:50%; border:none; cursor:pointer;
+    background:linear-gradient(135deg,#e3c684,#a9884f);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 10px 26px -8px rgba(201,168,76,0.55);
+    transition:transform .15s ease, opacity .15s ease;
+  }
+  .add-btn:hover{ transform:scale(1.06); }
+  .add-btn svg{ width:20px; height:20px; stroke:#1b1a15; fill:none; stroke-width:2.2; stroke-linecap:round; }
+
+  /* ── list screen ── */
+  #listScreen[hidden]{ display:none; }
+  .notes-list{ display:flex; flex-direction:column; gap:10px; }
+  .note-row{
+    display:flex; align-items:center; gap:14px; padding:15px 18px; border-radius:18px;
+    background:rgba(255,255,255,0.045); border:1px solid rgba(201,168,76,0.16);
+    cursor:pointer; text-align:left; width:100%;
+    transition:border-color .18s ease, background .18s ease;
+  }
+  .note-row:hover, .note-row:active{ border-color:rgba(201,168,76,0.4); background:rgba(201,168,76,0.06); }
+  .serial{
+    flex:0 0 auto; width:24px;
+    font-family:'Playfair Display',serif; font-weight:600; font-size:13px;
+    color:rgba(201,168,76,0.75);
+  }
+  .row-text{ flex:1 1 auto; min-width:0; }
+  .row-title{ font-size:14.5px; font-weight:600; letter-spacing:0.1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .row-title.untitled{ color:rgba(238,242,255,0.4); font-weight:400; font-style:italic; }
+  .row-preview{
+    font-size:11.5px; color:rgba(238,242,255,0.45); margin-top:2px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .row-chevron{ flex:0 0 auto; }
+  .row-chevron svg{ width:14px; height:14px; stroke:rgba(201,168,76,0.6); fill:none; stroke-width:2; }
+
+  .empty-state{
+    text-align:center; font-size:12.5px; color:rgba(238,242,255,0.4);
+    padding:40px 16px; border:1px dashed rgba(201,168,76,0.25); border-radius:18px;
+  }
+  .empty-state[hidden]{ display:none; }
+
+  /* ── detail screen ── */
+  #detailScreen[hidden]{ display:none; }
+  .detail-topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:18px; }
+  .icon-btn{
+    width:38px; height:38px; border-radius:50%; border:none; background:rgba(255,255,255,0.06);
+    cursor:pointer; display:flex; align-items:center; justify-content:center; color:rgba(238,242,255,0.75);
+    transition:all .15s ease;
+  }
+  .icon-btn:hover{ background:rgba(255,255,255,0.1); color:#eef2ff; }
+  .icon-btn.delete-icon:hover{ color:#e08b7d; background:rgba(224,139,125,0.12); }
+  .icon-btn svg{ width:17px; height:17px; stroke:currentColor; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+
+  .detail-panel{
+    padding:22px 20px;
+    border-radius:24px;
+    background:rgba(255,255,255,0.055);
+    border:1px solid rgba(201,168,76,0.22);
+    backdrop-filter:blur(22px) saturate(140%);
+    -webkit-backdrop-filter:blur(22px) saturate(140%);
+    box-shadow:0 24px 60px -22px rgba(0,0,0,0.65), 0 1px 0 rgba(255,255,255,0.06) inset;
+  }
+  #detailTitleInput{
+    width:100%; border:none; outline:none; background:transparent;
+    color:#eef2ff; font-family:'Playfair Display',serif; font-weight:600; font-size:20px;
+    padding-bottom:12px; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  #detailTitleInput::placeholder{ color:rgba(238,242,255,0.32); font-family:'Poppins',sans-serif; font-weight:400; }
+  #detailBodyInput{
+    width:100%; min-height:44vh; resize:vertical; border:none; outline:none; background:transparent;
+    color:#eef2ff; font-family:'Poppins',sans-serif; font-size:14px; line-height:1.7;
+  }
+  #detailBodyInput::placeholder{ color:rgba(238,242,255,0.32); }
+  .detail-hint{ text-align:center; font-size:10.5px; color:rgba(238,242,255,0.35); margin-top:14px; letter-spacing:0.2px; }
+
+  footer{ text-align:center; margin-top:28px; font-size:11px; color:rgba(238,242,255,0.35); letter-spacing:0.3px; }
+  footer span{ color:#c9a84c; }
+
+  @media (max-width:420px){
+    h1{font-size:24px;}
+    .add-btn{width:40px;height:40px;}
+  }
+  body.light{ background:linear-gradient(160deg, #f5f7fc 0%, #eef1fa 55%, #f2effa 100%); color:#0a1f44; }
+  body.light .note-row{ background:rgba(255,255,255,0.6); border-color:rgba(26,58,143,0.15); }
+  body.light .detail-panel{ background:rgba(255,255,255,0.7); border-color:rgba(26,58,143,0.18); }
+  body.light #detailTitleInput, body.light #detailBodyInput{ color:#0a1f44; }
+  body.light .icon-btn{ background:rgba(26,58,143,0.06); color:rgba(10,31,68,0.75); }
+  body.light .crest{ border-color:#1a3a8f; background:rgba(26,58,143,0.06); }
+  body.light .crest svg{ stroke:#1a3a8f; }
+  body.light .brand, body.light footer span, body.light .serial{ color:#1a3a8f; }
+  body.light .subtitle, body.light .row-preview, body.light footer, body.light .empty-state{ color:rgba(10,31,68,0.45); }
+  body.light .add-btn{ box-shadow:0 10px 26px -8px rgba(26,58,143,0.4); }
+</style>
+</head>
+<body>
+<script>try{if(localStorage.getItem('th-theme')==='light')document.body.classList.add('light');}catch(e){}</script>
+<div class="app">
+
+  <header>
+    <div class="crest-row">
+      <div class="crest">
+        <svg viewBox="0 0 24 24"><path d="M5 4h9l5 5v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M14 4v5h5"/><path d="M8 13h8M8 17h5"/></svg>
+      </div>
+    </div>
+    <div class="brand">Truefitt &amp; Hill</div>
+    <h1>Notes</h1>
+    <div class="subtitle" id="subtitle">Loading&hellip;</div>
+    <button type="button" class="add-btn" id="addBtn" title="New note">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+  </header>
+
+  <!-- ── LIST SCREEN ── -->
+  <div id="listScreen">
+    <div class="notes-list" id="notesList"></div>
+    <div class="empty-state" id="emptyState" hidden>No notes yet &mdash; tap + to add one.</div>
+  </div>
+
+  <!-- ── DETAIL SCREEN ── -->
+  <div id="detailScreen" hidden>
+    <div class="detail-topbar">
+      <button type="button" class="icon-btn" id="backBtn" title="Back">
+        <svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>
+      </button>
+      <button type="button" class="icon-btn delete-icon" id="deleteBtn" title="Delete" hidden>
+        <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 12a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-12"/></svg>
+      </button>
+    </div>
+    <div class="detail-panel">
+      <input type="text" id="detailTitleInput" placeholder="Title">
+      <textarea id="detailBodyInput" placeholder="Write something&hellip;"></textarea>
+    </div>
+    <div class="detail-hint">Changes save automatically when you go back</div>
+  </div>
+
+  <footer>Notes &nbsp;<span>&middot;</span>&nbsp; Truefitt &amp; Hill</footer>
+</div>
+
+<script>
+(function(){
+  var NOTES_COLLECTION = 'th-staff-tools-notes';
+  var OLD_COLLECTION = 'th-staff-tools';
+  var OLD_DOC_ID = 'notes';
+
+  var subtitleEl = document.getElementById('subtitle');
+  var addBtn = document.getElementById('addBtn');
+  var listScreen = document.getElementById('listScreen');
+  var notesList = document.getElementById('notesList');
+  var emptyState = document.getElementById('emptyState');
+
+  var detailScreen = document.getElementById('detailScreen');
+  var backBtn = document.getElementById('backBtn');
+  var deleteBtn = document.getElementById('deleteBtn');
+  var detailTitleInput = document.getElementById('detailTitleInput');
+  var detailBodyInput = document.getElementById('detailBodyInput');
+
+  var notesCol = null;
+  var latestNotes = [];
+  var currentNoteId = null;   // null while creating a brand-new note
+  var inDetail = false;
+
+  function fmtCount(n){
+    return n + (n === 1 ? ' note' : ' notes');
+  }
+
+  // ── list screen ──
+  function noteRowEl(note, index){
+    var row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'note-row';
+
+    var serial = document.createElement('div');
+    serial.className = 'serial';
+    serial.textContent = (index < 9 ? '0' : '') + (index + 1);
+
+    var textCol = document.createElement('div');
+    textCol.className = 'row-text';
+
+    var titleEl = document.createElement('div');
+    var hasTitle = !!(note.title && note.title.trim());
+    titleEl.className = 'row-title' + (hasTitle ? '' : ' untitled');
+    titleEl.textContent = hasTitle ? note.title : (note.text ? note.text.slice(0, 40) : '(untitled)');
+
+    textCol.appendChild(titleEl);
+
+    if(hasTitle && note.text){
+      var preview = document.createElement('div');
+      preview.className = 'row-preview';
+      preview.textContent = note.text;
+      textCol.appendChild(preview);
+    }
+
+    var chevron = document.createElement('div');
+    chevron.className = 'row-chevron';
+    chevron.innerHTML = '<svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>';
+
+    row.appendChild(serial);
+    row.appendChild(textCol);
+    row.appendChild(chevron);
+
+    row.addEventListener('click', function(){ openDetail(note); });
+
+    return row;
+  }
+
+  function renderList(notes){
+    if(inDetail) return; // don't touch the list DOM while a note is open
+    notesList.innerHTML = '';
+    notes.forEach(function(n, i){ notesList.appendChild(noteRowEl(n, i)); });
+    emptyState.hidden = notes.length > 0;
+    subtitleEl.textContent = notes.length ? fmtCount(notes.length) : 'A simple place to jot things down';
+  }
+
+  // ── detail screen ──
+  function openDetail(note){
+    currentNoteId = note ? note.id : null;
+    detailTitleInput.value = note ? (note.title || '') : '';
+    detailBodyInput.value = note ? (note.text || '') : '';
+    deleteBtn.hidden = !note;
+    inDetail = true;
+    listScreen.hidden = true;
+    detailScreen.hidden = false;
+    addBtn.hidden = true;
+    setTimeout(function(){ detailTitleInput.focus(); }, 0);
+  }
+
+  function closeDetail(){
+    inDetail = false;
+    detailScreen.hidden = true;
+    listScreen.hidden = false;
+    addBtn.hidden = false;
+    renderList(latestNotes);
+  }
+
+  function commitAndClose(){
+    if(!notesCol){ closeDetail(); return; }
+    var title = detailTitleInput.value.trim();
+    var body = detailBodyInput.value.trim();
+
+    if(!title && !body){
+      if(currentNoteId){
+        notesCol.doc(currentNoteId).delete().catch(function(e){ console.error(e); });
+      }
+      currentNoteId = null;
+      closeDetail();
+      return;
+    }
+
+    if(currentNoteId){
+      notesCol.doc(currentNoteId).update({ title: title, text: body, updatedAt: Date.now() })
+        .catch(function(e){ console.error(e); });
+    } else {
+      var now = Date.now();
+      notesCol.add({ title: title, text: body, createdAt: now, updatedAt: now })
+        .catch(function(e){ console.error('Could not save note', e); alert('Could not save that note \u2014 check your connection.'); });
+    }
+    currentNoteId = null;
+    closeDetail();
+  }
+
+  addBtn.addEventListener('click', function(){ openDetail(null); });
+  backBtn.addEventListener('click', commitAndClose);
+  deleteBtn.addEventListener('click', function(){
+    if(!currentNoteId) return;
+    if(!confirm('Delete this note?')) return;
+    notesCol.doc(currentNoteId).delete().catch(function(e){ console.error(e); });
+    currentNoteId = null;
+    closeDetail();
+  });
+
+  // ── data ──
+  function load(){
+    subtitleEl.textContent = 'Connecting\u2026';
+    window.thAuthReady.then(function(){
+      notesCol = window.thDB.collection(NOTES_COLLECTION);
+
+      notesCol.limit(1).get().then(function(snap){
+        if(!snap.empty) return;
+        return window.thDB.collection(OLD_COLLECTION).doc(OLD_DOC_ID).get().then(function(oldSnap){
+          if(!oldSnap.exists) return;
+          var data = oldSnap.data();
+          if(data && typeof data.text === 'string' && data.text.trim()){
+            var now = Date.now();
+            return notesCol.add({ title: '', text: data.text.trim(), createdAt: now, updatedAt: now });
+          }
+        });
+      }).catch(function(e){
+        console.error('Migration check failed', e);
+      }).then(function(){
+        notesCol.orderBy('createdAt', 'asc').onSnapshot(function(qsnap){
+          var notes = [];
+          qsnap.forEach(function(doc){
+            var d = doc.data();
+            notes.push({ id: doc.id, title: d.title || '', text: d.text || '', createdAt: d.createdAt || 0 });
+          });
+          latestNotes = notes;
+          renderList(notes);
+        }, function(err){
+          console.error('Sync error', err);
+          subtitleEl.textContent = 'Could not connect \u2014 check your internet connection.';
+        });
+      });
+    });
+  }
+
+  load();
+})();
+</script>
+<script src="nav.js"></script>
+<script src="shared.js"></script>
+</body>
+</html>

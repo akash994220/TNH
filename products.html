@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>T&H Products</title>
+<style>html,body{background:#0d1535;}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Tiro+Bangla&display=swap" rel="stylesheet">
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="auth.js"></script>
+<style>
+  :root{
+    --ink:#f3efe4;
+    --ink-soft:rgba(243,239,228,0.62);
+    --ink-faint:rgba(243,239,228,0.4);
+    --gold:#d9b872;
+    --gold-soft:#a9884f;
+    --green:#3a8562;
+    --green-deep:#1f4a35;
+    --red:#e08b7d;
+    --amber:#d9a45c;
+    --glass:rgba(255,255,255,0.055);
+    --glass-strong:rgba(255,255,255,0.09);
+    --glass-border:rgba(255,255,255,0.14);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    font-family:'Poppins',sans-serif;
+    color:var(--ink);
+    display:flex;
+    justify-content:center;
+    padding:48px 16px;
+    background:
+      radial-gradient(900px 560px at 15% -8%, rgba(217,184,114,0.16), transparent 60%),
+      radial-gradient(1000px 700px at 100% 10%, rgba(26,58,143,0.35), transparent 55%),
+      radial-gradient(800px 600px at 50% 120%, rgba(26,58,143,0.22), transparent 55%),
+      linear-gradient(160deg, #0d1535 0%, #080d1e 45%, #120828 100%);
+    background-attachment:fixed;
+  }
+
+  .app{ width:100%; max-width:560px; }
+
+  header{ text-align:center; margin-bottom:22px; }
+  .crest{ display:inline-flex; align-items:center; gap:12px; margin-bottom:10px; }
+  .crest-line{ width:30px; height:1px; background:linear-gradient(90deg, transparent, var(--gold)); }
+  .crest-line.right{background:linear-gradient(90deg, var(--gold), transparent);}
+  .brand{
+    font-family:'Poppins',sans-serif;
+    font-size:12px; letter-spacing:4.5px; text-transform:uppercase;
+    color:var(--gold); font-weight:400;
+  }
+  h1{
+    font-family:'Poppins',sans-serif;
+    font-weight:400; font-size:28px; letter-spacing:0.3px; margin:0;
+    color:var(--ink); text-shadow:0 2px 20px rgba(0,0,0,0.4);
+  }
+  .subtitle{ font-size:12.5px; color:var(--ink-faint); margin-top:6px; letter-spacing:0.4px; }
+
+  .panel{
+    background:var(--glass);
+    border:1px solid var(--glass-border);
+    border-radius:28px;
+    padding:20px;
+    backdrop-filter:blur(24px) saturate(140%);
+    -webkit-backdrop-filter:blur(24px) saturate(140%);
+    box-shadow:
+      0 24px 60px -20px rgba(0,0,0,0.6),
+      0 2px 0 rgba(255,255,255,0.05) inset,
+      0 -1px 0 rgba(0,0,0,0.3) inset;
+    margin-bottom:16px;
+  }
+
+  .add-cat-btn{
+    width:100%; padding:11px; font-size:12.5px; letter-spacing:0.3px; text-align:center;
+    border-radius:14px; cursor:pointer; background:rgba(217,184,114,0.08);
+    border:1px dashed rgba(217,184,114,0.5); color:var(--gold);
+    transition:all .15s ease; margin-bottom:14px; font-family:inherit; font-weight:600;
+  }
+  .add-cat-btn:hover{ background:rgba(217,184,114,0.16); border-color:rgba(217,184,114,0.8); }
+
+  .cat-add-product{
+    flex:0 0 auto; width:26px; height:26px; border-radius:50%;
+    background:rgba(217,184,114,0.1); border:1px dashed rgba(217,184,114,0.55);
+    color:var(--gold); font-size:15px; line-height:1; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:all .15s ease;
+  }
+  .cat-add-product:hover{ background:rgba(217,184,114,0.2); }
+
+  .search-row{ margin-bottom:14px; }
+  .search-row input{
+    width:100%; padding:12px 16px; font-size:13.5px; border:1px solid rgba(255,255,255,0.12);
+    border-radius:999px; background:rgba(0,0,0,0.22); color:var(--ink); font-family:inherit;
+    outline:none;
+  }
+  .search-row input:focus{ border-color:rgba(217,184,114,0.5); }
+  .search-row input::placeholder{ color:var(--ink-faint); }
+
+  .empty-hint{
+    text-align:center; padding:36px 20px; color:var(--ink-faint); font-size:13px;
+    border:1px dashed rgba(255,255,255,0.14); border-radius:20px; background:rgba(255,255,255,0.02);
+  }
+  .empty-hint span{ display:block; font-family:'Poppins',sans-serif; font-size:16px; color:var(--gold); margin-bottom:5px; }
+
+  .categories{ display:flex; flex-direction:column; gap:14px; }
+  .category{
+    background:var(--glass-strong); border:1px solid var(--glass-border); border-radius:20px;
+    padding:16px;
+  }
+  .cat-header{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    cursor:pointer; user-select:none;
+  }
+  .category.expanded .cat-header{ margin-bottom:12px; }
+  .cat-header-left{ display:flex; align-items:center; gap:10px; min-width:0; flex:1; }
+  .cat-chevron{
+    flex:0 0 auto; width:18px; height:18px; color:var(--gold); opacity:0.75;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .2s ease;
+  }
+  .cat-chevron svg{ width:12px; height:12px; }
+  .category.expanded .cat-chevron{ transform:rotate(90deg); }
+  .cat-title{
+    font-family:'Poppins',sans-serif; font-size:16px; color:var(--gold);
+    letter-spacing:0.2px; word-break:break-word;
+  }
+  .cat-count{ font-size:10.5px; color:var(--ink-faint); margin-top:3px; }
+
+  .items{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
+  .item{
+    background:rgba(0,0,0,0.16); border:1px solid rgba(255,255,255,0.08); border-radius:14px;
+    padding:11px 12px; display:flex; align-items:center; gap:10px;
+  }
+  .item-info{ flex:1 1 auto; min-width:0; }
+  .item-name{ font-size:13.5px; line-height:1.4; word-break:break-word; }
+  .item-price{ font-size:11.5px; color:var(--gold); margin-top:2px; }
+  .item-cat-label{ font-size:10px; color:var(--ink-faint); margin-top:1px; }
+  .item-actions{ flex:0 0 auto; display:flex; gap:5px; }
+  .item-action{
+    width:26px; height:26px; border-radius:50%; background:rgba(0,0,0,0.22); border:none;
+    color:var(--ink-faint); cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:all .15s ease;
+  }
+  .item-action:hover{ color:var(--gold); background:rgba(217,184,114,0.14); }
+  .item-action.danger:hover{ color:var(--red); background:rgba(224,139,125,0.14); }
+  .item-action svg{ width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:1.8; }
+
+  .add-item-btn{
+    width:100%; padding:10px; font-size:12px; letter-spacing:0.3px; text-align:center;
+    border-radius:12px; cursor:pointer; background:transparent;
+    border:1px dashed rgba(217,184,114,0.4); color:var(--gold);
+    transition:all .15s ease; margin-top:14px; font-family:inherit;
+  }
+  .add-item-btn:hover{ background:rgba(217,184,114,0.08); border-color:rgba(217,184,114,0.7); }
+
+  .form{
+    margin-top:12px; padding:14px; border-radius:14px;
+    background:rgba(0,0,0,0.22); border:1px solid rgba(217,184,114,0.25);
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .form input, .form select{
+    width:100%; padding:10px 14px; font-size:13px; border:1px solid rgba(255,255,255,0.12);
+    border-radius:12px; background:rgba(0,0,0,0.25); color:var(--ink); font-family:inherit;
+    outline:none;
+  }
+  .form input:focus, .form select:focus{ border-color:rgba(217,184,114,0.5); }
+  .form input::placeholder{ color:var(--ink-faint); }
+  .form-label{ font-size:10.5px; color:var(--ink-faint); letter-spacing:0.3px; margin-bottom:-3px; }
+  .form-row{ display:flex; gap:8px; }
+  .form-row button{
+    flex:1; padding:10px; font-size:12.5px; letter-spacing:0.2px; border-radius:12px; cursor:pointer;
+    font-family:inherit; transition:all .15s ease;
+  }
+  .form-save{ background:linear-gradient(135deg,#e3c684,#a9884f); border:none; color:#1b1a15; font-weight:600; }
+  .form-save:hover{ opacity:0.9; }
+  .form-cancel{ background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.14); color:var(--ink-soft); }
+  .form-cancel:hover{ color:var(--gold); border-color:rgba(217,184,114,0.4); }
+
+  .concurrency-banner{
+    display:none; font-size:11px; line-height:1.5; color:var(--amber);
+    background:rgba(217,164,92,0.1); border:1px solid rgba(217,164,92,0.35);
+    border-radius:10px; padding:8px 10px; margin-top:2px;
+  }
+  .concurrency-banner.show{ display:block; }
+
+  footer{ text-align:center; margin-top:24px; font-size:11px; color:var(--ink-faint); letter-spacing:0.3px; }
+  .footer-gold{color:var(--gold);}
+
+  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
+  @media (max-width:420px){
+    .panel{border-radius:22px; padding:16px;}
+    h1{font-size:24px;}
+  }
+
+  /* ── Light mode (navy blue) ── */
+  body.light{
+    --ink:#0a1f44; --ink-soft:rgba(10,31,68,0.68); --ink-faint:rgba(10,31,68,0.42);
+    --gold:#1a3a8f; --gold-soft:#15316f;
+    --glass:rgba(255,255,255,0.7); --glass-strong:rgba(255,255,255,0.85); --glass-border:rgba(26,58,143,0.15);
+    background:
+      radial-gradient(900px 560px at 15% -8%, rgba(26,58,143,0.06), transparent 60%),
+      radial-gradient(1000px 700px at 100% 10%, rgba(26,58,143,0.08), transparent 55%),
+      linear-gradient(160deg, #f5f7fc 0%, #eef1fa 55%, #f2effa 100%);
+  }
+  body.light .search-row input,
+  body.light .form input, body.light .form select{ background:#fff; border-color:rgba(26,58,143,0.18); }
+  body.light .item{ background:rgba(255,255,255,0.6); border-color:rgba(26,58,143,0.12); }
+  body.light .item-action{ background:rgba(26,58,143,0.06); }
+  body.light .empty-hint{ background:rgba(255,255,255,0.4); border-color:rgba(26,58,143,0.18); }
+  body.light .form{ background:rgba(255,255,255,0.6); border-color:rgba(26,58,143,0.2); }
+  body.light .form-cancel{ background:rgba(26,58,143,0.05); border-color:rgba(26,58,143,0.16); }
+</style>
+</head>
+<body>
+<script>try{if(localStorage.getItem('th-theme')==='light')document.body.classList.add('light');}catch(e){}</script>
+<div class="app">
+  <header>
+    <div class="crest">
+      <span class="crest-line"></span>
+      <span class="brand">Truefitt &amp; Hill</span>
+      <span class="crest-line right"></span>
+    </div>
+    <h1>Products</h1>
+    <div class="subtitle" id="subtitle">Loading&hellip;</div>
+  </header>
+
+  <div class="panel">
+    <div class="search-row">
+      <input type="text" id="searchInput" placeholder="Search products or category&hellip;">
+    </div>
+    <button class="add-cat-btn" id="addCatBtn">+ Add category</button>
+    <div id="viewBody"></div>
+  </div>
+
+  <footer>Products &nbsp;<span class="footer-gold">&middot;</span>&nbsp; Truefitt &amp; Hill</footer>
+</div>
+
+<script>
+(function(){
+  const DOC_COLLECTION = 'th-staff-tools';
+  const DOC_ID = 'products';
+
+  // Seed data used only the very first time this Firestore doc is created.
+  // After that, this Products page (and everything reading it) is the single
+  // source of truth — the station checklist picker, the requirements search,
+  // and the service calculator's product catalog all read the same live doc.
+  const SEED_PRODUCTS = [{"id": "p1", "name": "1805 (Triple) Soap", "category": "Truefitt & Hill Signature", "price": 6250}, {"id": "p2", "name": "1805 Aftershave Balm", "category": "Truefitt & Hill Signature", "price": 9300}, {"id": "p3", "name": "1805 Bath And Shower Gel 100mL", "category": "Truefitt & Hill Signature", "price": 3000}, {"id": "p4", "name": "1805 Bath And Shower Gel 200mL", "category": "Truefitt & Hill Signature", "price": 4000}, {"id": "p5", "name": "1805 Cologne", "category": "Truefitt & Hill Signature", "price": 9000}, {"id": "p6", "name": "1805 Cologne Tester", "category": "Truefitt & Hill Signature", "price": 2748}, {"id": "p7", "name": "1805 Cologne Travel Size 50mL", "category": "Truefitt & Hill Signature", "price": 7300}, {"id": "p8", "name": "1805 Luxury Shaving Soap In Wooden Bowl", "category": "Truefitt & Hill Signature", "price": 4255}, {"id": "p9", "name": "1805 Luxury Shaving Soap Refill", "category": "Truefitt & Hill Signature", "price": 2850}, {"id": "pa", "name": "1805 Shave Cream Bowl", "category": "Truefitt & Hill Signature", "price": 6400}, {"id": "pb", "name": "1805 Shave Cream Bowl C", "category": "Truefitt & Hill Signature", "price": 2700}, {"id": "pc", "name": "1805 Shave Cream Tube", "category": "Truefitt & Hill Signature", "price": 1955}, {"id": "pd", "name": "1L Pre Shave Oil", "category": "Truefitt & Hill Signature", "price": 8100}, {"id": "pe", "name": "Advanced Treatment Serum", "category": "Truefitt & Hill Signature", "price": 4945}, {"id": "pf", "name": "Almond Shave Cream Bowl", "category": "Truefitt & Hill Signature", "price": 2600}, {"id": "pg", "name": "Almond Shave Cream Tube", "category": "Truefitt & Hill Signature", "price": 1700}, {"id": "ph", "name": "Apsley Bath And Shower Cream 100mL", "category": "Truefitt & Hill Signature", "price": 3300}, {"id": "pi", "name": "Apsley Cologne", "category": "Truefitt & Hill Signature", "price": 10700}, {"id": "pj", "name": "Apsley Cologne Travel Size 50mL", "category": "Truefitt & Hill Signature", "price": 8600}, {"id": "pk", "name": "Apsley Shave Cream Bowl", "category": "Truefitt & Hill Signature", "price": 6400}, {"id": "pl", "name": "Athenian Water", "category": "Truefitt & Hill Signature", "price": 5750}, {"id": "pm", "name": "Authentic No 10 Post Shave Cologne Balm", "category": "Truefitt & Hill Signature", "price": 3105}, {"id": "pn", "name": "Authentic No. 10 Cleansing Scrub", "category": "Truefitt & Hill Signature", "price": 4000}, {"id": "po", "name": "Authentic No. 10 Finest Shaving Cream", "category": "Truefitt & Hill Signature", "price": 6400}, {"id": "pp", "name": "Authentic No. 10 Sensitive Moisturiser", "category": "Truefitt & Hill Signature", "price": 2300}, {"id": "pq", "name": "Authentic No. 10 Sensitive Shaving Gel", "category": "Truefitt & Hill Signature", "price": 1800}, {"id": "pr", "name": "Bathroom Gift Set 1805- Bowl, B&S Gel, Soap", "category": "Truefitt & Hill Signature", "price": 8750}, {"id": "ps", "name": "Bathroom Gift Set Grafton- Bowl, B&S Gel, Soap", "category": "Truefitt & Hill Signature", "price": 7000}, {"id": "pt", "name": "Bathroom Gift Set Limes- Bowl, B&S Gel, Soap", "category": "Truefitt & Hill Signature", "price": 7000}, {"id": "pu", "name": "Bathroom Gift Set Sandalwood-Bowl, B&S Gel, Soap", "category": "Truefitt & Hill Signature", "price": 7000}, {"id": "pv", "name": "Bathroom Gift Set Trafalgar- Bowl, B&S Gel, Soap", "category": "Truefitt & Hill Signature", "price": 7000}, {"id": "pw", "name": "Beard Balm", "category": "Truefitt & Hill Signature", "price": 3100}, {"id": "px", "name": "C.A.R Lotion", "category": "Truefitt & Hill Signature", "price": 5750}, {"id": "py", "name": "C.A.R lotion C", "category": "Truefitt & Hill Signature", "price": 3500}, {"id": "pz", "name": "C.A.R. Cream (Without Oil)", "category": "Truefitt & Hill Signature", "price": 5750}, {"id": "p10", "name": "Classic Aftershave Balm", "category": "Truefitt & Hill Signature", "price": 5000}, {"id": "p11", "name": "Classic Gift Set 1805- Bowl, Balm, Cologne", "category": "Truefitt & Hill Signature", "price": 13300}, {"id": "p12", "name": "Classic Gift Set Grafton- Bowl, Balm, Cologne", "category": "Truefitt & Hill Signature", "price": 13300}, {"id": "p13", "name": "Classic Gift Set Limes- Bowl, Balm, Cologne", "category": "Truefitt & Hill Signature", "price": 13300}, {"id": "p14", "name": "Classic Gift Set Sandalwood- Bowl, Balm, Cologne", "category": "Truefitt & Hill Signature", "price": 13300}, {"id": "p15", "name": "Classic Gift Set Trafalgar- Bowl, Balm, Cologne", "category": "Truefitt & Hill Signature", "price": 13300}, {"id": "p16", "name": "Clubman Cologne", "category": "Truefitt & Hill Signature", "price": 9000}, {"id": "p17", "name": "Clubman Cologne Tester", "category": "Truefitt & Hill Signature", "price": 2748}, {"id": "p18", "name": "Cone Razor Stand Chrome", "category": "Truefitt & Hill Signature", "price": 14600}, {"id": "p19", "name": "Curved Razor And Brush Stand Chrome", "category": "Truefitt & Hill Signature", "price": 15750}, {"id": "p1a", "name": "Double Wire Brush Stand Chrome", "category": "Truefitt & Hill Signature", "price": 12500}, {"id": "p1b", "name": "Double Wire Razor Stand Chrome", "category": "Truefitt & Hill Signature", "price": 12500}, {"id": "p1c", "name": "Double Wire Razor and Brush Stand Chrome", "category": "Truefitt & Hill Signature", "price": 12500}, {"id": "p1d", "name": "EAU MARINE LOTION", "category": "Truefitt & Hill Signature", "price": 8337}, {"id": "p1e", "name": "Eau de Portugal", "category": "Truefitt & Hill Signature", "price": 4600}, {"id": "p1f", "name": "Edwardiansetfauxblueopal-Badgerbrush-Machiiirazor-Stand", "category": "Truefitt & Hill Signature", "price": 30300}, {"id": "p1g", "name": "Edwardiansetfauxebony-Badgerbrush-Machiiirazor-Stand", "category": "Truefitt & Hill Signature", "price": 30300}, {"id": "p1h", "name": "Edwardiansetfauxhorn-Badgerbrush-Machiiirazor-Stand", "category": "Truefitt & Hill Signature", "price": 30300}, {"id": "p1i", "name": "Edwardiansetfauxivory-Badgerbrush-Machiiirazor-Stand", "category": "Truefitt & Hill Signature", "price": 30300}, {"id": "p1j", "name": "Faux Blue Opal/Super Badger/ Shave Brush/Wellington", "category": "Truefitt & Hill Signature", "price": 16500}, {"id": "p1k", "name": "Faux Ebony - EDWARDIAN SET MACHIII RAZOR BRUSH STAND", "category": "Truefitt & Hill Signature", "price": 30300}, {"id": "p1l", "name": "Faux Ebony / Super Badger/ Shave Brush/ Regency", "category": "Truefitt & Hill Signature", "price": 17300}, {"id": "p1m", "name": "Faux Ebony- Fusion- Razor- Chrome- Wellington", "category": "Truefitt & Hill Signature", "price": 20700}, {"id": "p1n", "name": "Faux Ebony- Machiii- Razor- Chrome-Regency", "category": "Truefitt & Hill Signature", "price": 13600}, {"id": "p1o", "name": "Faux Horn / Super Badger/ Shave Brush/ Regency", "category": "Truefitt & Hill Signature", "price": 17300}, {"id": "p1p", "name": "Faux Horn- Fusion- Razor- Chrome- Wellington", "category": "Truefitt & Hill Signature", "price": 20700}, {"id": "p1q", "name": "Faux Horn-Machiii- Razor- Chrome- Wellington", "category": "Truefitt & Hill Signature", "price": 14400}, {"id": "p1r", "name": "Faux Ivory / Mach III / Razor / Chrome / Regency", "category": "Truefitt & Hill Signature", "price": 13600}, {"id": "p1s", "name": "Faux Ivory / Super Badger/ Shave Brush/ Regency", "category": "Truefitt & Hill Signature", "price": 17300}, {"id": "p1t", "name": "Faux Ivory- Fusion- Razor- Chrome- Wellington", "category": "Truefitt & Hill Signature", "price": 20700}, {"id": "p1u", "name": "Faux Ivory- Machiii- Razor- Chrome- Wellington", "category": "Truefitt & Hill Signature", "price": 11500}, {"id": "p1v", "name": "Faux Porcelain- Fusion- Razor- Chrome- Wellington", "category": "Truefitt & Hill Signature", "price": 20700}, {"id": "p1w", "name": "Faux Porcelain- Machiii- Razor- Chrome- Wellington", "category": "Truefitt & Hill Signature", "price": 11500}, {"id": "p1x", "name": "Freshman Cologne", "category": "Truefitt & Hill Signature", "price": 9000}, {"id": "p1y", "name": "Freshman Cologne Tester", "category": "Truefitt & Hill Signature", "price": 2748}, {"id": "p1z", "name": "Freshman Friction", "category": "Truefitt & Hill Signature", "price": 4650}, {"id": "p20", "name": "Grafton (Triple) Soap", "category": "Truefitt & Hill Signature", "price": 6250}, {"id": "p21", "name": "Grafton Aftershave Balm", "category": "Truefitt & Hill Signature", "price": 9300}, {"id": "p22", "name": "Grafton Aftershave Balm Tester", "category": "Truefitt & Hill Signature", "price": 2459}, {"id": "p23", "name": "Grafton Bath And Shower Gel 100mL", "category": "Truefitt & Hill Signature", "price": 3000}, {"id": "p24", "name": "Grafton Bath And Shower Gel 200mL", "category": "Truefitt & Hill Signature", "price": 4000}, {"id": "p25", "name": "Grafton Cologne", "category": "Truefitt & Hill Signature", "price": 9000}, {"id": "p26", "name": "Grafton Cologne Tester", "category": "Truefitt & Hill Signature", "price": 6700}, {"id": "p27", "name": "Grafton Shave Cream Bowl", "category": "Truefitt & Hill Signature", "price": 6400}, {"id": "p28", "name": "Grafton Shave Cream Tube", "category": "Truefitt & Hill Signature", "price": 1955}, {"id": "p29", "name": "Green Shaving Mug", "category": "Truefitt & Hill Signature", "price": 11800}, {"id": "p2a", "name": "Hair Management Clay 100mL", "category": "Truefitt & Hill Signature", "price": 6200}, {"id": "p2b", "name": "Hair Management Coconut Shampoo 100mL", "category": "Truefitt & Hill Signature", "price": 3250}, {"id": "p2c", "name": "Hair Management Coconut Shampoo 1L", "category": "Truefitt & Hill Signature", "price": 3200}, {"id": "p2d", "name": "Hair Management Coconut Shampoo 365 ML", "category": "Truefitt & Hill Signature", "price": 6000}, {"id": "p2e", "name": "Hair Management Frequent Use Shampoo 100mL", "category": "Truefitt & Hill Signature", "price": 2600}, {"id": "p2f", "name": "Hair Management Frequent Use Shampoo 1L", "category": "Truefitt & Hill Signature", "price": 2600}, {"id": "p2g", "name": "Hair Management Frequent Use Shampoo 365mL", "category": "Truefitt & Hill Signature", "price": 6000}, {"id": "p2h", "name": "Hair Management Moisturizing Vitamin E Shampoo 100mL", "category": "Truefitt & Hill Signature", "price": 2600}, {"id": "p2i", "name": "Hair Management Moisturizing Vitamin E Shampoo 1L", "category": "Truefitt & Hill Signature", "price": 2600}, {"id": "p2j", "name": "Hair Management Moisturizing Vitamin E Shampoo 365mL", "category": "Truefitt & Hill Signature", "price": 6000}, {"id": "p2k", "name": "Hair Management Pomade 100mL", "category": "Truefitt & Hill Signature", "price": 6200}, {"id": "p2l", "name": "Hair Management Replenishing Conditioner 1L", "category": "Truefitt & Hill Signature", "price": 2598}, {"id": "p2m", "name": "Hair Management Replenishing Conditioner 365mL", "category": "Truefitt & Hill Signature", "price": 7000}, {"id": "p2n", "name": "Hair Management Styling Wax", "category": "Truefitt & Hill Signature", "price": 2700}, {"id": "p2o", "name": "Hair Management Thickening Shampoo 100mL", "category": "Truefitt & Hill Signature", "price": 2750}, {"id": "p2p", "name": "Hair Management Thickening Shampoo 365 ML", "category": "Truefitt & Hill Signature", "price": 6000}, {"id": "p2q", "name": "Hair Spa - Repairing Cream Bath - 500 ml", "category": "Truefitt & Hill Signature", "price": 950}, {"id": "p2r", "name": "Intensive Skin Renewal Booster", "category": "Truefitt & Hill Signature", "price": 4600}, {"id": "p2s", "name": "Lavender Shave Cream Bowl", "category": "Truefitt & Hill Signature", "price": 2700}, {"id": "p2t", "name": "Limnol", "category": "Truefitt & Hill Signature", "price": 5750}, {"id": "p2u", "name": "Luxury Edition 1805- Bowl, Balm, Razor, Brush", "category": "Truefitt & Hill Signature", "price": 25200}, {"id": "p2v", "name": "Luxury Edition Grafton- Bowl, Balm, Razor, Brush", "category": "Truefitt & Hill Signature", "price": 25200}, {"id": "p2w", "name": "Luxury Edition Limes- Bowl, Balm, Razor, Brush", "category": "Truefitt & Hill Signature", "price": 25200}, {"id": "p2x", "name": "Luxury Edition Trafalgar- Bowl, Balm, Razor, Brush", "category": "Truefitt & Hill Signature", "price": 25200}, {"id": "p2y", "name": "Luxury Shaving Soap In Wooden Bowl", "category": "Truefitt & Hill Signature", "price": 4140}, {"id": "p2z", "name": "Luxury Shaving Soap Refill", "category": "Truefitt & Hill Signature", "price": 2850}, {"id": "p30", "name": "Luxury Shaving Soap Refill (For Mug)", "category": "Truefitt & Hill Signature", "price": 1000}, {"id": "p31", "name": "Monte Carlo With Oil", "category": "Truefitt & Hill Signature", "price": 5150}, {"id": "p32", "name": "Moustache Wax", "category": "Truefitt & Hill Signature", "price": 3500}, {"id": "p33", "name": "NEW Sandalwood Shave Cream Tube", "category": "Truefitt & Hill Signature", "price": 1955}, {"id": "p34", "name": "Natural Conditioning Beard Oil", "category": "Truefitt & Hill Signature", "price": 5700}, {"id": "p35", "name": "Navy Shaving Mug", "category": "Truefitt & Hill Signature", "price": 8300}, {"id": "p36", "name": "Razor And Brush Stand With Bowl Chrome", "category": "Truefitt & Hill Signature", "price": 15600}, {"id": "p37", "name": "Red Shaving Mug", "category": "Truefitt & Hill Signature", "price": 11850}, {"id": "p38", "name": "SMOOTHING CREAMBATH-500 ML", "category": "Truefitt & Hill Signature", "price": 943}, {"id": "p39", "name": "Sandalwood (Triple) Soap", "category": "Truefitt & Hill Signature", "price": 6250}, {"id": "p3a", "name": "Sandalwood Aftershave Balm", "category": "Truefitt & Hill Signature", "price": 9300}, {"id": "p3b", "name": "Sandalwood Aftershave Balm Tester", "category": "Truefitt & Hill Signature", "price": 2459}, {"id": "p3c", "name": "Sandalwood Bath And Shower Gel 100mL", "category": "Truefitt & Hill Signature", "price": 3000}, {"id": "p3d", "name": "Sandalwood Bath And Shower Gel 200mL", "category": "Truefitt & Hill Signature", "price": 4000}, {"id": "p3e", "name": "Sandalwood Bath And Shower Gel C", "category": "Truefitt & Hill Signature", "price": 2400}, {"id": "p3f", "name": "Sandalwood Cologne", "category": "Truefitt & Hill Signature", "price": 9000}, {"id": "p3g", "name": "Sandalwood Cologne Tester", "category": "Truefitt & Hill Signature", "price": 2748}, {"id": "p3h", "name": "Sandalwood Cologne Travel Size 50mL", "category": "Truefitt & Hill Signature", "price": 7300}, {"id": "p3i", "name": "Sandalwood Luxury Shaving Soap In Wooden Bowl", "category": "Truefitt & Hill Signature", "price": 5300}, {"id": "p3j", "name": "Sandalwood Luxury Shaving Soap In Wooden Bowl C", "category": "Truefitt & Hill Signature", "price": 5300}, {"id": "p3k", "name": "Sandalwood Luxury Shaving Soap Refill", "category": "Truefitt & Hill Signature", "price": 2850}, {"id": "p3l", "name": "Sandalwood Shave Cream Bowl", "category": "Truefitt & Hill Signature", "price": 3500}, {"id": "p3m", "name": "Shave Brush- Black Color", "category": "Truefitt & Hill Signature", "price": 16500}, {"id": "p3n", "name": "Shave Brush- Brown Color", "category": "Truefitt & Hill Signature", "price": 16500}, {"id": "p3o", "name": "Shave Brush- Cream Color", "category": "Truefitt & Hill Signature", "price": 16500}, {"id": "p3p", "name": "Shave Brush- White Color", "category": "Truefitt & Hill Signature", "price": 13455}, {"id": "p3q", "name": "Skin Control Advanced Facial Moisturizer 100mL", "category": "Truefitt & Hill Signature", "price": 7700}, {"id": "p3r", "name": "Skin Control Daily Cleanser C", "category": "Truefitt & Hill Signature", "price": 2600}, {"id": "p3s", "name": "Skin Control Facial Cleanser 100mL", "category": "Truefitt & Hill Signature", "price": 4400}, {"id": "p3t", "name": "Skin Control Invigorating Bath & Shower Scrub", "category": "Truefitt & Hill Signature", "price": 2500}, {"id": "p3u", "name": "Slate Shaving Mug", "category": "Truefitt & Hill Signature", "price": 11800}, {"id": "p3v", "name": "Spanish Leather Cologne", "category": "Truefitt & Hill Signature", "price": 9000}, {"id": "p3w", "name": "Spanish Leather Cologne Tester", "category": "Truefitt & Hill Signature", "price": 2748}, {"id": "p3x", "name": "Tonic Lotion Special", "category": "Truefitt & Hill Signature", "price": 5300}, {"id": "p3y", "name": "Trafalgar (Triple) Soap", "category": "Truefitt & Hill Signature", "price": 6250}, {"id": "p3z", "name": "Trafalgar Aftershave Balm", "category": "Truefitt & Hill Signature", "price": 6750}, {"id": "p40", "name": "Trafalgar Aftershave Balm Tester", "category": "Truefitt & Hill Signature", "price": 2459}, {"id": "p41", "name": "Trafalgar Bath And Shower Gel", "category": "Truefitt & Hill Signature", "price": 4000}, {"id": "p42", "name": "Trafalgar Cologne", "category": "Truefitt & Hill Signature", "price": 9000}, {"id": "p43", "name": "Trafalgar Cologne Tester", "category": "Truefitt & Hill Signature", "price": 2748}, {"id": "p44", "name": "Trafalgar Shave Cream Bowl", "category": "Truefitt & Hill Signature", "price": 6400}, {"id": "p45", "name": "Trafalgar Shave Cream Bowl C", "category": "Truefitt & Hill Signature", "price": 3500}, {"id": "p46", "name": "Trafalgar Shave Cream Tube", "category": "Truefitt & Hill Signature", "price": 1955}, {"id": "p47", "name": "Tube Traveler Shave Brush- Faux Ebony- Super Badger", "category": "Truefitt & Hill Signature", "price": 9300}, {"id": "p48", "name": "Tube Traveler Shave Brush- Faux Ivory- Super Badger", "category": "Truefitt & Hill Signature", "price": 9300}, {"id": "p49", "name": "Turnback Travel Shave Brush- Faux Ebony- Super Badger", "category": "Truefitt & Hill Signature", "price": 12600}, {"id": "p4a", "name": "Turnback Travel Shave Brush- Faux Ivory- Super Badger", "category": "Truefitt & Hill Signature", "price": 12600}, {"id": "p4b", "name": "Ultimate Comfort Aftershave Balm (Travel Tube)", "category": "Truefitt & Hill Signature", "price": 4750}, {"id": "p4c", "name": "Ultimate Comfort Gift Set- Cream, Balm, Oil & Scrub", "category": "Truefitt & Hill Signature", "price": 13900}, {"id": "p4d", "name": "Ultimate Comfort Pre-Shave Oil", "category": "Truefitt & Hill Signature", "price": 5600}, {"id": "p4e", "name": "Ultimate Comfort Shaving Cream", "category": "Truefitt & Hill Signature", "price": 6400}, {"id": "p4f", "name": "Ultimate Comfort Shaving Cream (Travel Tube)", "category": "Truefitt & Hill Signature", "price": 4200}, {"id": "p4g", "name": "Ultimate Comfort Shaving Cream Bowl C", "category": "Truefitt & Hill Signature", "price": 3500}, {"id": "p4h", "name": "West Indian Limes (Triple)", "category": "Truefitt & Hill Signature", "price": 6250}, {"id": "p4i", "name": "West Indian Limes Aftershave Balm", "category": "Truefitt & Hill Signature", "price": 6750}, {"id": "p4j", "name": "West Indian Limes Bath And Shower Gel", "category": "Truefitt & Hill Signature", "price": 4000}, {"id": "p4k", "name": "West Indian Limes Cologne", "category": "Truefitt & Hill Signature", "price": 9000}, {"id": "p4l", "name": "West Indian Limes Cologne Tester", "category": "Truefitt & Hill Signature", "price": 2748}, {"id": "p4m", "name": "West Indian Limes Shave Cream Bowl", "category": "Truefitt & Hill Signature", "price": 6400}, {"id": "p4n", "name": "West Indian Limes Shave Cream Bowl C", "category": "Truefitt & Hill Signature", "price": 2700}, {"id": "p4o", "name": "West Indian Limes Shave Cream Tube", "category": "Truefitt & Hill Signature", "price": 1955}, {"id": "p4p", "name": "Inoa 2 Parts Shade 1", "category": "Hair Care", "price": 732}, {"id": "p4q", "name": "Inoa 2 Parts Shade 2", "category": "Hair Care", "price": 732}, {"id": "p4r", "name": "Inoa 2 Parts Shade 3", "category": "Hair Care", "price": 766}, {"id": "p4s", "name": "Inoa 2 Parts Shade 4", "category": "Hair Care", "price": 732}, {"id": "p4t", "name": "Inoa 2 Parts Shade 5", "category": "Hair Care", "price": 766}, {"id": "p4u", "name": "Inoa 2 Parts Shade 6", "category": "Hair Care", "price": 766}, {"id": "p4v", "name": "Inoa 2 Parts Shade 7", "category": "Hair Care", "price": 766}, {"id": "p4w", "name": "Inoa 2 Parts Shade 8", "category": "Hair Care", "price": 766}, {"id": "p4x", "name": "MAJIREL (NEW) SHADE NO 4.15", "category": "Hair Care", "price": 553}, {"id": "p4y", "name": "MAJIREL (NEW) SHADE NO. 2.10", "category": "Hair Care", "price": 553}, {"id": "p4z", "name": "MAJIREL (NEW) SHADE NO. 5", "category": "Hair Care", "price": 553}, {"id": "p50", "name": "MAJIREL (NEW) SHADE NO. 5.35", "category": "Hair Care", "price": 559}, {"id": "p51", "name": "MAJIREL (NEW) SHADE NO. 5.52", "category": "Hair Care", "price": 553}, {"id": "p52", "name": "MAJIREL (NEW) SHADE NO. 6", "category": "Hair Care", "price": 553}, {"id": "p53", "name": "MAJIREL (NEW) SHADE NO. 6.34", "category": "Hair Care", "price": 553}, {"id": "p54", "name": "MAJIREL (NEW) SHADE NO. 8", "category": "Hair Care", "price": 553}, {"id": "p55", "name": "MAJIREL (NEW) SHADE NO.1", "category": "Hair Care", "price": 553}, {"id": "p56", "name": "MAJIREL (NEW) SHADE NO.3", "category": "Hair Care", "price": 553}, {"id": "p57", "name": "MAJIREL SHADE NO 4.00", "category": "Hair Care", "price": 553}, {"id": "p58", "name": "OREOR DEVELOPER-20VOL-1000ML", "category": "Hair Care", "price": 1408}, {"id": "p59", "name": "OREOR DEVELOPER-40 VOL-1000ML", "category": "Hair Care", "price": 1408}, {"id": "p5a", "name": "Pro Classic Shmp (Post Colour Optimiser) 1.5L", "category": "Hair Care", "price": 1358}, {"id": "p5b", "name": "SE CLEAR DOSE 15ML", "category": "Hair Care", "price": 2001}, {"id": "p5c", "name": "SE HS.NOURISHING CREAM B", "category": "Hair Care", "price": 943}, {"id": "p5d", "name": "SER.EXP H.SPA HYD CONC 6x8 ML", "category": "Hair Care", "price": 828}, {"id": "p5e", "name": "SER.EXP H.SPA PUR CONC.6x8 ML", "category": "Hair Care", "price": 828}, {"id": "p5f", "name": "SER.EXP H.SPA VITA CB 500 ML", "category": "Hair Care", "price": 1591}, {"id": "p5g", "name": "Blade for WAHL Beret Trimmer USA", "category": "Professional Use", "price": 100}, {"id": "p5h", "name": "Cream Shaving Mug", "category": "Professional Use", "price": 11850}, {"id": "p5i", "name": "GIFT BOX", "category": "Professional Use", "price": 1000}, {"id": "p5j", "name": "Hydra Melting Massage Cream", "category": "Professional Use", "price": 6838}, {"id": "p5k", "name": "Hydra Original Non-Oily Ultra-Moisturizing Fluid", "category": "Professional Use", "price": 5654}, {"id": "p5l", "name": "OLIGOFORCE PURIFYING SERUM", "category": "Professional Use", "price": 8287}, {"id": "p5m", "name": "OLIGOPUR SEA WATER LYPHOLIZED", "category": "Professional Use", "price": 3053}, {"id": "p5n", "name": "Oligoforce Moisturizing Serum", "category": "Professional Use", "price": 8287}, {"id": "p5o", "name": "Oligopur Hydra-Matifying Control Cream - 100 Ml", "category": "Professional Use", "price": 3797}, {"id": "p5p", "name": "Oligopur Purifying Cleansing Gel - 250 Ml", "category": "Professional Use", "price": 3763}, {"id": "p5q", "name": "PERFECT VISAGE GENTLE CLENSING MILK", "category": "Professional Use", "price": 5916}, {"id": "p5r", "name": "ROSE visage TONING CLEANSING LOTION", "category": "Professional Use", "price": 5916}, {"id": "p5s", "name": "Relaxing Serum - 100 Ml", "category": "Professional Use", "price": 6163}, {"id": "p5t", "name": "Rose Shave Cream Bowl", "category": "Professional Use", "price": 2700}, {"id": "p5u", "name": "Rose Shave Cream Tube", "category": "Professional Use", "price": 1800}, {"id": "p5v", "name": "VEGETAL EXFOLIALT", "category": "Professional Use", "price": 5552}, {"id": "p5w", "name": "White Lumination Complexion Recovery Moisturizing Cream", "category": "Professional Use", "price": 5905}, {"id": "p5x", "name": "White Lumination Remineralizing Lightening Mask", "category": "Professional Use", "price": 6553}, {"id": "p5y", "name": "White Lumination Spot Correction Brightening Serum", "category": "Professional Use", "price": 9394}, {"id": "p5z", "name": "Faux Horn / Mach III / Razor / Chrome / Regency", "category": "After Shave", "price": 13600}, {"id": "p60", "name": "Freshman Friction C", "category": "After Shave", "price": 3500}, {"id": "p61", "name": "Luxury Edition sandal wood- Bowl, Balm, Razor, Brush", "category": "After Shave", "price": 25200}, {"id": "p62", "name": "Monte Carlo With Oil C", "category": "After Shave", "price": 5100}, {"id": "p63", "name": "Oligopur Flawless Skin Mask", "category": "After Shave", "price": 4630}, {"id": "p64", "name": "West Indian Limes Balm Tester", "category": "After Shave", "price": 2459}, {"id": "p65", "name": "puriso - Diffuser Oil", "category": "After Shave", "price": 138}, {"id": "p66", "name": "Faux Ebony / Super Badger/ Shave Brush/ Wellington", "category": "Shaving Accessories", "price": 16500}, {"id": "p67", "name": "Faux Ebony- Machiii- Razor- Chrome- Wellington", "category": "Shaving Accessories", "price": 11500}, {"id": "p68", "name": "Faux Horn / Super Badger / Shave Brush / Wellington", "category": "Shaving Accessories", "price": 16500}, {"id": "p69", "name": "Faux Ivory / Super Badger/ Shave Brush/ Wellington", "category": "Shaving Accessories", "price": 16500}, {"id": "p6a", "name": "Faux Porcelain / Super Badger/ Shave Brush/ Wellington", "category": "Shaving Accessories", "price": 16500}, {"id": "p6b", "name": "Black Mask (Remy Laure)", "category": "Facial & Pedi-Mani", "price": 20}, {"id": "p6c", "name": "Manicure/Pedicure ROYAL Kit", "category": "Facial & Pedi-Mani", "price": 150}, {"id": "p6d", "name": "Manicure/Pedicure ROYAL Kit - CANDLE", "category": "Facial & Pedi-Mani", "price": 222}, {"id": "p6e", "name": "Peel Off Mask (Serenite)", "category": "Facial & Pedi-Mani", "price": 170}, {"id": "p6f", "name": "Puriso - Turkish Lime - Mist", "category": "Spa Lifestyle", "price": 3967}];
+
+  let state = null;      // { items: [{id,name,category,price}], categories: [name,...], updatedAt }
+  let docRef = null;
+  let searchQuery = '';
+  let expandedCats = new Set();
+  let addFormCategory = null;  // category name whose inline "add product" form is open, or null
+  let editingId = null;
+  let formBaseline = null;           // deep copy of the item as it was when its edit form opened
+  let remoteChangedWhileEditing = false; // true if a snapshot arrived while a form was open
+
+  const subtitleEl = document.getElementById('subtitle');
+  const viewBodyEl = document.getElementById('viewBody');
+  const searchInput = document.getElementById('searchInput');
+
+  function uid(){
+    return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+  }
+
+  function escapeHtml(s){
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function fmtPrice(p){
+    const n = Number(p);
+    return isFinite(n) ? '\u09f3' + n.toLocaleString() : '';
+  }
+
+  // ---------- Load ----------
+  function load(){
+    subtitleEl.textContent = 'Connecting\u2026';
+    window.thAuthReady.then(function(){
+      docRef = window.thDB.collection(DOC_COLLECTION).doc(DOC_ID);
+      docRef.onSnapshot(function(snap){
+        if(snap.metadata.hasPendingWrites) return;
+        if(snap.exists){
+          state = snap.data();
+          if(!Array.isArray(state.items)) state.items = [];
+          if(!Array.isArray(state.categories)){
+            // Migrate: derive the category list from whatever items already exist.
+            const set = new Set();
+            state.items.forEach(it => { if(it.category) set.add(it.category); });
+            state.categories = [...set];
+            save();
+          }
+        } else {
+          const set = new Set();
+          SEED_PRODUCTS.forEach(it => { if(it.category) set.add(it.category); });
+          state = { items: SEED_PRODUCTS.slice(), categories: [...set] };
+          save();
+        }
+        // A form left open shouldn't get silently rebuilt out from under
+        // someone mid-edit — that would wipe whatever they'd typed. Refresh
+        // the underlying data, but only re-render (and only warn) instead
+        // of tearing down the open form.
+        if(editingId !== null || addFormCategory !== null){
+          remoteChangedWhileEditing = true;
+          updateConcurrencyBanner();
+        } else {
+          render();
+        }
+      }, function(err){
+        console.error('Products sync error', err);
+        subtitleEl.textContent = 'Could not connect \u2014 check your internet connection.';
+      });
+    });
+  }
+
+  function updateConcurrencyBanner(){
+    const banner = document.getElementById('concurrencyBanner');
+    if(!banner) return;
+    if(remoteChangedWhileEditing){
+      banner.textContent = 'Someone else updated the product list while you were editing. Your changes here are still safe \u2014 saving will ask you to confirm before overwriting theirs.';
+      banner.classList.add('show');
+    } else {
+      banner.classList.remove('show');
+    }
+  }
+
+  function save(){
+    if(!docRef || !state) return;
+    const payload = Object.assign({}, state, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    docRef.set(payload).catch(e => console.error('Could not save products', e));
+  }
+
+  // ---------- Data helpers ----------
+  function categoriesOf(items){
+    const map = new Map();
+    items.forEach(it => {
+      const cat = it.category || 'Uncategorised';
+      if(!map.has(cat)) map.set(cat, []);
+      map.get(cat).push(it);
+    });
+    return map;
+  }
+
+  function existingCategories(){
+    const set = new Set(state.categories || []);
+    (state.items || []).forEach(it => { if(it.category) set.add(it.category); });
+    return [...set].sort((a,b) => a.localeCompare(b));
+  }
+
+  function allProductNames(){
+    const set = new Set();
+    (state.items || []).forEach(it => { if(it.name) set.add(it.name); });
+    return [...set].sort((a,b) => a.localeCompare(b));
+  }
+
+  function firstPriceForName(name){
+    const hit = (state.items || []).find(it => it.name === name);
+    return (hit && hit.price !== undefined && hit.price !== null && hit.price !== '') ? hit.price : '';
+  }
+
+  async function addCategory(){
+    const name = await THDialog.prompt('New category name:', '', { title: 'Add category' });
+    if(name === null) return;
+    const trimmed = name.trim();
+    if(!trimmed) return;
+    if(!state.categories) state.categories = [];
+    if(existingCategories().includes(trimmed)){
+      await THDialog.alert('That category already exists.');
+      return;
+    }
+    state.categories.push(trimmed);
+    expandedCats.add(trimmed);
+    save();
+    render();
+  }
+
+  function filteredItems(){
+    const items = (state.items || []).slice().sort((a,b) => a.name.localeCompare(b.name));
+    const q = searchQuery.trim().toLowerCase();
+    if(!q) return items;
+    return items.filter(it => it.name.toLowerCase().includes(q) || (it.category||'').toLowerCase().includes(q));
+  }
+
+  // ---------- Render ----------
+  function render(){
+    if(!state){
+      subtitleEl.textContent = 'Connecting\u2026';
+      viewBodyEl.innerHTML = '';
+      return;
+    }
+    const total = (state.items || []).length;
+    subtitleEl.textContent = total + ' product' + (total === 1 ? '' : 's') + ' in the catalog';
+
+    viewBodyEl.innerHTML = '';
+
+    const items = filteredItems();
+
+    if(searchQuery.trim()){
+      // Flat filtered list while searching (category grouping isn't useful mid-search)
+      if(items.length === 0){
+        const hint = document.createElement('div');
+        hint.className = 'empty-hint';
+        hint.innerHTML = '<span>No matches</span>Try a different search term.';
+        viewBodyEl.appendChild(hint);
+      } else {
+        const ul = document.createElement('ul');
+        ul.className = 'items';
+        items.forEach(it => ul.appendChild(renderItemRow(it)));
+        viewBodyEl.appendChild(ul);
+      }
+    } else {
+      const allCats = existingCategories();
+      if(allCats.length === 0){
+        const hint = document.createElement('div');
+        hint.className = 'empty-hint';
+        hint.innerHTML = '<span>No categories yet</span>Tap "+ Add category" above to get started.';
+        viewBodyEl.appendChild(hint);
+      } else {
+        const grouped = categoriesOf(items);
+        const catsWrap = document.createElement('div');
+        catsWrap.className = 'categories';
+        allCats.forEach(cat => {
+          catsWrap.appendChild(renderCategory(cat, grouped.get(cat) || []));
+        });
+        viewBodyEl.appendChild(catsWrap);
+      }
+    }
+  }
+
+  function renderCategory(cat, items){
+    const isFormOpenHere = addFormCategory === cat;
+    const isExpanded = expandedCats.has(cat) || isFormOpenHere;
+    const card = document.createElement('div');
+    card.className = 'category' + (isExpanded ? ' expanded' : '');
+
+    const header = document.createElement('div');
+    header.className = 'cat-header';
+    header.addEventListener('click', () => {
+      if(expandedCats.has(cat)) expandedCats.delete(cat); else expandedCats.add(cat);
+      render();
+    });
+
+    const left = document.createElement('div');
+    left.className = 'cat-header-left';
+    const chevron = document.createElement('div');
+    chevron.className = 'cat-chevron';
+    chevron.innerHTML = '<svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    const titleWrap = document.createElement('div');
+    const title = document.createElement('div');
+    title.className = 'cat-title';
+    title.textContent = cat;
+    const count = document.createElement('div');
+    count.className = 'cat-count';
+    count.textContent = items.length + ' item' + (items.length === 1 ? '' : 's');
+    titleWrap.appendChild(title);
+    titleWrap.appendChild(count);
+    left.appendChild(chevron);
+    left.appendChild(titleWrap);
+    header.appendChild(left);
+
+    const addProductBtn = document.createElement('button');
+    addProductBtn.className = 'cat-add-product';
+    addProductBtn.textContent = '+';
+    addProductBtn.title = 'Add product to ' + cat;
+    addProductBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      editingId = null;
+      addFormCategory = cat;
+      expandedCats.add(cat);
+      formBaseline = null;
+      remoteChangedWhileEditing = false;
+      render();
+    });
+    header.appendChild(addProductBtn);
+
+    card.appendChild(header);
+
+    if(isExpanded){
+      if(items.length){
+        const ul = document.createElement('ul');
+        ul.className = 'items';
+        items.sort((a,b) => a.name.localeCompare(b.name)).forEach(it => ul.appendChild(renderItemRow(it)));
+        card.appendChild(ul);
+      }
+      if(isFormOpenHere){
+        card.appendChild(renderForm(null, cat));
+      }
+    }
+
+    return card;
+  }
+
+  function renderItemRow(it){
+    const li = document.createElement('li');
+    li.className = 'item';
+
+    if(editingId === it.id){
+      const wrap = document.createElement('div');
+      wrap.style.flex = '1 1 auto';
+      wrap.appendChild(renderForm(it));
+      li.appendChild(wrap);
+      li.style.padding = '0';
+      li.style.background = 'transparent';
+      li.style.border = 'none';
+      return li;
+    }
+
+    const info = document.createElement('div');
+    info.className = 'item-info';
+    const name = document.createElement('div');
+    name.className = 'item-name';
+    name.textContent = it.name;
+    const meta = document.createElement('div');
+    meta.className = 'item-price';
+    meta.textContent = fmtPrice(it.price);
+    const catLabel = document.createElement('div');
+    catLabel.className = 'item-cat-label';
+    catLabel.textContent = it.category || 'Uncategorised';
+    info.appendChild(name);
+    if(it.price !== undefined && it.price !== null && it.price !== '') info.appendChild(meta);
+    info.appendChild(catLabel);
+
+    const actions = document.createElement('div');
+    actions.className = 'item-actions';
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'item-action';
+    editBtn.title = 'Edit';
+    editBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 20h9" stroke-linecap="round"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" stroke-linejoin="round"/></svg>';
+    editBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      addFormCategory = null;
+      editingId = it.id;
+      formBaseline = JSON.parse(JSON.stringify(it));
+      remoteChangedWhileEditing = false;
+      render();
+    });
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'item-action danger';
+    delBtn.title = 'Delete';
+    delBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M3 6h18" stroke-linecap="round"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" stroke-linejoin="round"/></svg>';
+    delBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const typed = await THDialog.prompt(
+        'Delete \u201c' + it.name + '\u201d from the product catalog?\n\n' +
+        'This removes it everywhere it\u2019s used for search \u2014 the station checklist, requirements, and the service calculator.\n\n' +
+        'Type DELETE to confirm.',
+        '',
+        { title: 'Delete product', placeholder: 'DELETE', okText: 'Confirm' }
+      );
+      if(typed === null) return; // cancelled
+      if(typed.trim() !== 'DELETE'){
+        await THDialog.alert('Didn\u2019t match \u2014 nothing was deleted.');
+        return;
+      }
+      if(!(state.items || []).some(x => x.id === it.id)){
+        await THDialog.alert('This product was already deleted (possibly by someone else).');
+        render();
+        return;
+      }
+      state.items = state.items.filter(x => x.id !== it.id);
+      save();
+      render();
+    });
+
+    actions.appendChild(editBtn);
+    actions.appendChild(delBtn);
+
+    li.appendChild(info);
+    li.appendChild(actions);
+    return li;
+  }
+
+  function renderForm(existing, presetCategory){
+    const wrap = document.createElement('div');
+    wrap.className = 'form';
+
+    const banner = document.createElement('div');
+    banner.className = 'concurrency-banner';
+    banner.id = 'concurrencyBanner';
+    wrap.appendChild(banner);
+
+    const nameLabel = document.createElement('div');
+    nameLabel.className = 'form-label';
+    nameLabel.textContent = 'Product name';
+
+    const NEW_NAME = '__newname__';
+    let nameSelect = null, nameNewInput = null, namePlainInput = null;
+
+    if(existing){
+      // Editing a specific record — plain text, renaming this exact item.
+      namePlainInput = document.createElement('input');
+      namePlainInput.type = 'text';
+      namePlainInput.placeholder = 'e.g. 1805 Aftershave Balm';
+      namePlainInput.value = existing.name;
+    } else {
+      // Adding — pick from every product already in the catalog, or add a new one.
+      const names = allProductNames();
+      nameSelect = document.createElement('select');
+      names.forEach(n => {
+        const opt = document.createElement('option');
+        opt.value = n;
+        opt.textContent = n;
+        nameSelect.appendChild(opt);
+      });
+      const newOpt = document.createElement('option');
+      newOpt.value = NEW_NAME;
+      newOpt.textContent = '+ Add new product\u2026';
+      nameSelect.appendChild(newOpt);
+
+      nameNewInput = document.createElement('input');
+      nameNewInput.type = 'text';
+      nameNewInput.placeholder = 'New product name';
+      nameNewInput.style.display = 'none';
+
+      if(names.length === 0){
+        nameSelect.value = NEW_NAME;
+        nameNewInput.style.display = 'block';
+      }
+      nameSelect.addEventListener('change', () => {
+        const isNew = nameSelect.value === NEW_NAME;
+        nameNewInput.style.display = isNew ? 'block' : 'none';
+        if(isNew){
+          nameNewInput.focus();
+        } else if(!priceInput.value){
+          const p = firstPriceForName(nameSelect.value);
+          if(p !== '') priceInput.value = p;
+        }
+      });
+    }
+
+    const catLabel = document.createElement('div');
+    catLabel.className = 'form-label';
+    catLabel.textContent = presetCategory ? 'Category' : 'Category';
+
+    const NEW_CAT = '__new__';
+    let catSelect = null, newCatInput = null, presetCatNote = null;
+
+    if(presetCategory){
+      presetCatNote = document.createElement('div');
+      presetCatNote.style.cssText = 'padding:10px 14px;font-size:13px;border-radius:12px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.12);color:var(--ink-soft);';
+      presetCatNote.textContent = presetCategory;
+    } else {
+      const cats = existingCategories();
+      catSelect = document.createElement('select');
+      cats.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        catSelect.appendChild(opt);
+      });
+      const existingCat = existing ? (existing.category || '') : '';
+      if(existingCat && !cats.includes(existingCat)){
+        // The item's own category isn't in the current list (edge case, e.g.
+        // stale data) — keep it selectable so saving doesn't silently change it.
+        const opt = document.createElement('option');
+        opt.value = existingCat;
+        opt.textContent = existingCat;
+        catSelect.appendChild(opt);
+      }
+      const newCatOpt = document.createElement('option');
+      newCatOpt.value = NEW_CAT;
+      newCatOpt.textContent = '+ Add new category\u2026';
+      catSelect.appendChild(newCatOpt);
+
+      newCatInput = document.createElement('input');
+      newCatInput.type = 'text';
+      newCatInput.placeholder = 'New category name';
+      newCatInput.style.display = 'none';
+
+      if(existingCat){
+        catSelect.value = existingCat;
+      } else if(cats.length === 0){
+        catSelect.value = NEW_CAT;
+        newCatInput.style.display = 'block';
+      }
+      catSelect.addEventListener('change', () => {
+        const isNew = catSelect.value === NEW_CAT;
+        newCatInput.style.display = isNew ? 'block' : 'none';
+        if(isNew) newCatInput.focus();
+      });
+    }
+
+    const priceLabel = document.createElement('div');
+    priceLabel.className = 'form-label';
+    priceLabel.textContent = 'Price (\u09f3, optional)';
+    const priceInput = document.createElement('input');
+    priceInput.type = 'number';
+    priceInput.inputMode = 'numeric';
+    priceInput.placeholder = 'e.g. 9300';
+    priceInput.value = existing && existing.price !== undefined && existing.price !== null ? existing.price : '';
+
+    const row = document.createElement('div');
+    row.className = 'form-row';
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'form-save';
+    saveBtn.textContent = existing ? 'Save changes' : 'Add product';
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'form-cancel';
+    cancelBtn.textContent = 'Cancel';
+
+    saveBtn.addEventListener('click', async () => {
+      const name = existing
+        ? namePlainInput.value.trim()
+        : (nameSelect.value === NEW_NAME ? nameNewInput.value.trim() : nameSelect.value);
+      const category = presetCategory
+        ? presetCategory
+        : (catSelect.value === NEW_CAT ? newCatInput.value.trim() : catSelect.value);
+      const priceRaw = priceInput.value.trim();
+      const price = priceRaw === '' ? null : Number(priceRaw);
+      if(!name){ await THDialog.alert('Please enter a product name.'); return; }
+      if(!category){ await THDialog.alert('Please enter or choose a category.'); return; }
+      if(priceRaw !== '' && !isFinite(price)){ await THDialog.alert('Price must be a number.'); return; }
+
+      if(existing){
+        const live = (state.items || []).find(x => x.id === existing.id);
+        if(!live){
+          await THDialog.alert('This product was deleted elsewhere while you were editing it. Your changes were not saved.');
+          editingId = null;
+          formBaseline = null;
+          render();
+          return;
+        }
+
+        // Optimistic concurrency check: did someone else change this product
+        // since this form was opened?
+        if(formBaseline){
+          const changedElsewhere =
+            live.name !== formBaseline.name ||
+            live.category !== formBaseline.category ||
+            String(live.price) !== String(formBaseline.price);
+          if(changedElsewhere){
+            const proceed = await THDialog.confirm(
+              'This product was changed elsewhere while you were editing it.\n\n' +
+              'Their current version \u2014 "' + live.name + '", ' + (live.category || 'Uncategorised') + ', ' + fmtPrice(live.price) + '\n\n' +
+              'Save your version anyway and overwrite theirs?',
+              { title: 'Conflicting changes', okText: 'Overwrite', danger: true }
+            );
+            if(!proceed){
+              editingId = null;
+              formBaseline = null;
+              remoteChangedWhileEditing = false;
+              render();
+              return;
+            }
+          }
+        }
+
+        // Extra confirmation specifically for price changes, since a wrong
+        // price goes live in the calculator immediately.
+        const oldPrice = (live.price === undefined || live.price === null || live.price === '') ? null : Number(live.price);
+        if(oldPrice !== price){
+          const oldLabel = oldPrice === null ? 'no price set' : fmtPrice(oldPrice);
+          const newLabel = price === null ? 'no price set' : fmtPrice(price);
+          const okPrice = await THDialog.confirm('Change price of "' + name + '" from ' + oldLabel + ' to ' + newLabel + '?\n\nThis updates live in the Service Calculator.', { title: 'Confirm price change', okText: 'Change price' });
+          if(!okPrice) return;
+        }
+
+        const idx = state.items.findIndex(x => x.id === existing.id);
+        if(idx > -1) state.items[idx] = Object.assign({}, live, { name, category, price });
+        editingId = null;
+        formBaseline = null;
+      } else {
+        if(!state.categories) state.categories = [];
+        if(!state.categories.includes(category)) state.categories.push(category);
+        state.items.push({ id: uid(), name, category, price });
+        addFormCategory = null;
+        expandedCats.add(category);
+      }
+      remoteChangedWhileEditing = false;
+      save();
+      render();
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      if(existing) editingId = null; else addFormCategory = null;
+      formBaseline = null;
+      remoteChangedWhileEditing = false;
+      render();
+    });
+
+    row.appendChild(saveBtn);
+    row.appendChild(cancelBtn);
+
+    wrap.appendChild(nameLabel);
+    if(existing){
+      wrap.appendChild(namePlainInput);
+    } else {
+      wrap.appendChild(nameSelect);
+      wrap.appendChild(nameNewInput);
+    }
+    wrap.appendChild(catLabel);
+    if(presetCategory){
+      wrap.appendChild(presetCatNote);
+    } else {
+      wrap.appendChild(catSelect);
+      wrap.appendChild(newCatInput);
+    }
+    wrap.appendChild(priceLabel);
+    wrap.appendChild(priceInput);
+    wrap.appendChild(row);
+
+    setTimeout(() => {
+      (existing ? namePlainInput : (nameSelect.value === NEW_NAME ? nameNewInput : nameSelect)).focus();
+      updateConcurrencyBanner();
+    }, 0);
+
+    return wrap;
+  }
+
+  searchInput.addEventListener('input', () => {
+    searchQuery = searchInput.value;
+    render();
+  });
+
+  document.getElementById('addCatBtn').addEventListener('click', addCategory);
+
+  load();
+})();
+</script>
+<script src="nav.js"></script>
+<script src="shared.js"></script>
+</body>
+</html>

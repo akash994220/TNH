@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Truefitt &amp; Hill — Staff Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600&family=Tiro+Bangla&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    font-family:'Poppins',sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:32px 20px;
+    color:#eef2ff;
+    background:
+      radial-gradient(900px 560px at 12% -6%, rgba(201,168,76,0.16), transparent 60%),
+      radial-gradient(1000px 700px at 105% 8%, rgba(26,58,143,0.35), transparent 55%),
+      radial-gradient(800px 620px at 50% 118%, rgba(201,168,76,0.10), transparent 55%),
+      linear-gradient(160deg, #0d1535 0%, #080d1e 55%, #120828 100%);
+    background-attachment:fixed;
+  }
+
+  header{
+    text-align:center;
+    margin-bottom:44px;
+  }
+  .crest-row{
+    display:inline-flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:14px;
+  }
+  .crest{
+    width:46px;height:46px;border-radius:50%;
+    border:1px solid rgba(201,168,76,0.5);
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(201,168,76,0.06);
+    box-shadow:0 0 18px rgba(201,168,76,0.14);
+  }
+  .crest svg{width:24px;height:24px;stroke:#c9a84c;fill:none;stroke-width:1.4;}
+  .brand{
+    font-size:11px;letter-spacing:5px;text-transform:uppercase;
+    color:#c9a84c;font-weight:500;
+  }
+  h1{
+    font-family:'Playfair Display',serif;
+    font-weight:600;
+    font-size:34px;
+    letter-spacing:0.3px;
+    text-shadow:0 2px 24px rgba(0,0,0,0.5);
+    margin-top:2px;
+  }
+  .subtitle{
+    font-size:13px;
+    color:rgba(238,242,255,0.5);
+    margin-top:8px;
+    letter-spacing:0.4px;
+  }
+
+  .cards{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:22px;
+    width:100%;
+    max-width:720px;
+  }
+  @media (max-width:560px){
+    .cards{grid-template-columns:1fr;}
+  }
+
+  .card{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:16px;
+    padding:32px 26px;
+    border-radius:28px;
+    text-decoration:none;
+    color:inherit;
+    background:rgba(255,255,255,0.055);
+    border:1px solid rgba(201,168,76,0.22);
+    backdrop-filter:blur(22px) saturate(140%);
+    -webkit-backdrop-filter:blur(22px) saturate(140%);
+    box-shadow:
+      0 24px 60px -22px rgba(0,0,0,0.65),
+      0 1px 0 rgba(255,255,255,0.06) inset;
+    overflow:hidden;
+    transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+  }
+  .card::before{
+    content:'';
+    position:absolute;
+    top:0;left:0;right:0;height:2px;
+    background:linear-gradient(90deg, transparent, #c9a84c, #ffd166, #c9a84c, transparent);
+    opacity:0;
+    transition:opacity .22s ease;
+  }
+  .card:hover{
+    transform:translateY(-4px);
+    border-color:rgba(201,168,76,0.5);
+    box-shadow:
+      0 30px 70px -20px rgba(0,0,0,0.7),
+      0 0 0 1px rgba(201,168,76,0.15) inset;
+  }
+  .card:hover::before{opacity:1;}
+
+  .icon-wrap{
+    width:56px;height:56px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg, rgba(201,168,76,0.18), rgba(201,168,76,0.04));
+    border:1px solid rgba(201,168,76,0.4);
+    box-shadow:0 8px 20px -8px rgba(201,168,76,0.4);
+  }
+  .icon-wrap svg{width:26px;height:26px;stroke:#e3c684;fill:none;stroke-width:1.5;}
+
+  .card h2{
+    font-family:'Playfair Display',serif;
+    font-weight:600;
+    font-size:20px;
+    letter-spacing:0.2px;
+  }
+  .card p{
+    font-size:12.5px;
+    line-height:1.55;
+    color:rgba(238,242,255,0.55);
+    margin-top:-8px;
+  }
+  .card .go{
+    margin-top:auto;
+    padding-top:6px;
+    font-size:11px;
+    letter-spacing:1.5px;
+    text-transform:uppercase;
+    color:#c9a84c;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .card .go svg{
+    width:13px;height:13px;stroke:#c9a84c;fill:none;stroke-width:2;
+    transition:transform .2s ease;
+  }
+  .card:hover .go svg{transform:translateX(3px);}
+
+  footer{
+    margin-top:40px;
+    font-size:11px;
+    color:rgba(238,242,255,0.35);
+    letter-spacing:0.3px;
+    text-align:center;
+  }
+  footer span{color:#c9a84c;}
+  body.light{ background:linear-gradient(160deg, #f5f7fc 0%, #eef1fa 55%, #f2effa 100%) !important; color:#0a1f44; }
+</style>
+</head>
+<body>
+<script>try{if(localStorage.getItem('th-theme')==='light')document.body.classList.add('light');}catch(e){}</script>
+
+  <header>
+    <div class="crest-row">
+      <div class="crest">
+        <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"/></svg>
+      </div>
+    </div>
+    <div class="brand">Truefitt &amp; Hill</div>
+    <h1>Staff Tools</h1>
+    <div class="subtitle">Select a tool to continue</div>
+  </header>
+
+  <div class="cards">
+
+    <a class="card" href="service-calculator.html">
+      <div class="icon-wrap">
+        <svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01" stroke-linecap="round"/></svg>
+      </div>
+      <h2>Service Calculator</h2>
+      <p>Build a bill from services and products, assign staff, and total the visit.</p>
+      <div class="go">Open <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </a>
+
+    <a class="card" href="task-manager.html">
+      <div class="icon-wrap">
+        <svg viewBox="0 0 24 24"><path d="M9 11l2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/><rect x="3" y="4" width="18" height="16" rx="3"/></svg>
+      </div>
+      <h2>Task Manager</h2>
+      <p>Keep track of daily to‑dos across the floor, front desk, and closing.</p>
+      <div class="go">Open <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    </a>
+
+  </div>
+
+  <footer>Staff Portal &nbsp;<span>&middot;</span>&nbsp; Truefitt &amp; Hill</footer>
+
+<script src="shared.js"></script>
+</body>
+</html>
