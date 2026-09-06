@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>T&H Station Checklist</title>
-<style>html,body{background:#0d1535;}</style>
+<title>Truefitt &amp; Hill — Station Checklist</title>
+<style>html,body{background:#0a0f24;}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Tiro+Bangla&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Poppins:wght@300;400;500;600;700&family=Tiro+Bangla&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -15,438 +15,704 @@
 <script src="catalog.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <style>
-  :root{
-    --ink:#f3efe4;
-    --ink-soft:rgba(243,239,228,0.62);
-    --ink-faint:rgba(243,239,228,0.4);
-    --gold:#d9b872;
-    --gold-soft:#a9884f;
-    --green:#3a8562;
-    --green-deep:#1f4a35;
-    --red:#e08b7d;
-    --amber:#d9a45c;
-    --glass:rgba(255,255,255,0.055);
-    --glass-strong:rgba(255,255,255,0.09);
-    --glass-border:rgba(255,255,255,0.14);
+  :root {
+    --ink: #f4f6fc;
+    --ink-soft: rgba(244, 246, 252, 0.72);
+    --ink-faint: rgba(244, 246, 252, 0.44);
+    --gold: #d9b872;
+    --gold-light: #f3dfaa;
+    --gold-dark: #ad8a42;
+    --gold-glow: rgba(217, 184, 114, 0.25);
+    --navy-deep: #070b1a;
+    --navy-mid: #0d1532;
+    --navy-card: rgba(16, 24, 52, 0.72);
+    --navy-border: rgba(217, 184, 114, 0.22);
+    --green: #2ecc71;
+    --green-deep: #166534;
+    --green-glow: rgba(46, 204, 113, 0.25);
+    --amber: #f59e0b;
+    --amber-deep: #92400e;
+    --amber-glow: rgba(245, 158, 11, 0.25);
+    --red: #f43f5e;
+    --red-deep: #9f1239;
+    --red-glow: rgba(244, 63, 94, 0.25);
   }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
-  body{
-    min-height:100vh;
-    font-family:'Poppins',sans-serif;
-    color:var(--ink);
-    display:flex;
-    justify-content:center;
-    padding:48px 16px;
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    font-family: 'Poppins', sans-serif;
+    color: var(--ink);
+    padding: 36px 16px 110px;
     background:
-      radial-gradient(900px 560px at 15% -8%, rgba(217,184,114,0.16), transparent 60%),
-      radial-gradient(1000px 700px at 100% 10%, rgba(26,58,143,0.35), transparent 55%),
-      radial-gradient(800px 600px at 50% 120%, rgba(26,58,143,0.22), transparent 55%),
-      linear-gradient(160deg, #0d1535 0%, #080d1e 45%, #120828 100%);
-    background-attachment:fixed;
+      radial-gradient(1100px 650px at 15% -10%, rgba(217,184,114,0.14), transparent 60%),
+      radial-gradient(1100px 750px at 95% 10%, rgba(26,58,143,0.32), transparent 55%),
+      radial-gradient(900px 650px at 50% 115%, rgba(26,58,143,0.2), transparent 50%),
+      linear-gradient(160deg, #090e21 0%, #060a18 50%, #0d081f 100%);
+    background-attachment: fixed;
+    display: flex;
+    justify-content: center;
+    transition: background 0.25s ease, color 0.25s ease;
   }
 
-  .app{ width:100%; max-width:560px; }
-
-  header{ text-align:center; margin-bottom:22px; }
-  .crest{ display:inline-flex; align-items:center; gap:12px; margin-bottom:10px; }
-  .crest-line{ width:30px; height:1px; background:linear-gradient(90deg, transparent, var(--gold)); }
-  .crest-line.right{background:linear-gradient(90deg, var(--gold), transparent);}
-  .brand{
-    font-family:'Poppins',sans-serif;
-    font-size:12px; letter-spacing:4.5px; text-transform:uppercase;
-    color:var(--gold); font-weight:400;
-  }
-  h1{
-    font-family:'Poppins',sans-serif;
-    font-weight:400; font-size:28px; letter-spacing:0.3px; margin:0;
-    color:var(--ink); text-shadow:0 2px 20px rgba(0,0,0,0.4);
-  }
-  .subtitle{ font-size:12.5px; color:var(--ink-faint); margin-top:6px; letter-spacing:0.4px; }
-
-  /* Breadcrumb */
-  .breadcrumb{
-    display:flex; align-items:center; flex-wrap:wrap; gap:6px;
-    margin:0 4px 14px; font-size:12.5px; color:var(--ink-soft);
-  }
-  .crumb-back{
-    display:inline-flex; align-items:center; gap:5px; color:var(--gold); cursor:pointer;
-    background:rgba(217,184,114,0.08); border:1px solid rgba(217,184,114,0.3); border-radius:999px;
-    font-size:12px; font-family:inherit; padding:6px 12px; transition:all .15s ease;
-  }
-  .crumb-back:hover{ background:rgba(217,184,114,0.16); border-color:rgba(217,184,114,0.55); }
-  .crumb-back svg{ width:12px; height:12px; stroke:currentColor; fill:none; stroke-width:2.2; }
-  .crumb-sep{ color:var(--ink-faint); }
-  .crumb-current{ color:var(--ink); font-weight:600; }
-  .crumb-actions{ display:flex; gap:6px; margin-left:auto; }
-  .crumb-action{
-    width:28px; height:28px; border-radius:50%; background:rgba(0,0,0,0.2); border:none;
-    color:var(--ink-faint); cursor:pointer; display:flex; align-items:center; justify-content:center;
-    transition:all .15s ease;
-  }
-  .crumb-action:hover{ color:var(--gold); background:rgba(217,184,114,0.14); }
-  .crumb-action.danger:hover{ color:var(--red); background:rgba(224,139,125,0.14); }
-  .crumb-action svg{ width:13px; height:13px; stroke:currentColor; fill:none; stroke-width:1.8; }
-
-  .panel{
-    background:var(--glass);
-    border:1px solid var(--glass-border);
-    border-radius:28px;
-    padding:20px;
-    backdrop-filter:blur(24px) saturate(140%);
-    -webkit-backdrop-filter:blur(24px) saturate(140%);
-    box-shadow:
-      0 24px 60px -20px rgba(0,0,0,0.6),
-      0 2px 0 rgba(255,255,255,0.05) inset,
-      0 -1px 0 rgba(0,0,0,0.3) inset;
-    margin-bottom:16px;
+  .app-container {
+    width: 100%;
+    max-width: 1040px;
+    display: flex;
+    flex-direction: column;
   }
 
-  /* Nav cards (groups / stations grid) */
-  .card-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(148px,1fr)); gap:12px; }
-  .nav-card{
-    position:relative; background:var(--glass-strong); border:1px solid var(--glass-border);
-    border-radius:20px; padding:16px 14px; cursor:pointer; display:flex; flex-direction:column;
-    justify-content:space-between; min-height:112px; transition:all .15s ease;
+  /* Header */
+  header { text-align: center; margin-bottom: 20px; }
+  .crest {
+    display: inline-flex; align-items: center; justify-content: center; gap: 14px;
+    margin-bottom: 8px;
   }
-  .nav-card:hover{ border-color:rgba(217,184,114,0.45); }
-  .status-dot{ width:9px; height:9px; border-radius:50%; flex:0 0 auto; }
-  .status-dot.ok{ background:var(--green); box-shadow:0 0 6px rgba(58,133,98,0.8); }
-  .status-dot.missing{ background:var(--red); box-shadow:0 0 6px rgba(224,139,125,0.7); }
-  .status-dot.refill{ background:var(--amber); box-shadow:0 0 6px rgba(217,164,92,0.7); }
-  .status-dot.empty{ background:rgba(255,255,255,0.2); }
-  .nav-card-title{
-    font-family:'Poppins',sans-serif; font-size:15px; color:var(--gold);
-    line-height:1.3; word-break:break-word; margin-top:8px;
+  .crest-line {
+    width: 38px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold));
   }
-  .nav-card-meta{ font-size:10.5px; color:var(--ink-faint); margin-top:6px; }
-  .nav-card-actions{ display:flex; gap:5px; margin-top:10px; }
-  .nav-card-action{
-    width:26px; height:26px; border-radius:50%; background:rgba(0,0,0,0.22); border:none;
-    color:var(--ink-faint); cursor:pointer; display:flex; align-items:center; justify-content:center;
-    transition:all .15s ease;
+  .crest-line.right {
+    background: linear-gradient(90deg, var(--gold), transparent);
   }
-  .nav-card-action:hover{ color:var(--gold); background:rgba(217,184,114,0.14); }
-  .nav-card-action.danger:hover{ color:var(--red); background:rgba(224,139,125,0.14); }
-  .nav-card-action svg{ width:12.5px; height:12.5px; stroke:currentColor; fill:none; stroke-width:1.8; }
-
-  .add-nav-card{
-    border:1px dashed rgba(217,184,114,0.5); background:transparent; display:flex;
-    align-items:center; justify-content:center; min-height:112px; border-radius:20px;
-    color:var(--gold); font-size:12.5px; letter-spacing:0.3px; cursor:pointer;
-    flex-direction:column; gap:6px; transition:all .15s ease; font-family:inherit;
+  .crest-icon {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 1px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--gold);
+    box-shadow: 0 0 14px var(--gold-glow);
   }
-  .add-nav-card:hover{ background:rgba(217,184,114,0.08); border-color:rgba(217,184,114,0.85); }
-  .add-nav-card .plus{ font-size:22px; line-height:1; }
-
-  .empty-hint{
-    text-align:center; padding:36px 20px; color:var(--ink-faint); font-size:13px;
-    border:1px dashed rgba(255,255,255,0.14); border-radius:20px; background:rgba(255,255,255,0.02);
-    margin-bottom:14px;
+  .crest-icon svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.6; }
+  .brand-eyebrow {
+    font-size: 11px; letter-spacing: 4px; text-transform: uppercase;
+    color: var(--gold); font-weight: 500;
   }
-  .empty-hint span{ display:block; font-family:'Poppins',sans-serif; font-size:16px; color:var(--gold); margin-bottom:5px; }
-
-  /* station-wide progress bar */
-  .progress-row{
-    display:flex; align-items:center; gap:12px; margin-bottom:18px;
-    padding:12px 16px; border-radius:18px;
-    background:rgba(0,0,0,0.18); border:1px solid rgba(255,255,255,0.06);
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 600; font-size: 32px; letter-spacing: 0.3px;
+    color: #ffffff; text-shadow: 0 3px 20px rgba(0,0,0,0.5);
+    margin-top: 2px;
   }
-  .progress-bar{
-    flex:1; height:8px; border-radius:999px; background:rgba(255,255,255,0.08);
-    overflow:hidden; display:flex;
-  }
-  .progress-seg.yes{ background:var(--green); }
-  .progress-seg.refill{ background:var(--amber); }
-  .progress-seg.no{ background:var(--red); }
-  .progress-seg.unset{ background:rgba(255,255,255,0.12); }
-  .progress-label{ font-size:11.5px; color:var(--ink-soft); white-space:nowrap; flex:0 0 auto; }
-
-  .print-btn{
-    width:100%; padding:12px; font-size:12.5px; letter-spacing:0.3px; text-align:center;
-    border-radius:14px; cursor:pointer; background:rgba(217,184,114,0.06);
-    border:1px solid rgba(217,184,114,0.3); color:var(--gold); font-weight:600;
-    display:flex; align-items:center; justify-content:center; gap:8px;
-    margin-bottom:16px; font-family:inherit;
-    transition:all .15s ease;
-  }
-  .print-btn:hover{ background:rgba(217,184,114,0.14); border-color:rgba(217,184,114,0.55); }
-  .print-btn:disabled{ opacity:0.55; cursor:default; }
-  .print-btn svg{ width:15px; height:15px; stroke:var(--gold); fill:none; stroke-width:1.6; flex:0 0 auto; }
-
-  /* Category cards */
-  .categories{ display:flex; flex-direction:column; gap:14px; margin-bottom:16px; }
-  .category{
-    background:var(--glass-strong); border:1px solid var(--glass-border); border-radius:20px;
-    padding:16px;
-  }
-  .cat-header{
-    display:flex; align-items:center; justify-content:space-between; gap:10px;
-    cursor:pointer; user-select:none;
-  }
-  .category.expanded .cat-header{ margin-bottom:12px; }
-  .cat-header-left{ display:flex; align-items:center; gap:10px; min-width:0; flex:1; }
-  .cat-chevron{
-    flex:0 0 auto; width:18px; height:18px; color:var(--gold); opacity:0.75;
-    display:flex; align-items:center; justify-content:center;
-    transition:transform .2s ease;
-  }
-  .cat-chevron svg{ width:12px; height:12px; }
-  .category.expanded .cat-chevron{ transform:rotate(90deg); }
-  .cat-title-wrap{ min-width:0; }
-  .cat-title{
-    font-family:'Poppins',sans-serif; font-size:16px; color:var(--gold);
-    letter-spacing:0.2px; word-break:break-word;
-  }
-  .cat-badges{ display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
-  .cat-badge{ font-size:10px; letter-spacing:0.3px; padding:2px 8px; border-radius:999px; }
-  .cat-badge.yes{ color:#8fd6ae; background:rgba(58,133,98,0.16); border:1px solid rgba(58,133,98,0.35); }
-  .cat-badge.no{ color:var(--red); background:rgba(224,139,125,0.14); border:1px solid rgba(224,139,125,0.35); }
-  .cat-badge.refill{ color:var(--amber); background:rgba(217,164,92,0.16); border:1px solid rgba(217,164,92,0.4); }
-  .cat-badge.unset{ color:var(--ink-faint); background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); }
-  .cat-del{
-    flex:0 0 auto; width:26px; height:26px; border-radius:50%; background:none; border:none;
-    color:var(--ink-faint); font-size:17px; cursor:pointer; display:flex; align-items:center;
-    justify-content:center; transition:all .15s ease;
-  }
-  .cat-del:hover{ color:var(--red); background:rgba(224,139,125,0.12); }
-
-  .items{ list-style:none; margin:0 0 12px; padding:0; display:flex; flex-direction:column; gap:8px; }
-  .item{
-    background:rgba(0,0,0,0.16); border:1px solid rgba(255,255,255,0.08); border-radius:14px;
-    padding:11px 12px;
-  }
-  .item-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:8px; margin-bottom:9px; }
-  .item-name{ font-size:13.5px; line-height:1.4; padding-top:1px; word-break:break-word; }
-  .item-del{
-    flex:0 0 auto; width:20px; height:20px; border-radius:50%; background:none; border:none;
-    color:var(--ink-faint); font-size:15px; cursor:pointer; display:flex; align-items:center;
-    justify-content:center; transition:all .15s ease;
-  }
-  .item-del:hover{ color:var(--red); background:rgba(224,139,125,0.12); }
-  .status-btns{ display:flex; gap:6px; }
-  .status-btn{
-    flex:1; padding:8px 4px; font-size:11px; letter-spacing:0.2px; text-align:center;
-    border-radius:10px; cursor:pointer; background:rgba(255,255,255,0.04);
-    border:1px solid rgba(255,255,255,0.12); color:var(--ink-soft);
-    transition:all .15s ease;
-  }
-  .status-btn:hover{ border-color:rgba(255,255,255,0.3); }
-  .status-btn.yes.active{ background:linear-gradient(135deg, var(--green), var(--green-deep)); border-color:var(--green); color:#fbf7ea; }
-  .status-btn.no.active{ background:rgba(224,139,125,0.9); border-color:var(--red); color:#2a1512; }
-  .status-btn.refill.active{ background:linear-gradient(135deg, #e3c684, var(--amber)); border-color:var(--amber); color:#2a1e0c; }
-
-  .remark-input{
-    width:100%; margin-top:8px; padding:8px 14px; font-size:12px; line-height:1.3;
-    border-radius:999px; border:1px solid rgba(255,255,255,0.1); background:rgba(0,0,0,0.2);
-    color:var(--ink); font-family:inherit; outline:none; box-sizing:border-box;
-    transition:border-color .15s ease, background .15s ease;
-  }
-  .remark-input::placeholder{ color:var(--ink-faint); }
-  .remark-input:focus{ border-color:rgba(217,184,114,0.5); background:rgba(0,0,0,0.28); }
-
-  .add-item-btn{
-    width:100%; padding:10px; font-size:12px; letter-spacing:0.3px; text-align:center;
-    border-radius:12px; cursor:pointer; background:transparent;
-    border:1px dashed rgba(217,184,114,0.4); color:var(--gold);
-    transition:all .15s ease;
-  }
-  .add-item-btn:hover{ background:rgba(217,184,114,0.08); border-color:rgba(217,184,114,0.7); }
-
-  /* Picker */
-  .picker{
-    margin-top:10px; padding:12px; border-radius:14px;
-    background:rgba(0,0,0,0.22); border:1px solid rgba(217,184,114,0.25);
-  }
-  .picker-row{ display:flex; gap:8px; margin-bottom:8px; }
-  .picker-row input{
-    flex:1; padding:10px 14px; font-size:13px; border:1px solid rgba(255,255,255,0.12);
-    border-radius:999px; background:rgba(0,0,0,0.25); color:var(--ink); font-family:inherit;
-    outline:none;
-  }
-  .picker-row input:focus{ border-color:rgba(217,184,114,0.5); }
-  .picker-row button{
-    flex:0 0 auto; padding:0 14px; font-size:12px; border-radius:999px; cursor:pointer;
-    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); color:var(--ink-soft);
-  }
-  .picker-results{ display:flex; flex-direction:column; gap:5px; max-height:230px; overflow-y:auto; }
-  .picker-result{
-    display:flex; flex-direction:column; padding:9px 12px; border-radius:10px; cursor:pointer;
-    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
-    transition:background .15s ease, border-color .15s ease;
-  }
-  .picker-result:hover{ background:rgba(217,184,114,0.1); border-color:rgba(217,184,114,0.4); }
-  .picker-result-name{ font-size:13px; }
-  .picker-result-cat{ font-size:10.5px; color:var(--ink-faint); margin-top:1px; }
-  .picker-custom{
-    display:flex; align-items:center; justify-content:center; gap:6px;
-    padding:10px 12px; border-radius:10px; cursor:pointer; margin-top:2px;
-    background:rgba(217,184,114,0.08); border:1px dashed rgba(217,184,114,0.5); color:var(--gold);
-    font-size:12.5px; text-align:center;
-  }
-  .picker-custom:hover{ background:rgba(217,184,114,0.16); }
-  .picker-empty{ text-align:center; font-size:11.5px; color:var(--ink-faint); padding:8px; }
-  .picker-hint{ font-size:10.5px; color:var(--ink-faint); text-align:center; padding:4px 0 0; }
-
-  .add-cat-btn{
-    width:100%; padding:13px; font-size:13px; letter-spacing:0.3px; text-align:center;
-    border-radius:14px; cursor:pointer; background:rgba(217,184,114,0.06);
-    border:1px solid rgba(217,184,114,0.3); color:var(--gold); font-weight:600;
-    transition:all .15s ease;
-  }
-  .add-cat-btn:hover{ background:rgba(217,184,114,0.14); border-color:rgba(217,184,114,0.55); }
-
-  /* ---- Custom modal (Add item to stations) ---- */
-  .modal-overlay{
-    position:fixed; inset:0; background:rgba(5,8,20,0.68); backdrop-filter:blur(3px);
-    display:flex; align-items:flex-end; justify-content:center; z-index:500;
-    padding:0; opacity:0; pointer-events:none; transition:opacity .18s ease;
-  }
-  .modal-overlay.open{ opacity:1; pointer-events:auto; }
-  @media (min-width:640px){ .modal-overlay{ align-items:center; padding:24px; } }
-  .modal-box{
-    width:100%; max-width:520px; max-height:88vh; overflow-y:auto;
-    background:linear-gradient(160deg, #16204a 0%, #0d1330 60%, #1a0f38 100%);
-    border:1px solid rgba(217,184,114,0.28); border-radius:22px 22px 0 0;
-    box-shadow:0 -8px 40px rgba(0,0,0,0.5); padding:22px 20px 24px;
-    transform:translateY(16px); transition:transform .18s ease;
-  }
-  .modal-overlay.open .modal-box{ transform:translateY(0); }
-  @media (min-width:640px){ .modal-box{ border-radius:22px; } }
-  .modal-title{ font-size:16px; font-weight:600; color:var(--gold); margin:0 0 3px; }
-  .modal-sub{ font-size:12px; color:var(--ink-soft); margin:0 0 16px; }
-  .modal-section{ margin-bottom:16px; }
-  .modal-label{ font-size:11px; letter-spacing:0.6px; text-transform:uppercase; color:var(--ink-faint); margin-bottom:8px; font-weight:600; }
-  .modal-close{
-    position:absolute; top:16px; right:16px; width:30px; height:30px; border-radius:50%;
-    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.14); color:var(--ink-soft);
-    cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:15px;
-  }
-  .modal-close:hover{ background:rgba(255,255,255,0.12); }
-  .modal-box{ position:relative; }
-
-  .cat-pick-list{ display:flex; flex-direction:column; gap:6px; max-height:180px; overflow-y:auto; }
-  .cat-pick-row{
-    display:flex; align-items:center; justify-content:space-between; gap:10px;
-    padding:11px 13px; border-radius:12px; cursor:pointer;
-    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08);
-    transition:background .15s ease, border-color .15s ease;
-  }
-  .cat-pick-row:hover{ background:rgba(217,184,114,0.08); border-color:rgba(217,184,114,0.35); }
-  .cat-pick-row.selected{ background:rgba(217,184,114,0.16); border-color:rgba(217,184,114,0.6); }
-  .cat-pick-name{ font-size:13px; }
-  .cat-pick-count{ font-size:10.5px; color:var(--ink-faint); white-space:nowrap; }
-  .cat-pick-count.missing{ color:var(--amber); }
-  .new-cat-row{ display:flex; gap:8px; margin-top:8px; }
-  .new-cat-row input{
-    flex:1; padding:10px 14px; font-size:13px; border:1px solid rgba(255,255,255,0.12);
-    border-radius:999px; background:rgba(0,0,0,0.25); color:var(--ink); font-family:inherit; outline:none;
-  }
-  .new-cat-row input:focus{ border-color:rgba(217,184,114,0.5); }
-  .new-cat-row button{
-    flex:0 0 auto; padding:0 16px; font-size:12px; border-radius:999px; cursor:pointer;
-    background:rgba(217,184,114,0.1); border:1px solid rgba(217,184,114,0.4); color:var(--gold); font-weight:600;
-  }
-  .new-cat-row button:hover{ background:rgba(217,184,114,0.2); }
-
-  .station-check-list{ display:flex; flex-direction:column; gap:5px; max-height:190px; overflow-y:auto; }
-  .station-check-row{
-    display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px;
-    background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); cursor:pointer;
-  }
-  .station-check-row:hover{ background:rgba(255,255,255,0.06); }
-  .station-check-row input[type=checkbox]{ width:16px; height:16px; accent-color:var(--gold); cursor:pointer; }
-  .station-check-name{ font-size:13px; flex:1; }
-  .station-check-tag{ font-size:10px; color:var(--amber); }
-  .station-select-actions{ display:flex; gap:8px; margin:8px 0 2px; }
-  .station-select-actions button{
-    flex:1; padding:7px; font-size:11px; border-radius:999px; cursor:pointer;
-    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.14); color:var(--ink-soft);
-  }
-  .station-select-actions button:hover{ background:rgba(255,255,255,0.1); }
-
-  .product-input-wrap{ position:relative; }
-  .product-input-wrap input{
-    width:100%; padding:11px 14px; font-size:13px; border:1px solid rgba(255,255,255,0.12);
-    border-radius:14px; background:rgba(0,0,0,0.25); color:var(--ink); font-family:inherit; outline:none;
-  }
-  .product-input-wrap input:focus{ border-color:rgba(217,184,114,0.5); }
-  .product-suggestions{
-    position:absolute; top:calc(100% + 6px); left:0; right:0; max-height:200px; overflow-y:auto;
-    background:#161c3d; border:1px solid rgba(217,184,114,0.3); border-radius:12px; z-index:10;
-    box-shadow:0 8px 24px rgba(0,0,0,0.4);
-  }
-  .product-suggestion{ padding:10px 13px; font-size:13px; cursor:pointer; }
-  .product-suggestion:hover{ background:rgba(217,184,114,0.14); }
-
-  .modal-confirm-btn{
-    width:100%; padding:14px; font-size:13.5px; font-weight:700; letter-spacing:0.3px;
-    border-radius:999px; cursor:pointer; border:none; margin-top:4px;
-    background:linear-gradient(135deg, var(--gold), var(--gold-soft)); color:#1a1305;
-    transition:filter .15s ease;
-  }
-  .modal-confirm-btn:hover{ filter:brightness(1.08); }
-  .modal-confirm-btn:disabled{ opacity:0.4; cursor:not-allowed; filter:none; }
-
-  .toast{
-    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(10px);
-    background:#16204a; border:1px solid rgba(217,184,114,0.4); color:var(--ink);
-    padding:12px 20px; border-radius:999px; font-size:12.5px; z-index:600;
-    opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease;
-    box-shadow:0 8px 24px rgba(0,0,0,0.4); text-align:center; max-width:90vw;
-  }
-  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
-
-  footer{ text-align:center; margin-top:24px; font-size:11px; color:var(--ink-faint); letter-spacing:0.3px; }
-  .footer-gold{color:var(--gold);}
-
-  @media (prefers-reduced-motion: reduce){ *{transition:none !important;} }
-  @media (max-width:420px){
-    .panel{border-radius:22px; padding:16px;}
-    h1{font-size:24px;}
-    .status-btn{font-size:10px; padding:8px 2px;}
-    .card-grid{grid-template-columns:repeat(auto-fill, minmax(130px,1fr));}
+  .subtitle {
+    font-size: 13px; color: var(--ink-soft); margin-top: 4px; letter-spacing: 0.3px;
   }
 
-  /* ── Light mode (navy blue) ── */
-  body.light{
-    --ink:#0a1f44; --ink-soft:rgba(10,31,68,0.68); --ink-faint:rgba(10,31,68,0.42);
-    --gold:#1a3a8f; --gold-soft:#15316f;
-    --glass:rgba(255,255,255,0.7); --glass-strong:rgba(255,255,255,0.85); --glass-border:rgba(26,58,143,0.15);
+  /* Companion Tab Switcher */
+  .context-tabs {
+    display: flex; gap: 8px; margin: 0 auto 20px; max-width: 440px; width: 100%; padding: 4px;
+    background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(217, 184, 114, 0.28); border-radius: 999px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.35);
+  }
+  .context-tab {
+    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 9px 16px; border-radius: 999px; font-size: 12px; font-weight: 500;
+    letter-spacing: 0.2px; text-decoration: none; color: var(--ink-soft);
+    transition: all 0.18s ease; white-space: nowrap;
+  }
+  .context-tab svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  .context-tab:hover { color: #ffffff; background: rgba(217, 184, 114, 0.1); }
+  .context-tab.active {
+    background: linear-gradient(135deg, #e3c684, #ad8a42); color: #120d03; font-weight: 600;
+    box-shadow: 0 4px 16px rgba(217, 184, 114, 0.35);
+  }
+
+  /* Breadcrumbs bar */
+  .nav-bar-strip {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    margin-bottom: 16px; padding: 10px 18px; border-radius: 16px;
+    background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+  }
+  .breadcrumbs {
+    display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-soft);
+    flex-wrap: wrap;
+  }
+  .crumb-link {
+    display: inline-flex; align-items: center; gap: 6px; color: var(--gold);
+    background: rgba(217, 184, 114, 0.1); border: 1px solid rgba(217, 184, 114, 0.28);
+    border-radius: 999px; padding: 5px 12px; font-size: 12px; cursor: pointer;
+    font-family: inherit; transition: all 0.15s ease;
+  }
+  .crumb-link:hover {
+    background: rgba(217, 184, 114, 0.2); border-color: var(--gold); color: #ffffff;
+  }
+  .crumb-link svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2.2; }
+  .crumb-sep { color: var(--ink-faint); font-size: 12px; }
+  .crumb-current { color: #ffffff; font-weight: 600; font-size: 13.5px; }
+
+  .strip-actions {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .strip-btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px;
+    font-size: 12px; font-weight: 500; font-family: inherit; cursor: pointer;
+    background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--ink-soft); transition: all 0.15s ease;
+  }
+  .strip-btn:hover { color: #ffffff; background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.25); }
+  .strip-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  .strip-btn.gold {
+    background: rgba(217, 184, 114, 0.12); border-color: rgba(217, 184, 114, 0.4); color: var(--gold);
+  }
+  .strip-btn.gold:hover {
+    background: rgba(217, 184, 114, 0.22); border-color: var(--gold); color: #ffffff;
+  }
+  .strip-btn.danger:hover {
+    background: rgba(244, 63, 94, 0.15); border-color: var(--red); color: var(--red);
+  }
+
+  /* Quick Station Switcher Dropdown inside Station */
+  .station-switcher-wrap {
+    display: inline-flex; align-items: center; gap: 8px; position: relative;
+  }
+  .station-select {
+    padding: 6px 12px; border-radius: 999px; font-size: 12px; font-family: inherit;
+    background: rgba(13, 21, 50, 0.9); border: 1px solid rgba(217, 184, 114, 0.35);
+    color: var(--gold); outline: none; cursor: pointer;
+  }
+
+  /* Metric Stat Cards */
+  .stat-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--navy-card); border: 1px solid var(--navy-border); border-radius: 18px;
+    padding: 14px 16px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; flex-direction: column; justify-content: space-between;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+  .stat-card:hover { transform: translateY(-2px); border-color: rgba(217,184,114,0.45); }
+  .stat-label {
+    font-size: 11px; letter-spacing: 0.5px; text-transform: uppercase; color: var(--ink-faint);
+    font-weight: 500; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between;
+  }
+  .stat-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .stat-dot.green { background: var(--green); box-shadow: 0 0 8px var(--green); }
+  .stat-dot.amber { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+  .stat-dot.red { background: var(--red); box-shadow: 0 0 8px var(--red); }
+  .stat-dot.gold { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+  .stat-value {
+    font-size: 26px; font-weight: 700; color: #ffffff; line-height: 1.1; font-feature-settings: 'tnum';
+  }
+  .stat-sub {
+    font-size: 11px; color: var(--ink-soft); margin-top: 4px;
+  }
+
+  /* Main Surface Panel */
+  .surface-panel {
+    background: rgba(13, 21, 50, 0.7);
+    border: 1px solid rgba(217, 184, 114, 0.25);
+    border-radius: 24px;
+    padding: 24px;
+    backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+  }
+
+  /* Groups & Stations Grid Views */
+  .section-headline {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .section-title {
+    font-family: 'Playfair Display', serif; font-size: 20px; color: var(--gold);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-badge {
+    font-family: 'Poppins', sans-serif; font-size: 11px; font-weight: 600;
+    padding: 3px 9px; border-radius: 999px; background: rgba(217, 184, 114, 0.15);
+    color: var(--gold-light); border: 1px solid rgba(217, 184, 114, 0.3);
+  }
+
+  /* Station & Group Cards */
+  .grid-container {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;
+  }
+  .item-card {
+    background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px; padding: 20px; cursor: pointer; display: flex; flex-direction: column;
+    justify-content: space-between; min-height: 160px; transition: all 0.2s ease;
+    position: relative; overflow: hidden;
+  }
+  .item-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: transparent; transition: background 0.2s ease;
+  }
+  .item-card:hover {
+    background: rgba(255, 255, 255, 0.065); border-color: rgba(217, 184, 114, 0.45);
+    transform: translateY(-2px); box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+  }
+  .item-card.status-ok::before { background: linear-gradient(90deg, var(--green), #10b981); }
+  .item-card.status-refill::before { background: linear-gradient(90deg, var(--amber), #fbbf24); }
+  .item-card.status-missing::before { background: linear-gradient(90deg, var(--red), #f43f5e); }
+  .item-card.status-empty::before { background: rgba(255,255,255,0.15); }
+
+  .card-top {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    margin-bottom: 12px;
+  }
+  .card-title {
+    font-family: 'Playfair Display', serif; font-size: 19px; font-weight: 600;
+    color: #ffffff; line-height: 1.3;
+  }
+  .card-pill {
+    font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 3px 8px; border-radius: 999px; white-space: nowrap; flex-shrink: 0;
+  }
+  .card-pill.ok { background: rgba(46, 204, 113, 0.16); color: #86efac; border: 1px solid rgba(46, 204, 113, 0.35); }
+  .card-pill.refill { background: rgba(245, 158, 11, 0.16); color: #fde047; border: 1px solid rgba(245, 158, 11, 0.35); }
+  .card-pill.missing { background: rgba(244, 63, 94, 0.16); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.35); }
+  .card-pill.empty { background: rgba(255, 255, 255, 0.08); color: var(--ink-soft); border: 1px solid rgba(255, 255, 255, 0.15); }
+
+  /* Station progress mini bar */
+  .card-progress-bar {
+    height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.1);
+    overflow: hidden; display: flex; margin: 12px 0 14px;
+  }
+  .progress-slice { height: 100%; }
+  .progress-slice.yes { background: var(--green); }
+  .progress-slice.refill { background: var(--amber); }
+  .progress-slice.no { background: var(--red); }
+  .progress-slice.unset { background: rgba(255, 255, 255, 0.15); }
+
+  .card-meta-row {
+    display: flex; align-items: center; justify-content: space-between; font-size: 11.5px;
+    color: var(--ink-soft); margin-top: auto; padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .card-actions {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .icon-btn {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--ink-soft); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s ease;
+  }
+  .icon-btn:hover { background: rgba(217, 184, 114, 0.2); border-color: var(--gold); color: #ffffff; }
+  .icon-btn.danger:hover { background: rgba(244, 63, 94, 0.2); border-color: var(--red); color: var(--red); }
+  .icon-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+
+  /* Create new item card */
+  .add-card {
+    border: 1px dashed rgba(217, 184, 114, 0.45); background: rgba(217, 184, 114, 0.03);
+    border-radius: 20px; padding: 20px; cursor: pointer; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; min-height: 160px; color: var(--gold);
+    transition: all 0.2s ease; font-family: inherit;
+  }
+  .add-card:hover {
+    background: rgba(217, 184, 114, 0.09); border-color: var(--gold); transform: translateY(-2px);
+  }
+  .add-card-circle {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(217, 184, 114, 0.15); border: 1px solid rgba(217, 184, 114, 0.4);
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+    margin-bottom: 8px;
+  }
+  .add-card-title { font-size: 13px; font-weight: 600; letter-spacing: 0.3px; }
+  .add-card-sub { font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+
+  /* Checklist View Specifics */
+  .checklist-toolbar {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    margin-bottom: 20px;
+  }
+  .search-filter-wrap {
+    display: flex; align-items: center; gap: 10px; flex: 1; min-width: 240px;
+  }
+  .search-input-box {
+    position: relative; flex: 1;
+  }
+  .search-input-box svg {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    width: 15px; height: 15px; stroke: var(--ink-faint); fill: none; stroke-width: 2;
+  }
+  .search-input {
+    width: 100%; padding: 10px 14px 10px 38px; border-radius: 999px;
+    background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #ffffff; font-size: 13px; font-family: inherit; outline: none;
+    transition: border-color 0.15s ease, background 0.15s ease;
+  }
+  .search-input:focus {
+    border-color: var(--gold); background: rgba(0, 0, 0, 0.45);
+  }
+  .filter-pills {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  }
+  .filter-pill {
+    padding: 6px 12px; border-radius: 999px; font-size: 11px; font-weight: 500;
+    cursor: pointer; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--ink-soft); transition: all 0.15s ease;
+  }
+  .filter-pill:hover { color: #ffffff; background: rgba(255, 255, 255, 0.1); }
+  .filter-pill.active {
+    background: var(--gold); color: #151004; font-weight: 600; border-color: var(--gold);
+  }
+
+  .action-buttons-wrap {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  }
+  .primary-action-btn {
+    display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px;
+    font-size: 12.5px; font-weight: 600; font-family: inherit; cursor: pointer; border: none;
+    background: linear-gradient(135deg, #e3c684, #ad8a42); color: #140e04;
+    box-shadow: 0 4px 14px rgba(217, 184, 114, 0.3); transition: filter 0.15s ease, transform 0.15s ease;
+  }
+  .primary-action-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+  .primary-action-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2.2; }
+
+  /* Station Overview Banner */
+  .station-overview-banner {
+    display: flex; flex-direction: column; gap: 12px;
+    background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(217, 184, 114, 0.2);
+    border-radius: 18px; padding: 16px 20px; margin-bottom: 24px;
+  }
+  .banner-top {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  }
+  .banner-title {
+    font-family: 'Playfair Display', serif; font-size: 22px; color: #ffffff;
+  }
+  .banner-progress-wrap {
+    display: flex; align-items: center; gap: 14px;
+  }
+  .full-progress-bar {
+    flex: 1; height: 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.1);
+    overflow: hidden; display: flex; min-width: 140px;
+  }
+
+  /* Category Accordion Blocks */
+  .categories-list {
+    display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;
+  }
+  .cat-block {
+    background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 20px; overflow: hidden; transition: border-color 0.2s ease;
+  }
+  .cat-block:hover { border-color: rgba(217, 184, 114, 0.35); }
+  .cat-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 14px;
+    padding: 16px 20px; cursor: pointer; user-select: none;
+    background: rgba(255, 255, 255, 0.02); transition: background 0.15s ease;
+  }
+  .cat-head:hover { background: rgba(255, 255, 255, 0.045); }
+  .cat-head-left {
+    display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;
+  }
+  .cat-toggle-arrow {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(217, 184, 114, 0.12); border: 1px solid rgba(217, 184, 114, 0.25);
+    color: var(--gold); display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s ease; flex-shrink: 0;
+  }
+  .cat-toggle-arrow svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 2.2; }
+  .cat-block.expanded .cat-toggle-arrow { transform: rotate(90deg); }
+
+  .cat-name-box { min-width: 0; }
+  .cat-name {
+    font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 600;
+    color: var(--gold); letter-spacing: 0.2px; word-break: break-word;
+  }
+  .cat-badges-strip {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;
+  }
+  .cat-status-tag {
+    font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 999px;
+  }
+  .cat-status-tag.yes { background: rgba(46, 204, 113, 0.15); color: #86efac; border: 1px solid rgba(46, 204, 113, 0.3); }
+  .cat-status-tag.refill { background: rgba(245, 158, 11, 0.15); color: #fde047; border: 1px solid rgba(245, 158, 11, 0.3); }
+  .cat-status-tag.no { background: rgba(244, 63, 94, 0.15); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.3); }
+  .cat-status-tag.unset { background: rgba(255, 255, 255, 0.06); color: var(--ink-soft); border: 1px solid rgba(255, 255, 255, 0.12); }
+
+  .cat-head-actions {
+    display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  }
+  .cat-quick-stock-btn {
+    padding: 5px 11px; font-size: 11px; font-weight: 600; border-radius: 999px;
+    background: rgba(46, 204, 113, 0.12); border: 1px solid rgba(46, 204, 113, 0.3);
+    color: #86efac; cursor: pointer; transition: all 0.15s ease;
+  }
+  .cat-quick-stock-btn:hover {
+    background: rgba(46, 204, 113, 0.25); border-color: var(--green); color: #ffffff;
+  }
+
+  /* Items List Inside Category */
+  .cat-body {
+    padding: 0 20px 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .items-table {
+    display: flex; flex-direction: column; gap: 10px; margin-top: 14px;
+  }
+  .item-row {
+    background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px; padding: 12px 16px; transition: all 0.15s ease;
+  }
+  .item-row:hover {
+    border-color: rgba(217, 184, 114, 0.3); background: rgba(0, 0, 0, 0.35);
+  }
+  .item-main {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  }
+  .item-title {
+    font-size: 14px; font-weight: 500; color: #ffffff; flex: 1; min-width: 180px;
+  }
+  .item-controls {
+    display: flex; align-items: center; gap: 8px;
+  }
+  
+  /* Status Toggle Pills (Present / Refill / Missing) */
+  .status-toggle-group {
+    display: inline-flex; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 999px; padding: 3px; gap: 3px;
+  }
+  .status-toggle-btn {
+    padding: 5px 12px; font-size: 11.5px; font-weight: 500; border-radius: 999px;
+    background: transparent; border: none; color: var(--ink-soft); cursor: pointer;
+    font-family: inherit; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 5px;
+    white-space: nowrap;
+  }
+  .status-toggle-btn:hover { color: #ffffff; background: rgba(255, 255, 255, 0.08); }
+  
+  .status-toggle-btn.yes.active {
+    background: linear-gradient(135deg, #2ecc71, #166534); color: #ffffff; font-weight: 600;
+    box-shadow: 0 2px 8px var(--green-glow);
+  }
+  .status-toggle-btn.refill.active {
+    background: linear-gradient(135deg, #f59e0b, #b45309); color: #ffffff; font-weight: 600;
+    box-shadow: 0 2px 8px var(--amber-glow);
+  }
+  .status-toggle-btn.no.active {
+    background: linear-gradient(135deg, #f43f5e, #be123c); color: #ffffff; font-weight: 600;
+    box-shadow: 0 2px 8px var(--red-glow);
+  }
+
+  .item-remark-input {
+    width: 100%; margin-top: 8px; padding: 7px 14px; font-size: 12px;
+    border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.09);
+    background: rgba(0, 0, 0, 0.2); color: var(--ink); font-family: inherit;
+    outline: none; transition: all 0.15s ease;
+  }
+  .item-remark-input:focus {
+    border-color: var(--gold); background: rgba(0, 0, 0, 0.4);
+  }
+  .item-remark-input::placeholder { color: var(--ink-faint); }
+
+  /* Add Item Picker Drawer inside Category */
+  .picker-box {
+    margin-top: 14px; padding: 14px; border-radius: 16px;
+    background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(217, 184, 114, 0.35);
+  }
+  .picker-input-row {
+    display: flex; gap: 8px; margin-bottom: 8px;
+  }
+  .picker-input {
+    flex: 1; padding: 9px 14px; font-size: 13px; border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(0, 0, 0, 0.3);
+    color: #ffffff; font-family: inherit; outline: none;
+  }
+  .picker-input:focus { border-color: var(--gold); }
+  .picker-close-btn {
+    padding: 0 14px; font-size: 12px; border-radius: 999px; cursor: pointer;
+    background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--ink-soft); font-family: inherit;
+  }
+  .picker-results-list {
+    display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto;
+  }
+  .picker-item-option {
+    display: flex; align-items: center; justify-content: space-between; padding: 8px 12px;
+    border-radius: 10px; background: rgba(255, 255, 255, 0.035); border: 1px solid rgba(255, 255, 255, 0.07);
+    cursor: pointer; transition: all 0.15s ease;
+  }
+  .picker-item-option:hover {
+    background: rgba(217, 184, 114, 0.15); border-color: var(--gold);
+  }
+  .picker-add-custom {
+    padding: 10px; border-radius: 10px; cursor: pointer; margin-top: 4px;
+    background: rgba(217, 184, 114, 0.1); border: 1px dashed rgba(217, 184, 114, 0.5);
+    color: var(--gold); font-size: 12.5px; text-align: center; font-weight: 500;
+  }
+  .picker-add-custom:hover { background: rgba(217, 184, 114, 0.2); }
+
+  .add-item-trigger-btn {
+    width: 100%; margin-top: 12px; padding: 10px; font-size: 12.5px; font-weight: 600;
+    border-radius: 12px; cursor: pointer; background: transparent;
+    border: 1px dashed rgba(217, 184, 114, 0.4); color: var(--gold);
+    transition: all 0.15s ease; font-family: inherit;
+  }
+  .add-item-trigger-btn:hover {
+    background: rgba(217, 184, 114, 0.1); border-color: var(--gold);
+  }
+
+  /* Modal Windows */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(5, 8, 20, 0.75);
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center; z-index: 999;
+    padding: 16px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: auto; }
+  .modal-dialog {
+    width: 100%; max-width: 580px; max-height: 90vh; overflow-y: auto;
+    background: linear-gradient(160deg, #131c3f 0%, #0c122a 60%, #160c2b 100%);
+    border: 1px solid rgba(217, 184, 114, 0.35); border-radius: 24px;
+    padding: 24px; box-shadow: 0 24px 70px rgba(0,0,0,0.6);
+    transform: scale(0.96); transition: transform 0.2s ease; position: relative;
+  }
+  .modal-overlay.open .modal-dialog { transform: scale(1); }
+  .modal-header {
+    display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px;
+  }
+  .modal-title {
+    font-family: 'Playfair Display', serif; font-size: 20px; color: var(--gold); font-weight: 600;
+  }
+  .modal-subtitle {
+    font-size: 12px; color: var(--ink-soft); margin-top: 4px;
+  }
+  .modal-close-btn {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--ink-soft); cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; transition: all 0.15s ease;
+  }
+  .modal-close-btn:hover { color: #ffffff; background: rgba(255, 255, 255, 0.16); }
+
+  .toast {
+    position: fixed; bottom: 84px; left: 50%; transform: translateX(-50%) translateY(12px);
+    background: #111a3b; border: 1px solid var(--gold); color: #ffffff;
+    padding: 12px 24px; border-radius: 999px; font-size: 13px; font-weight: 500;
+    z-index: 1000; opacity: 0; pointer-events: none; transition: all 0.2s ease;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5); text-align: center; max-width: 90vw;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  footer {
+    text-align: center; margin-top: 32px; font-size: 11px; color: var(--ink-faint);
+    letter-spacing: 0.4px;
+  }
+  .footer-gold { color: var(--gold); }
+
+  /* ── Light Mode Custom Palette ── */
+  body.light {
+    --ink: #0b1a3d;
+    --ink-soft: rgba(11, 26, 61, 0.72);
+    --ink-faint: rgba(11, 26, 61, 0.45);
+    --gold: #1a3a8f;
+    --gold-light: #244eb8;
+    --gold-dark: #0f245c;
+    --gold-glow: rgba(26, 58, 143, 0.2);
+    --navy-deep: #f6f8fd;
+    --navy-mid: #ebf0fa;
+    --navy-card: rgba(255, 255, 255, 0.9);
+    --navy-border: rgba(26, 58, 143, 0.16);
     background:
-      radial-gradient(900px 560px at 15% -8%, rgba(26,58,143,0.06), transparent 60%),
-      radial-gradient(1000px 700px at 100% 10%, rgba(26,58,143,0.08), transparent 55%),
-      linear-gradient(160deg, #f5f7fc 0%, #eef1fa 55%, #f2effa 100%);
+      radial-gradient(1100px 650px at 15% -10%, rgba(26, 58, 143, 0.08), transparent 60%),
+      radial-gradient(1100px 750px at 95% 10%, rgba(217, 184, 114, 0.12), transparent 55%),
+      linear-gradient(160deg, #f4f6fc 0%, #edf1fa 55%, #f6f3fc 100%);
   }
-  body.light .remark-input{ background:rgba(255,255,255,0.6); border-color:rgba(26,58,143,0.15); }
-  body.light .picker-custom{ background:rgba(26,58,143,0.05); }
+  body.light h1 { color: #0b1a3d; text-shadow: none; }
+  body.light .context-tabs {
+    background: rgba(255, 255, 255, 0.7); border-color: rgba(26, 58, 143, 0.18);
+  }
+  body.light .context-tab.active {
+    background: linear-gradient(135deg, #1a3a8f, #10255c); color: #ffffff;
+    box-shadow: 0 4px 14px rgba(26, 58, 143, 0.3);
+  }
+  body.light .surface-panel {
+    background: rgba(255, 255, 255, 0.82); border-color: rgba(26, 58, 143, 0.16);
+    box-shadow: 0 20px 50px rgba(11, 26, 61, 0.08);
+  }
+  body.light .item-card {
+    background: #ffffff; border-color: rgba(26, 58, 143, 0.12);
+    box-shadow: 0 6px 20px rgba(11, 26, 61, 0.04);
+  }
+  body.light .item-card:hover {
+    background: #ffffff; border-color: #1a3a8f; box-shadow: 0 12px 30px rgba(11, 26, 61, 0.1);
+  }
+  body.light .card-title { color: #0b1a3d; }
+  body.light .add-card {
+    background: rgba(26, 58, 143, 0.03); border-color: rgba(26, 58, 143, 0.35); color: #1a3a8f;
+  }
+  body.light .add-card-circle {
+    background: rgba(26, 58, 143, 0.1); border-color: rgba(26, 58, 143, 0.3);
+  }
+  body.light .cat-block {
+    background: #ffffff; border-color: rgba(26, 58, 143, 0.12); box-shadow: 0 4px 14px rgba(11, 26, 61, 0.03);
+  }
+  body.light .cat-name { color: #1a3a8f; }
+  body.light .item-row {
+    background: rgba(244, 246, 252, 0.6); border-color: rgba(26, 58, 143, 0.1);
+  }
+  body.light .item-title { color: #0b1a3d; }
+  body.light .status-toggle-group {
+    background: rgba(26, 58, 143, 0.06); border-color: rgba(26, 58, 143, 0.14);
+  }
+  body.light .item-remark-input {
+    background: #ffffff; border-color: rgba(26, 58, 143, 0.15); color: #0b1a3d;
+  }
+  body.light .search-input {
+    background: #ffffff; border-color: rgba(26, 58, 143, 0.18); color: #0b1a3d;
+  }
+  body.light .modal-dialog {
+    background: #ffffff; border-color: rgba(26, 58, 143, 0.2); color: #0b1a3d;
+  }
+  body.light .modal-title { color: #1a3a8f; }
+  body.light .toast {
+    background: #ffffff; border-color: #1a3a8f; color: #0b1a3d;
+    box-shadow: 0 10px 30px rgba(11, 26, 61, 0.15);
+  }
 </style>
 </head>
 <body>
-<script>try{if(localStorage.getItem('th-theme')==='light')document.body.classList.add('light');}catch(e){}</script>
-<div class="app">
+<script>try{var t=localStorage.getItem('th-theme');if(t==='light'||(!t&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches))document.body.classList.add('light');}catch(e){}</script>
+
+<div class="app-container">
   <header>
     <div class="crest">
       <span class="crest-line"></span>
-      <span class="brand">Truefitt &amp; Hill</span>
+      <div class="crest-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      </div>
       <span class="crest-line right"></span>
     </div>
+    <div class="brand-eyebrow">Truefitt &amp; Hill &middot; Mayfair</div>
     <h1 id="pageTitle">Station Checklist</h1>
-    <div class="subtitle" id="subtitle">Loading&hellip;</div>
+    <div class="subtitle" id="subtitle">Connecting to salon cloud&hellip;</div>
   </header>
 
-  <div class="breadcrumb" id="breadcrumb" style="display:none;"></div>
+  <!-- Reusable Companion Tool Switcher -->
+  <div class="context-tabs">
+    <a class="context-tab active" href="station-checklist.html" id="tabChecklist">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Station Checklist
+    </a>
+    <a class="context-tab" href="requirements.html" id="tabRequirements">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      Station Requirements
+    </a>
+  </div>
 
-  <div class="panel" id="mainPanel">
+  <!-- Navigation bar strip (Breadcrumbs, Station Switcher, Actions) -->
+  <div class="nav-bar-strip" id="navBarStrip" style="display:none;"></div>
+
+  <!-- Stat summary cards -->
+  <div class="stat-grid" id="statGrid"></div>
+
+  <!-- Main Surface Viewport -->
+  <div class="surface-panel" id="mainSurface">
     <div id="viewBody"></div>
   </div>
 
-  <footer>Station Checklist &nbsp;<span class="footer-gold">&middot;</span>&nbsp; Truefitt &amp; Hill</footer>
+  <footer>Station Checklist &nbsp;<span class="footer-gold">&middot;</span>&nbsp; Truefitt &amp; Hill London</footer>
 </div>
 
+<!-- Modal for "Add Item to Stations" -->
 <div class="modal-overlay" id="everywhereModal">
-  <div class="modal-box" id="everywhereModalBox"></div>
+  <div class="modal-dialog" id="everywhereModalBox"></div>
 </div>
+
 <div class="toast" id="toastEl"></div>
 
 <script>
@@ -454,9 +720,6 @@
   const DOC_COLLECTION = 'th-staff-tools';
   const DOC_ID = 'station-checklist';
 
-  // Product catalog defaults to the static bootstrap file for instant search,
-  // then swaps to the live Products page data (th-staff-tools/products) once it loads —
-  // so edits made on the Products page show up here without a redeploy.
   let CATALOG = (window.TH_CATALOG || []).slice();
 
   const DEFAULT_STATE = {
@@ -470,34 +733,45 @@
 
   let state = null;
   let docRef = null;
-  let openPicker = null;   // category id whose "add item" picker is open
+  let openPicker = null;        // category id whose "add item" picker is open
   let pickerQuery = '';
-  let expandedCats = new Set(); // category ids currently expanded
+  let expandedCats = new Set();  // category ids currently expanded
+  let searchQuery = '';          // in-station checklist search query
+  let activeFilter = 'all';      // 'all' | 'no' | 'refill' | 'yes' | 'unset'
 
   const pageTitleEl = document.getElementById('pageTitle');
   const subtitleEl = document.getElementById('subtitle');
-  const breadcrumbEl = document.getElementById('breadcrumb');
+  const navBarStripEl = document.getElementById('navBarStrip');
+  const statGridEl = document.getElementById('statGrid');
   const viewBodyEl = document.getElementById('viewBody');
+  const toastEl = document.getElementById('toastEl');
+  let toastTimer = null;
 
   function uid(){
-    return Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   }
 
   function escapeHtml(s){
     const d = document.createElement('div');
-    d.textContent = s;
+    d.textContent = s || '';
     return d.innerHTML;
   }
 
-  // ---------- Migration ----------
+  function showToast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3000);
+  }
+
+  // ---------- Migration Helper ----------
   function migrateIfNeeded(data){
     if(data && Array.isArray(data.groups) && Array.isArray(data.stations) && typeof data.data === 'object'){
       return data;
     }
-    // Old flat format: { stations: [names...], active: name, data: { name: [cats] } }
     if(data && Array.isArray(data.stations) && typeof data.data === 'object'){
       const groupId = 'g_migrated';
-      const migrated = {
+      return {
         groups: [{ id: groupId, title: 'Stations' }],
         stations: data.stations.map(name => ({ id: name, title: name, groupId: groupId })),
         data: data.data,
@@ -505,7 +779,6 @@
         activeGroup: null,
         activeStation: null
       };
-      return migrated;
     }
     return JSON.parse(JSON.stringify(DEFAULT_STATE));
   }
@@ -517,13 +790,8 @@
     }
     if(!state.data) state.data = {};
     state.stations.forEach(s => { if(!state.data[s.id]) state.data[s.id] = []; });
-    // Validate active pointers
-    if(state.activeGroup && !state.groups.some(g => g.id === state.activeGroup)){
-      state.activeGroup = null;
-    }
-    if(state.activeStation && !state.stations.some(s => s.id === state.activeStation)){
-      state.activeStation = null;
-    }
+    if(state.activeGroup && !state.groups.some(g => g.id === state.activeGroup)) state.activeGroup = null;
+    if(state.activeStation && !state.stations.some(s => s.id === state.activeStation)) state.activeStation = null;
     if(state.view === 'stations' && !state.activeGroup) state.view = 'groups';
     if(state.view === 'checklist' && !state.activeStation) state.view = state.activeGroup ? 'stations' : 'groups';
     if(!state.view) state.view = 'groups';
@@ -531,11 +799,11 @@
   }
 
   function load(){
-    subtitleEl.textContent = 'Connecting\u2026';
+    subtitleEl.textContent = 'Connecting to salon cloud\u2026';
     window.thAuthReady.then(function(){
       docRef = window.thDB.collection(DOC_COLLECTION).doc(DOC_ID);
       docRef.onSnapshot(function(snap){
-        if(snap.metadata.hasPendingWrites) return; // ignore this device's own echo
+        if(snap.metadata.hasPendingWrites) return;
         if(snap.exists){
           applyIncoming(snap.data());
         } else {
@@ -544,8 +812,8 @@
           render();
         }
       }, function(err){
-        console.error('Sync error', err);
-        subtitleEl.textContent = 'Could not connect \u2014 check your internet connection.';
+        console.error('Checklist sync error', err);
+        subtitleEl.textContent = 'Could not sync \u2014 check your connection.';
       });
     });
   }
@@ -553,35 +821,29 @@
   function save(){
     if(!docRef || !state) return;
     const payload = Object.assign({}, state, { updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
-    docRef.set(payload).catch(e => console.error('Could not save', e));
+    docRef.set(payload).catch(e => console.error('Checklist save error', e));
   }
 
-  // Debounced save for free-typing fields (like remarks) so we don't write
-  // to Firestore on every keystroke and don't need to re-render mid-typing.
   let saveTimer = null;
   function queueSave(){
     if(saveTimer) clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => { saveTimer = null; save(); }, 600);
+    saveTimer = setTimeout(() => { saveTimer = null; save(); }, 500);
   }
 
-  // ---------- Data helpers ----------
-  function groupById(id){ return state.groups.find(g => g.id === id); }
-  function stationById(id){ return state.stations.find(s => s.id === id); }
-  function stationsInGroup(groupId){ return state.stations.filter(s => s.groupId === groupId); }
-
+  // ---------- Helpers ----------
+  function groupById(id){ return (state.groups || []).find(g => g.id === id); }
+  function stationById(id){ return (state.stations || []).find(s => s.id === id); }
+  function stationsInGroup(groupId){ return (state.stations || []).filter(s => s.groupId === groupId); }
   function categoriesForStation(stationId){
     if(!state.data[stationId]) state.data[stationId] = [];
     return state.data[stationId];
   }
-
-  function activeCats(){
-    return categoriesForStation(state.activeStation);
-  }
+  function activeCats(){ return categoriesForStation(state.activeStation); }
 
   function itemsOfStation(stationId){
     const cats = state.data[stationId] || [];
     let items = [];
-    cats.forEach(c => items = items.concat(c.items));
+    cats.forEach(c => { items = items.concat(c.items || []); });
     return items;
   }
 
@@ -592,7 +854,7 @@
   }
 
   function itemsStatus(items){
-    if(items.length === 0) return 'empty';
+    if(!items || items.length === 0) return 'empty';
     if(items.some(i => i.status === 'no')) return 'missing';
     if(items.some(i => i.status === 'refill')) return 'refill';
     if(items.some(i => !i.status)) return 'empty';
@@ -600,20 +862,24 @@
   }
 
   function countsFor(items){
+    items = items || [];
     return {
       yes: items.filter(i => i.status === 'yes').length,
       no: items.filter(i => i.status === 'no').length,
       refill: items.filter(i => i.status === 'refill').length,
-      unset: items.filter(i => !i.status).length
+      unset: items.filter(i => !i.status).length,
+      total: items.length
     };
   }
 
-  // ---------- Navigation ----------
+  // ---------- Navigation Flow ----------
   function goToGroups(){
     state.view = 'groups';
     state.activeGroup = null;
     state.activeStation = null;
     openPicker = null;
+    searchQuery = '';
+    activeFilter = 'all';
     save();
     render();
   }
@@ -623,6 +889,8 @@
     state.activeGroup = groupId;
     state.activeStation = null;
     openPicker = null;
+    searchQuery = '';
+    activeFilter = 'all';
     save();
     render();
   }
@@ -633,21 +901,15 @@
     state.activeGroup = st ? st.groupId : state.activeGroup;
     state.activeStation = stationId;
     openPicker = null;
-    save();
-    render();
-  }
-
-  function backToStations(){
-    state.view = 'stations';
-    state.activeStation = null;
-    openPicker = null;
+    searchQuery = '';
+    activeFilter = 'all';
     save();
     render();
   }
 
   // ---------- Group CRUD ----------
   async function addGroup(){
-    const name = await THDialog.prompt('Name for the new group:', '', { title: 'Add group', placeholder: 'e.g. Service Station, Desks, Pantry Room' });
+    const name = await THDialog.prompt('Name for the new station group:', '', { title: 'Add Station Group', placeholder: 'e.g. Service Stations, Desks, VIP Room' });
     if(!name) return;
     const trimmed = name.trim();
     if(!trimmed) return;
@@ -663,14 +925,10 @@
   async function renameGroup(groupId){
     const g = groupById(groupId);
     if(!g) return;
-    const name = await THDialog.prompt('Rename group:', g.title, { title: 'Rename group' });
+    const name = await THDialog.prompt('Rename group:', g.title, { title: 'Rename Group' });
     if(!name) return;
     const trimmed = name.trim();
     if(!trimmed || trimmed === g.title) return;
-    if(state.groups.some(x => x.id !== groupId && x.title.toLowerCase() === trimmed.toLowerCase())){
-      await THDialog.alert('A group with that name already exists.');
-      return;
-    }
     g.title = trimmed;
     save();
     render();
@@ -679,16 +937,16 @@
   async function deleteGroup(groupId){
     const g = groupById(groupId);
     if(!g) return;
-    const stCount = stationsInGroup(groupId).length;
-    const msg = stCount > 0
-      ? 'Delete "' + g.title + '" and all ' + stCount + ' station(s) inside it, including their checklists?'
-      : 'Delete "' + g.title + '"?';
-    const ok = await THDialog.confirm(msg, { title: 'Delete group', okText: 'Delete', danger: true });
+    const count = stationsInGroup(groupId).length;
+    const msg = count > 0
+      ? 'Delete "' + g.title + '" and all ' + count + ' station(s) inside it?'
+      : 'Delete group "' + g.title + '"?';
+    const ok = await THDialog.confirm(msg, { title: 'Delete Group', okText: 'Delete', danger: true });
     if(!ok) return;
-    const removedStationIds = stationsInGroup(groupId).map(s => s.id);
+    const removedIds = stationsInGroup(groupId).map(s => s.id);
     state.groups = state.groups.filter(x => x.id !== groupId);
     state.stations = state.stations.filter(s => s.groupId !== groupId);
-    removedStationIds.forEach(id => { delete state.data[id]; });
+    removedIds.forEach(id => { delete state.data[id]; });
     if(state.activeGroup === groupId){
       state.activeGroup = null;
       state.activeStation = null;
@@ -700,14 +958,10 @@
 
   // ---------- Station CRUD ----------
   async function addStation(groupId){
-    const name = await THDialog.prompt('Name for the new station:', '', { title: 'Add station', placeholder: 'e.g. Station 1, Station 2' });
+    const name = await THDialog.prompt('Name for the new station:', '', { title: 'Add Station', placeholder: 'e.g. Station 1, Chair 4' });
     if(!name) return;
     const trimmed = name.trim();
     if(!trimmed) return;
-    if(stationsInGroup(groupId).some(s => s.title.toLowerCase() === trimmed.toLowerCase())){
-      await THDialog.alert('A station with that name already exists in this group.');
-      return;
-    }
     const id = uid();
     state.stations.push({ id: id, title: trimmed, groupId: groupId });
     state.data[id] = [];
@@ -718,54 +972,43 @@
   async function renameStation(stationId){
     const st = stationById(stationId);
     if(!st) return;
-    const name = await THDialog.prompt('Rename station:', st.title, { title: 'Rename station' });
+    const name = await THDialog.prompt('Rename station:', st.title, { title: 'Rename Station' });
     if(!name) return;
     const trimmed = name.trim();
     if(!trimmed || trimmed === st.title) return;
-    if(stationsInGroup(st.groupId).some(s => s.id !== stationId && s.title.toLowerCase() === trimmed.toLowerCase())){
-      await THDialog.alert('A station with that name already exists in this group.');
-      return;
-    }
     st.title = trimmed;
     save();
     render();
   }
 
   async function duplicateStation(stationId){
-    const source = stationById(stationId);
-    if(!source) return;
-    const sourceCats = state.data[stationId] || [];
-
-    let suggestion = source.title + ' Copy';
-    let n = 2;
-    while(stationsInGroup(source.groupId).some(s => s.title === suggestion)){ suggestion = source.title + ' Copy ' + n; n++; }
-
-    const name = await THDialog.prompt('Name for the duplicated station:', suggestion, { title: 'Duplicate station' });
+    const src = stationById(stationId);
+    if(!src) return;
+    const srcCats = state.data[stationId] || [];
+    let suggestion = src.title + ' Copy';
+    const name = await THDialog.prompt('Name for the duplicated station:', suggestion, { title: 'Duplicate Station' });
     if(!name) return;
     const trimmed = name.trim();
     if(!trimmed) return;
-    if(stationsInGroup(source.groupId).some(s => s.title.toLowerCase() === trimmed.toLowerCase())){
-      await THDialog.alert('A station with that name already exists in this group.');
-      return;
-    }
 
-    const clonedCats = sourceCats.map(cat => ({
+    const cloned = srcCats.map(cat => ({
       id: uid(),
       title: cat.title,
-      items: cat.items.map(item => ({ id: uid(), name: item.name, status: null }))
+      items: (cat.items || []).map(item => ({ id: uid(), name: item.name, status: null, remark: '' }))
     }));
 
     const newId = uid();
-    state.stations.push({ id: newId, title: trimmed, groupId: source.groupId });
-    state.data[newId] = clonedCats;
+    state.stations.push({ id: newId, title: trimmed, groupId: src.groupId });
+    state.data[newId] = cloned;
     save();
     render();
+    showToast('Station duplicated successfully.');
   }
 
   async function deleteStation(stationId){
     const st = stationById(stationId);
     if(!st) return;
-    const ok = await THDialog.confirm('Delete "' + st.title + '" and its entire checklist?', { title: 'Delete station', okText: 'Delete', danger: true });
+    const ok = await THDialog.confirm('Delete "' + st.title + '" and its entire checklist?', { title: 'Delete Station', okText: 'Delete', danger: true });
     if(!ok) return;
     state.stations = state.stations.filter(s => s.id !== stationId);
     delete state.data[stationId];
@@ -777,863 +1020,719 @@
     render();
   }
 
-  // ---------- Icons ----------
-  const ICON_BACK = '<svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const ICON_EDIT = '<svg viewBox="0 0 24 24" fill="none"><path d="M4 20l1-4.2L15.5 5.3a1.5 1.5 0 0 1 2.1 0l1.1 1.1a1.5 1.5 0 0 1 0 2.1L8.2 19 4 20z" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const ICON_TRASH = '<svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0v12a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const ICON_COPY = '<svg viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5a1 1 0 0 1 1-1h10" stroke-linecap="round"/></svg>';
-
-  // ---------- Rendering ----------
+  // ---------- Central Renderer ----------
   function render(){
-    if(!state){ return; }
+    if(!state) return;
     if(state.view === 'groups'){
-      pageTitleEl.textContent = 'Station Checklist';
-      breadcrumbEl.style.display = 'none';
       renderGroupsView();
     } else if(state.view === 'stations'){
-      const g = groupById(state.activeGroup);
-      pageTitleEl.textContent = g ? g.title : 'Station Checklist';
-      renderStationsBreadcrumb(g);
-      renderStationsView(g);
+      renderStationsView();
     } else if(state.view === 'checklist'){
-      const st = stationById(state.activeStation);
-      pageTitleEl.textContent = st ? st.title : 'Station Checklist';
-      renderChecklistBreadcrumb(st);
-      renderChecklistView(st);
+      renderChecklistView();
     }
   }
 
-  function updateSubtitleGroups(){
-    const allItems = [];
-    state.stations.forEach(s => { allItems.push.apply(allItems, itemsOfStation(s.id)); });
-    const withItems = state.stations.filter(s => itemsOfStation(s.id).length > 0);
-    if(withItems.length === 0){
-      subtitleEl.textContent = 'Build your first checklist below';
-      return;
-    }
-    const fullyStocked = withItems.filter(s => itemsStatus(itemsOfStation(s.id)) === 'ok').length;
-    subtitleEl.textContent = fullyStocked + ' of ' + withItems.length + ' stations fully stocked';
-  }
-
+  // 1. GROUPS VIEW
   function renderGroupsView(){
-    updateSubtitleGroups();
+    pageTitleEl.textContent = 'Station Checklist';
+    navBarStripEl.style.display = 'none';
+
+    // Calculate global stats
+    let totalStations = state.stations.length;
+    let allItems = [];
+    state.stations.forEach(s => { allItems = allItems.concat(itemsOfStation(s.id)); });
+    let counts = countsFor(allItems);
+    subtitleEl.textContent = totalStations + ' stations monitored across salon';
+
+    // Render Stat Cards
+    statGridEl.innerHTML = `
+      <div class="stat-card" id="statCardStations">
+        <div class="stat-label">Total Stations <span class="stat-dot gold"></span></div>
+        <div class="stat-value">${totalStations}</div>
+        <div class="stat-sub">${state.groups.length} station groups</div>
+      </div>
+      <div class="stat-card" id="statCardStocked">
+        <div class="stat-label">In Stock (আছে) <span class="stat-dot green"></span></div>
+        <div class="stat-value" style="color:var(--green);">${counts.yes}</div>
+        <div class="stat-sub">Fully present items</div>
+      </div>
+      <div class="stat-card" id="statCardRefill">
+        <div class="stat-label">Refill (রিফিল) <span class="stat-dot amber"></span></div>
+        <div class="stat-value" style="color:var(--amber);">${counts.refill}</div>
+        <div class="stat-sub">Needs replenishment</div>
+      </div>
+      <div class="stat-card" id="statCardMissing">
+        <div class="stat-label">Missing (নাই) <span class="stat-dot red"></span></div>
+        <div class="stat-value" style="color:var(--red);">${counts.no}</div>
+        <div class="stat-sub">Out of stock at station</div>
+      </div>
+    `;
+
+    // Render Groups List
     viewBodyEl.innerHTML = '';
+    const topBar = document.createElement('div');
+    topBar.className = 'section-headline';
+    topBar.innerHTML = `
+      <div class="section-title">
+        Salon Station Groups
+        <span class="section-badge">${state.groups.length} Groups</span>
+      </div>
+      <div class="action-buttons-wrap">
+        <button class="primary-action-btn" id="btnAddEverywhere">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          Add Item to Every Station
+        </button>
+      </div>
+    `;
+    topBar.querySelector('#btnAddEverywhere').addEventListener('click', addItemToAllStations);
+    viewBodyEl.appendChild(topBar);
 
     const grid = document.createElement('div');
-    grid.className = 'card-grid';
+    grid.className = 'grid-container';
 
-    if(state.groups.length === 0){
-      const empty = document.createElement('div');
-      empty.className = 'empty-hint';
-      empty.innerHTML = '<span>No groups yet</span>Add a group like "Service Station", "Desks" or "Pantry Room" to get started';
-      viewBodyEl.appendChild(empty);
-    } else {
-      state.groups.forEach(g => {
-        const stations = stationsInGroup(g.id);
-        const status = itemsStatus(itemsOfGroup(g.id));
-        const card = document.createElement('div');
-        card.className = 'nav-card';
-        card.addEventListener('click', () => openGroup(g.id));
+    state.groups.forEach(g => {
+      const stations = stationsInGroup(g.id);
+      const items = itemsOfGroup(g.id);
+      const status = itemsStatus(items);
+      const c = countsFor(items);
 
-        const top = document.createElement('div');
-        top.className = 'status-dot ' + status;
-        card.appendChild(top);
+      const card = document.createElement('div');
+      card.className = 'item-card status-' + status;
+      card.addEventListener('click', () => openGroup(g.id));
 
-        const title = document.createElement('div');
-        title.className = 'nav-card-title';
-        title.textContent = g.title;
-        card.appendChild(title);
+      let pillText = status === 'ok' ? 'All Ready' : status === 'refill' ? 'Refill Needed' : status === 'missing' ? 'Items Missing' : 'Unchecked';
+      let pillClass = status;
 
-        const meta = document.createElement('div');
-        meta.className = 'nav-card-meta';
-        meta.textContent = stations.length + (stations.length === 1 ? ' station' : ' stations');
-        card.appendChild(meta);
+      card.innerHTML = `
+        <div>
+          <div class="card-top">
+            <div class="card-title">${escapeHtml(g.title)}</div>
+            <span class="card-pill ${pillClass}">${pillText}</span>
+          </div>
+          <div style="font-size:12px;color:var(--ink-soft);">${stations.length} ${stations.length === 1 ? 'Station' : 'Stations'} &middot; ${items.length} monitored items</div>
+        </div>
 
-        const actions = document.createElement('div');
-        actions.className = 'nav-card-actions';
-        const editBtn = makeIconBtn(ICON_EDIT, 'Rename group', (e) => { e.stopPropagation(); renameGroup(g.id); });
-        const delBtn = makeIconBtn(ICON_TRASH, 'Delete group', (e) => { e.stopPropagation(); deleteGroup(g.id); }, true);
-        actions.appendChild(editBtn);
-        actions.appendChild(delBtn);
-        card.appendChild(actions);
+        <div>
+          <div class="card-progress-bar">
+            <div class="progress-slice yes" style="width:${c.total ? (c.yes/c.total*100) : 0}%"></div>
+            <div class="progress-slice refill" style="width:${c.total ? (c.refill/c.total*100) : 0}%"></div>
+            <div class="progress-slice no" style="width:${c.total ? (c.no/c.total*100) : 0}%"></div>
+            <div class="progress-slice unset" style="width:${c.total ? (c.unset/c.total*100) : 100}%"></div>
+          </div>
 
-        grid.appendChild(card);
-      });
-    }
+          <div class="card-meta-row">
+            <span>${c.yes} / ${c.total || 0} Ready</span>
+            <div class="card-actions">
+              <button class="icon-btn" title="Rename Group" data-act="rename"><svg viewBox="0 0 24 24"><path d="M4 20l1-4.2L15.5 5.3a1.5 1.5 0 0 1 2.1 0l1.1 1.1a1.5 1.5 0 0 1 0 2.1L8.2 19 4 20z"/></svg></button>
+              <button class="icon-btn danger" title="Delete Group" data-act="delete"><svg viewBox="0 0 24 24"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0v12a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V7"/></svg></button>
+            </div>
+          </div>
+        </div>
+      `;
 
-    const addCard = document.createElement('button');
-    addCard.className = 'add-nav-card';
-    addCard.innerHTML = '<span class="plus">+</span><span>Add group</span>';
+      card.querySelector('[data-act="rename"]').addEventListener('click', (e) => { e.stopPropagation(); renameGroup(g.id); });
+      card.querySelector('[data-act="delete"]').addEventListener('click', (e) => { e.stopPropagation(); deleteGroup(g.id); });
+
+      grid.appendChild(card);
+    });
+
+    // Add Group Card
+    const addCard = document.createElement('div');
+    addCard.className = 'add-card';
+    addCard.innerHTML = `
+      <div class="add-card-circle">+</div>
+      <div class="add-card-title">Create New Group</div>
+      <div class="add-card-sub">e.g. VIP Suites, Barber Stations</div>
+    `;
     addCard.addEventListener('click', addGroup);
     grid.appendChild(addCard);
 
     viewBodyEl.appendChild(grid);
-
-    const addEverywhereBtn = document.createElement('button');
-    addEverywhereBtn.className = 'add-cat-btn';
-    addEverywhereBtn.style.marginTop = '14px';
-    addEverywhereBtn.textContent = '+ Add item to every station';
-    addEverywhereBtn.addEventListener('click', addItemToAllStations);
-    viewBodyEl.appendChild(addEverywhereBtn);
   }
 
-  // ---------- Add item to stations (custom modal) ----------
-  const modalOverlayEl = document.getElementById('everywhereModal');
-  const modalBoxEl = document.getElementById('everywhereModalBox');
-  const toastEl = document.getElementById('toastEl');
-  let toastTimer = null;
+  // 2. STATIONS VIEW (Inside a specific group)
+  function renderStationsView(){
+    const g = groupById(state.activeGroup);
+    if(!g){ goToGroups(); return; }
 
-  function showToast(msg){
-    toastEl.textContent = msg;
-    toastEl.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 3200);
-  }
-
-  function closeModal(){
-    modalOverlayEl.classList.remove('open');
-  }
-  modalOverlayEl.addEventListener('click', (e) => { if(e.target === modalOverlayEl) closeModal(); });
-
-  // All categories that exist on ANY station, with which stations have them.
-  function unionCategoriesInfo(){
-    const map = new Map(); // lowercase title -> { title, stationIds:Set }
-    state.stations.forEach(st => {
-      categoriesForStation(st.id).forEach(cat => {
-        const key = cat.title.toLowerCase();
-        if(!map.has(key)) map.set(key, { title: cat.title, stationIds: new Set() });
-        map.get(key).stationIds.add(st.id);
-      });
-    });
-    return [...map.values()].sort((a, b) => a.title.localeCompare(b.title));
-  }
-
-  // Product names pulled from the live catalog + anything already typed into any checklist.
-  function allKnownProductNames(){
-    const set = new Set();
-    CATALOG.forEach(p => { if(p[0]) set.add(p[0]); });
-    state.stations.forEach(st => {
-      categoriesForStation(st.id).forEach(cat => {
-        cat.items.forEach(it => { if(it.name) set.add(it.name); });
-      });
-    });
-    return [...set].sort((a, b) => a.localeCompare(b));
-  }
-
-  function addItemToAllStations(){
-    if(!state){ showToast('Still connecting \u2014 please wait a moment.'); return; }
-    if(state.stations.length === 0){ showToast('Add a station first.'); return; }
-    openCategoryStep();
-    modalOverlayEl.classList.add('open');
-  }
-
-  function openCategoryStep(){
-    const cats = unionCategoriesInfo();
-    const totalStations = state.stations.length;
-
-    modalBoxEl.innerHTML = '';
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'modal-close';
-    closeBtn.innerHTML = '&times;';
-    closeBtn.addEventListener('click', closeModal);
-    modalBoxEl.appendChild(closeBtn);
-
-    const title = document.createElement('div');
-    title.className = 'modal-title';
-    title.textContent = 'Add item to stations';
-    modalBoxEl.appendChild(title);
-
-    const sub = document.createElement('div');
-    sub.className = 'modal-sub';
-    sub.textContent = 'Step 1 of 2 \u2014 choose a category';
-    modalBoxEl.appendChild(sub);
-
-    const section = document.createElement('div');
-    section.className = 'modal-section';
-    const label = document.createElement('div');
-    label.className = 'modal-label';
-    label.textContent = 'Existing categories';
-    section.appendChild(label);
-
-    const list = document.createElement('div');
-    list.className = 'cat-pick-list';
-    if(cats.length === 0){
-      const empty = document.createElement('div');
-      empty.className = 'picker-empty';
-      empty.textContent = 'No categories yet \u2014 create one below.';
-      list.appendChild(empty);
-    }
-    cats.forEach(c => {
-      const row = document.createElement('div');
-      row.className = 'cat-pick-row';
-      const name = document.createElement('div');
-      name.className = 'cat-pick-name';
-      name.textContent = c.title;
-      const count = document.createElement('div');
-      const have = c.stationIds.size;
-      const missing = totalStations - have;
-      count.className = 'cat-pick-count' + (missing > 0 ? ' missing' : '');
-      count.textContent = missing > 0
-        ? have + ' of ' + totalStations + ' stations \u2014 ' + missing + ' missing'
-        : 'all ' + totalStations + ' stations';
-      row.appendChild(name);
-      row.appendChild(count);
-      row.addEventListener('click', () => openStationStep(c.title, c.stationIds));
-      list.appendChild(row);
-    });
-    section.appendChild(list);
-    modalBoxEl.appendChild(section);
-
-    const newSection = document.createElement('div');
-    newSection.className = 'modal-section';
-    const newLabel = document.createElement('div');
-    newLabel.className = 'modal-label';
-    newLabel.textContent = 'Or create a new category';
-    newSection.appendChild(newLabel);
-    const newRow = document.createElement('div');
-    newRow.className = 'new-cat-row';
-    const newInput = document.createElement('input');
-    newInput.type = 'text';
-    newInput.placeholder = 'e.g. Aftershave Balm';
-    newInput.maxLength = 80;
-    const newBtn = document.createElement('button');
-    newBtn.textContent = 'Use this';
-    const submitNew = () => {
-      const trimmed = newInput.value.trim();
-      if(!trimmed) return;
-      openStationStep(trimmed, new Set());
-    };
-    newBtn.addEventListener('click', submitNew);
-    newInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') submitNew(); });
-    newRow.appendChild(newInput);
-    newRow.appendChild(newBtn);
-    newSection.appendChild(newRow);
-    modalBoxEl.appendChild(newSection);
-  }
-
-  function openStationStep(catTitle, stationIdsWithCat){
-    const totalStations = state.stations.length;
-
-    modalBoxEl.innerHTML = '';
-    const closeBtn = document.createElement('button');
-    closeBtn.className = 'modal-close';
-    closeBtn.innerHTML = '&times;';
-    closeBtn.addEventListener('click', closeModal);
-    modalBoxEl.appendChild(closeBtn);
-
-    const backRow = document.createElement('div');
-    backRow.style.cssText = 'font-size:11px;color:var(--gold);cursor:pointer;margin-bottom:8px;';
-    backRow.textContent = '\u2039 Back to category';
-    backRow.addEventListener('click', openCategoryStep);
-    modalBoxEl.appendChild(backRow);
-
-    const title = document.createElement('div');
-    title.className = 'modal-title';
-    title.textContent = catTitle;
-    modalBoxEl.appendChild(title);
-
-    const sub = document.createElement('div');
-    sub.className = 'modal-sub';
-    sub.textContent = 'Step 2 of 2 \u2014 pick stations & the product';
-    modalBoxEl.appendChild(sub);
-
-    // Station checkboxes, pre-checked for stations missing this category.
-    const stSection = document.createElement('div');
-    stSection.className = 'modal-section';
-    const stLabel = document.createElement('div');
-    stLabel.className = 'modal-label';
-    stLabel.textContent = 'Stations';
-    stSection.appendChild(stLabel);
-
-    const actions = document.createElement('div');
-    actions.className = 'station-select-actions';
-    const allBtn = document.createElement('button');
-    allBtn.textContent = 'Select all';
-    const noneBtn = document.createElement('button');
-    noneBtn.textContent = 'Select none';
-    const missingBtn = document.createElement('button');
-    missingBtn.textContent = 'Missing only';
-    actions.appendChild(allBtn);
-    actions.appendChild(missingBtn);
-    actions.appendChild(noneBtn);
-    stSection.appendChild(actions);
-
-    const stList = document.createElement('div');
-    stList.className = 'station-check-list';
-    const checkboxes = [];
-    state.stations.forEach(st => {
-      const hasCat = stationIdsWithCat.has(st.id);
-      const row = document.createElement('label');
-      row.className = 'station-check-row';
-      const cb = document.createElement('input');
-      cb.type = 'checkbox';
-      cb.checked = !hasCat;
-      cb.dataset.stationId = st.id;
-      checkboxes.push(cb);
-      const name = document.createElement('span');
-      name.className = 'station-check-name';
-      name.textContent = st.title;
-      row.appendChild(cb);
-      row.appendChild(name);
-      if(hasCat){
-        const tag = document.createElement('span');
-        tag.className = 'station-check-tag';
-        tag.textContent = 'has category';
-        row.appendChild(tag);
-      }
-      stList.appendChild(row);
-    });
-    stSection.appendChild(stList);
-    modalBoxEl.appendChild(stSection);
-
-    allBtn.addEventListener('click', () => checkboxes.forEach(cb => cb.checked = true));
-    noneBtn.addEventListener('click', () => checkboxes.forEach(cb => cb.checked = false));
-    missingBtn.addEventListener('click', () => checkboxes.forEach(cb => { cb.checked = !stationIdsWithCat.has(cb.dataset.stationId); }));
-
-    // Product field: type-ahead over catalog + already-used item names, or type a custom one.
-    const pSection = document.createElement('div');
-    pSection.className = 'modal-section';
-    const pLabel = document.createElement('div');
-    pLabel.className = 'modal-label';
-    pLabel.textContent = 'Product / item';
-    pSection.appendChild(pLabel);
-
-    const pWrap = document.createElement('div');
-    pWrap.className = 'product-input-wrap';
-    const pInput = document.createElement('input');
-    pInput.type = 'text';
-    pInput.placeholder = 'Search products or type a custom name\u2026';
-    pInput.maxLength = 140;
-    pWrap.appendChild(pInput);
-    const suggestBox = document.createElement('div');
-    suggestBox.className = 'product-suggestions';
-    suggestBox.style.display = 'none';
-    pWrap.appendChild(suggestBox);
-    pSection.appendChild(pWrap);
-    modalBoxEl.appendChild(pSection);
-
-    const names = allKnownProductNames();
-    function renderSuggestions(){
-      const q = pInput.value.trim().toLowerCase();
-      suggestBox.innerHTML = '';
-      if(!q){ suggestBox.style.display = 'none'; return; }
-      const matches = names.filter(n => n.toLowerCase().includes(q)).slice(0, 8);
-      if(matches.length === 0){ suggestBox.style.display = 'none'; return; }
-      matches.forEach(n => {
-        const opt = document.createElement('div');
-        opt.className = 'product-suggestion';
-        opt.textContent = n;
-        opt.addEventListener('mousedown', (e) => {
-          e.preventDefault();
-          pInput.value = n;
-          suggestBox.style.display = 'none';
-        });
-        suggestBox.appendChild(opt);
-      });
-      suggestBox.style.display = 'block';
-    }
-    pInput.addEventListener('input', renderSuggestions);
-    pInput.addEventListener('focus', renderSuggestions);
-    pInput.addEventListener('blur', () => setTimeout(() => { suggestBox.style.display = 'none'; }, 120));
-
-    const confirmBtn = document.createElement('button');
-    confirmBtn.className = 'modal-confirm-btn';
-    confirmBtn.textContent = 'Add to selected stations';
-    confirmBtn.addEventListener('click', () => {
-      const itemName = pInput.value.trim();
-      if(!itemName){ pInput.focus(); return; }
-      const selectedIds = checkboxes.filter(cb => cb.checked).map(cb => cb.dataset.stationId);
-      if(selectedIds.length === 0){ showToast('Pick at least one station.'); return; }
-
-      let addedCount = 0;
-      selectedIds.forEach(stId => {
-        const cats = categoriesForStation(stId);
-        let cat = cats.find(c => c.title.toLowerCase() === catTitle.toLowerCase());
-        if(!cat){
-          cat = { id: uid(), title: catTitle, items: [] };
-          cats.push(cat);
-        }
-        const exists = cat.items.some(i => i.name.toLowerCase() === itemName.toLowerCase());
-        if(!exists){
-          cat.items.push({ id: uid(), name: itemName, status: null });
-          addedCount++;
-        }
-      });
-
-      save();
-      render();
-      closeModal();
-      showToast('Added \u201c' + itemName + '\u201d to ' + addedCount + ' of ' + selectedIds.length + ' selected station(s).');
-    });
-    modalBoxEl.appendChild(confirmBtn);
-  }
-
-  function makeIconBtn(svg, title, onClick, danger){
-    const b = document.createElement('button');
-    b.className = 'nav-card-action' + (danger ? ' danger' : '');
-    b.title = title;
-    b.innerHTML = svg;
-    b.addEventListener('click', onClick);
-    return b;
-  }
-
-  function renderStationsBreadcrumb(g){
-    breadcrumbEl.style.display = 'flex';
-    breadcrumbEl.innerHTML = '';
-    const back = document.createElement('button');
-    back.className = 'crumb-back';
-    back.innerHTML = ICON_BACK + '<span>Groups</span>';
-    back.addEventListener('click', goToGroups);
-    breadcrumbEl.appendChild(back);
-
-    const sep = document.createElement('span');
-    sep.className = 'crumb-sep';
-    sep.textContent = '/';
-    breadcrumbEl.appendChild(sep);
-
-    const current = document.createElement('span');
-    current.className = 'crumb-current';
-    current.textContent = g ? g.title : '';
-    breadcrumbEl.appendChild(current);
-  }
-
-  function renderStationsView(g){
-    if(!g){ viewBodyEl.innerHTML = ''; return; }
+    pageTitleEl.textContent = g.title;
     const stations = stationsInGroup(g.id);
-    const withItems = stations.filter(s => itemsOfStation(s.id).length > 0);
-    const fullyStocked = withItems.filter(s => itemsStatus(itemsOfStation(s.id)) === 'ok').length;
-    subtitleEl.textContent = withItems.length === 0
-      ? 'Add a station to start a checklist'
-      : fullyStocked + ' of ' + withItems.length + ' stations fully stocked';
+    const allGroupItems = itemsOfGroup(g.id);
+    const counts = countsFor(allGroupItems);
+    subtitleEl.textContent = `${stations.length} stations inside ${g.title}`;
+
+    // Nav bar strip
+    navBarStripEl.style.display = 'flex';
+    navBarStripEl.innerHTML = `
+      <div class="breadcrumbs">
+        <button class="crumb-link" id="crumbBack"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg> All Groups</button>
+        <span class="crumb-sep">/</span>
+        <span class="crumb-current">${escapeHtml(g.title)}</span>
+      </div>
+      <div class="strip-actions">
+        <button class="strip-btn gold" id="btnRenameCurrGroup">Rename Group</button>
+        <button class="strip-btn danger" id="btnDeleteCurrGroup">Delete Group</button>
+      </div>
+    `;
+    navBarStripEl.querySelector('#crumbBack').addEventListener('click', goToGroups);
+    navBarStripEl.querySelector('#btnRenameCurrGroup').addEventListener('click', () => renameGroup(g.id));
+    navBarStripEl.querySelector('#btnDeleteCurrGroup').addEventListener('click', () => deleteGroup(g.id));
+
+    // Stats
+    statGridEl.innerHTML = `
+      <div class="stat-card">
+        <div class="stat-label">Stations <span class="stat-dot gold"></span></div>
+        <div class="stat-value">${stations.length}</div>
+        <div class="stat-sub">In this group</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Ready (আছে) <span class="stat-dot green"></span></div>
+        <div class="stat-value" style="color:var(--green);">${counts.yes}</div>
+        <div class="stat-sub">Items ready</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Refill (রিফিল) <span class="stat-dot amber"></span></div>
+        <div class="stat-value" style="color:var(--amber);">${counts.refill}</div>
+        <div class="stat-sub">Needs refill</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Missing (নাই) <span class="stat-dot red"></span></div>
+        <div class="stat-value" style="color:var(--red);">${counts.no}</div>
+        <div class="stat-sub">Out of stock</div>
+      </div>
+    `;
 
     viewBodyEl.innerHTML = '';
+    const topBar = document.createElement('div');
+    topBar.className = 'section-headline';
+    topBar.innerHTML = `
+      <div class="section-title">
+        Stations in ${escapeHtml(g.title)}
+        <span class="section-badge">${stations.length} Active</span>
+      </div>
+      <div class="action-buttons-wrap">
+        <button class="primary-action-btn" id="btnNewStationTop">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> Add Station
+        </button>
+      </div>
+    `;
+    topBar.querySelector('#btnNewStationTop').addEventListener('click', () => addStation(g.id));
+    viewBodyEl.appendChild(topBar);
+
     const grid = document.createElement('div');
-    grid.className = 'card-grid';
+    grid.className = 'grid-container';
 
-    if(stations.length === 0){
-      const empty = document.createElement('div');
-      empty.className = 'empty-hint';
-      empty.innerHTML = '<span>No stations yet</span>Add a station like "Station 1" or "Station 2" inside "' + escapeHtml(g.title) + '"';
-      viewBodyEl.appendChild(empty);
-    } else {
-      stations.forEach(s => {
-        const items = itemsOfStation(s.id);
-        const status = itemsStatus(items);
-        const cats = categoriesForStation(s.id);
-        const card = document.createElement('div');
-        card.className = 'nav-card';
-        card.addEventListener('click', () => openStation(s.id));
+    stations.forEach(st => {
+      const items = itemsOfStation(st.id);
+      const cats = categoriesForStation(st.id);
+      const status = itemsStatus(items);
+      const c = countsFor(items);
 
-        const dot = document.createElement('div');
-        dot.className = 'status-dot ' + status;
-        card.appendChild(dot);
+      const card = document.createElement('div');
+      card.className = 'item-card status-' + status;
+      card.addEventListener('click', () => openStation(st.id));
 
-        const title = document.createElement('div');
-        title.className = 'nav-card-title';
-        title.textContent = s.title;
-        card.appendChild(title);
+      let pillText = status === 'ok' ? 'Ready' : status === 'refill' ? 'Refill' : status === 'missing' ? 'Missing' : 'Unchecked';
 
-        const meta = document.createElement('div');
-        meta.className = 'nav-card-meta';
-        meta.textContent = cats.length + (cats.length === 1 ? ' category' : ' categories') + ' \u00b7 ' + items.length + (items.length === 1 ? ' item' : ' items');
-        card.appendChild(meta);
+      card.innerHTML = `
+        <div>
+          <div class="card-top">
+            <div class="card-title">${escapeHtml(st.title)}</div>
+            <span class="card-pill ${status}">${pillText}</span>
+          </div>
+          <div style="font-size:12px;color:var(--ink-soft);">${cats.length} Categories &middot; ${items.length} Items</div>
+        </div>
 
-        const actions = document.createElement('div');
-        actions.className = 'nav-card-actions';
-        actions.appendChild(makeIconBtn(ICON_EDIT, 'Rename station', (e) => { e.stopPropagation(); renameStation(s.id); }));
-        actions.appendChild(makeIconBtn(ICON_COPY, 'Duplicate station', (e) => { e.stopPropagation(); duplicateStation(s.id); }));
-        actions.appendChild(makeIconBtn(ICON_TRASH, 'Delete station', (e) => { e.stopPropagation(); deleteStation(s.id); }, true));
-        card.appendChild(actions);
+        <div>
+          <div class="card-progress-bar">
+            <div class="progress-slice yes" style="width:${c.total ? (c.yes/c.total*100) : 0}%"></div>
+            <div class="progress-slice refill" style="width:${c.total ? (c.refill/c.total*100) : 0}%"></div>
+            <div class="progress-slice no" style="width:${c.total ? (c.no/c.total*100) : 0}%"></div>
+            <div class="progress-slice unset" style="width:${c.total ? (c.unset/c.total*100) : 100}%"></div>
+          </div>
 
-        grid.appendChild(card);
-      });
-    }
+          <div class="card-meta-row">
+            <span>${c.yes} / ${c.total || 0} Ready</span>
+            <div class="card-actions">
+              <button class="icon-btn" title="Rename Station" data-act="rename"><svg viewBox="0 0 24 24"><path d="M4 20l1-4.2L15.5 5.3a1.5 1.5 0 0 1 2.1 0l1.1 1.1a1.5 1.5 0 0 1 0 2.1L8.2 19 4 20z"/></svg></button>
+              <button class="icon-btn" title="Duplicate Station" data-act="duplicate"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="1.5"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/></svg></button>
+              <button class="icon-btn danger" title="Delete Station" data-act="delete"><svg viewBox="0 0 24 24"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0v12a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V7"/></svg></button>
+            </div>
+          </div>
+        </div>
+      `;
 
-    const addCard = document.createElement('button');
-    addCard.className = 'add-nav-card';
-    addCard.innerHTML = '<span class="plus">+</span><span>Add station</span>';
+      card.querySelector('[data-act="rename"]').addEventListener('click', (e) => { e.stopPropagation(); renameStation(st.id); });
+      card.querySelector('[data-act="duplicate"]').addEventListener('click', (e) => { e.stopPropagation(); duplicateStation(st.id); });
+      card.querySelector('[data-act="delete"]').addEventListener('click', (e) => { e.stopPropagation(); deleteStation(st.id); });
+
+      grid.appendChild(card);
+    });
+
+    const addCard = document.createElement('div');
+    addCard.className = 'add-card';
+    addCard.innerHTML = `
+      <div class="add-card-circle">+</div>
+      <div class="add-card-title">Add New Station</div>
+      <div class="add-card-sub">Inside ${escapeHtml(g.title)}</div>
+    `;
     addCard.addEventListener('click', () => addStation(g.id));
     grid.appendChild(addCard);
 
     viewBodyEl.appendChild(grid);
   }
 
-  function renderChecklistBreadcrumb(st){
-    breadcrumbEl.style.display = 'flex';
-    breadcrumbEl.innerHTML = '';
-    const g = st ? groupById(st.groupId) : null;
+  // 3. CHECKLIST VIEW (Active station inventory checking)
+  function renderChecklistView(){
+    const st = stationById(state.activeStation);
+    if(!st){ goToGroups(); return; }
+    const g = groupById(st.groupId);
 
-    const back = document.createElement('button');
-    back.className = 'crumb-back';
-    back.innerHTML = ICON_BACK + '<span>' + (g ? escapeHtml(g.title) : 'Stations') + '</span>';
-    back.addEventListener('click', backToStations);
-    breadcrumbEl.appendChild(back);
-
-    const sep = document.createElement('span');
-    sep.className = 'crumb-sep';
-    sep.textContent = '/';
-    breadcrumbEl.appendChild(sep);
-
-    const current = document.createElement('span');
-    current.className = 'crumb-current';
-    current.textContent = st ? st.title : '';
-    breadcrumbEl.appendChild(current);
-
-    if(st){
-      const actions = document.createElement('div');
-      actions.className = 'crumb-actions';
-      const editBtn = document.createElement('button');
-      editBtn.className = 'crumb-action';
-      editBtn.title = 'Rename station';
-      editBtn.innerHTML = ICON_EDIT;
-      editBtn.addEventListener('click', () => renameStation(st.id));
-      const copyBtn = document.createElement('button');
-      copyBtn.className = 'crumb-action';
-      copyBtn.title = 'Duplicate station';
-      copyBtn.innerHTML = ICON_COPY;
-      copyBtn.addEventListener('click', () => duplicateStation(st.id));
-      const delBtn = document.createElement('button');
-      delBtn.className = 'crumb-action danger';
-      delBtn.title = 'Delete station';
-      delBtn.innerHTML = ICON_TRASH;
-      delBtn.addEventListener('click', () => deleteStation(st.id));
-      actions.appendChild(editBtn);
-      actions.appendChild(copyBtn);
-      actions.appendChild(delBtn);
-      breadcrumbEl.appendChild(actions);
-    }
-  }
-
-  function renderChecklistView(st){
-    viewBodyEl.innerHTML = '';
-    if(!st){ return; }
-
+    pageTitleEl.textContent = st.title;
     const items = itemsOfStation(st.id);
-    const total = items.length;
-    const yes = items.filter(i => i.status === 'yes').length;
-    const refill = items.filter(i => i.status === 'refill').length;
-    const no = items.filter(i => i.status === 'no').length;
-    const unset = total - yes - refill - no;
-    subtitleEl.textContent = total === 0 ? 'Build this station\u2019s checklist below' : yes + ' / ' + total + ' items ready';
+    const cats = categoriesForStation(st.id);
+    const counts = countsFor(items);
+    subtitleEl.textContent = `${st.title} \u2014 ${counts.yes} of ${counts.total} items ready`;
 
-    const progressRow = document.createElement('div');
-    progressRow.className = 'progress-row';
-    const progressBar = document.createElement('div');
-    progressBar.className = 'progress-bar';
-    if(total === 0){
-      const progressLabel = document.createElement('div');
-      progressLabel.className = 'progress-label';
-      progressLabel.textContent = 'No items yet';
-      progressRow.appendChild(progressBar);
-      progressRow.appendChild(progressLabel);
-    } else {
-      [['yes',yes], ['refill',refill], ['no',no], ['unset',unset]].forEach(([cls,count]) => {
-        if(count > 0){
-          const seg = document.createElement('div');
-          seg.className = 'progress-seg ' + cls;
-          seg.style.width = (count / total * 100) + '%';
-          progressBar.appendChild(seg);
-        }
+    // Navigation Strip with Station Switcher Dropdown
+    const siblingStations = stationsInGroup(st.groupId);
+    navBarStripEl.style.display = 'flex';
+    navBarStripEl.innerHTML = `
+      <div class="breadcrumbs">
+        <button class="crumb-link" id="crumbBackGroup"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg> ${escapeHtml(g ? g.title : 'Stations')}</button>
+        <span class="crumb-sep">/</span>
+        <div class="station-switcher-wrap">
+          <select class="station-select" id="stationQuickSelect">
+            ${siblingStations.map(s => `<option value="${s.id}" ${s.id === st.id ? 'selected' : ''}>${escapeHtml(s.title)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="strip-actions">
+        <button class="strip-btn" id="btnExportExcel" title="Export Excel Checklist">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Export Excel
+        </button>
+        <button class="strip-btn" id="btnDuplicateStation">Duplicate</button>
+        <button class="strip-btn danger" id="btnDeleteStation">Delete</button>
+      </div>
+    `;
+
+    navBarStripEl.querySelector('#crumbBackGroup').addEventListener('click', () => openGroup(st.groupId));
+    navBarStripEl.querySelector('#stationQuickSelect').addEventListener('change', (e) => openStation(e.target.value));
+    navBarStripEl.querySelector('#btnExportExcel').addEventListener('click', () => exportStationExcel(st.id));
+    navBarStripEl.querySelector('#btnDuplicateStation').addEventListener('click', () => duplicateStation(st.id));
+    navBarStripEl.querySelector('#btnDeleteStation').addEventListener('click', () => deleteStation(st.id));
+
+    // Stats Grid
+    statGridEl.innerHTML = `
+      <div class="stat-card">
+        <div class="stat-label">Total Items <span class="stat-dot gold"></span></div>
+        <div class="stat-value">${counts.total}</div>
+        <div class="stat-sub">Across ${cats.length} categories</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">In Stock (আছে) <span class="stat-dot green"></span></div>
+        <div class="stat-value" style="color:var(--green);">${counts.yes}</div>
+        <div class="stat-sub">${counts.total ? Math.round(counts.yes / counts.total * 100) : 0}% stocked</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Refill (রিফিল) <span class="stat-dot amber"></span></div>
+        <div class="stat-value" style="color:var(--amber);">${counts.refill}</div>
+        <div class="stat-sub">Needs refill</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Missing (নাই) <span class="stat-dot red"></span></div>
+        <div class="stat-value" style="color:var(--red);">${counts.no}</div>
+        <div class="stat-sub">Out of stock</div>
+      </div>
+    `;
+
+    // View Body
+    viewBodyEl.innerHTML = '';
+
+    // Station Overview Banner with Segmented Progress Bar & Quick "Stock All"
+    const banner = document.createElement('div');
+    banner.className = 'station-overview-banner';
+    banner.innerHTML = `
+      <div class="banner-top">
+        <div class="banner-title">${escapeHtml(st.title)} Checklist</div>
+        <div class="banner-progress-wrap">
+          <div class="full-progress-bar">
+            <div class="progress-slice yes" style="width:${counts.total ? (counts.yes / counts.total * 100) : 0}%"></div>
+            <div class="progress-slice refill" style="width:${counts.total ? (counts.refill / counts.total * 100) : 0}%"></div>
+            <div class="progress-slice no" style="width:${counts.total ? (counts.no / counts.total * 100) : 0}%"></div>
+            <div class="progress-slice unset" style="width:${counts.total ? (counts.unset / counts.total * 100) : 100}%"></div>
+          </div>
+          <span style="font-size:12px;font-weight:600;color:var(--gold);">${counts.yes} / ${counts.total} Ready</span>
+        </div>
+      </div>
+    `;
+    viewBodyEl.appendChild(banner);
+
+    // Toolbar (Search, Filter Pills, Bulk Actions)
+    const toolbar = document.createElement('div');
+    toolbar.className = 'checklist-toolbar';
+    toolbar.innerHTML = `
+      <div class="search-filter-wrap">
+        <div class="search-input-box">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="search-input" id="itemSearchInput" placeholder="Search items in this station…" value="${escapeHtml(searchQuery)}">
+        </div>
+        <div class="filter-pills">
+          <button class="filter-pill ${activeFilter==='all'?'active':''}" data-f="all">All (${counts.total})</button>
+          <button class="filter-pill ${activeFilter==='no'?'active':''}" data-f="no" style="${counts.no?'color:#fda4af;':''}">Missing (${counts.no})</button>
+          <button class="filter-pill ${activeFilter==='refill'?'active':''}" data-f="refill" style="${counts.refill?'color:#fde047;':''}">Refill (${counts.refill})</button>
+          <button class="filter-pill ${activeFilter==='yes'?'active':''}" data-f="yes" style="${counts.yes?'color:#86efac;':''}">Ready (${counts.yes})</button>
+          <button class="filter-pill ${activeFilter==='unset'?'active':''}" data-f="unset">Unchecked (${counts.unset})</button>
+        </div>
+      </div>
+
+      <div class="action-buttons-wrap">
+        <button class="strip-btn gold" id="btnMarkAllReady">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Mark All In Stock
+        </button>
+        <button class="primary-action-btn" id="btnAddCategoryTop">
+          <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+          Add Category
+        </button>
+      </div>
+    `;
+
+    // Hook search & filter events
+    const sInput = toolbar.querySelector('#itemSearchInput');
+    sInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value.trim().toLowerCase();
+      renderChecklistView();
+    });
+
+    toolbar.querySelectorAll('.filter-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeFilter = btn.dataset.f;
+        renderChecklistView();
       });
-      const progressLabel = document.createElement('div');
-      progressLabel.className = 'progress-label';
-      progressLabel.textContent = yes + ' / ' + total + ' ready';
-      progressRow.appendChild(progressBar);
-      progressRow.appendChild(progressLabel);
-    }
-    viewBodyEl.appendChild(progressRow);
-
-    const printBtn = document.createElement('button');
-    printBtn.className = 'print-btn';
-    printBtn.id = 'printStationBtn';
-    printBtn.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2" stroke-linecap="round" stroke-linejoin="round"/><rect x="6" y="14" width="12" height="7" stroke-linejoin="round"/></svg><span>Print checklist (Excel)</span>';
-    printBtn.addEventListener('click', () => exportStationExcel(st.id));
-    viewBodyEl.appendChild(printBtn);
-
-    const categoriesWrap = document.createElement('div');
-    categoriesWrap.id = 'categoriesWrap';
-    viewBodyEl.appendChild(categoriesWrap);
-    renderCategories(categoriesWrap);
-
-    const addCatBtn = document.createElement('button');
-    addCatBtn.className = 'add-cat-btn';
-    addCatBtn.textContent = '+ Add category';
-    addCatBtn.addEventListener('click', addCategory);
-    viewBodyEl.appendChild(addCatBtn);
-  }
-
-  function renderPicker(cat){
-    const wrap = document.createElement('div');
-    wrap.className = 'picker';
-
-    const row = document.createElement('div');
-    row.className = 'picker-row';
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.placeholder = 'Search products or type a custom name…';
-    input.value = pickerQuery;
-    input.maxLength = 140;
-    input.addEventListener('input', () => {
-      pickerQuery = input.value;
-      renderPickerResults(cat, resultsWrap, customBtn);
     });
-    const closeBtn = document.createElement('button');
-    closeBtn.textContent = 'Close';
-    closeBtn.addEventListener('click', () => {
-      openPicker = null; pickerQuery = ''; render();
-    });
-    row.appendChild(input);
-    row.appendChild(closeBtn);
-    wrap.appendChild(row);
 
-    const customBtn = document.createElement('div');
-    customBtn.className = 'picker-custom';
-
-    const resultsWrap = document.createElement('div');
-    resultsWrap.className = 'picker-results';
-
-    wrap.appendChild(customBtn);
-    wrap.appendChild(resultsWrap);
-
-    renderPickerResults(cat, resultsWrap, customBtn);
-
-    setTimeout(() => input.focus(), 0);
-    return wrap;
-  }
-
-  function renderPickerResults(cat, resultsWrap, customBtn){
-    const q = pickerQuery.trim();
-    const existingNames = cat.items.map(i => i.name.toLowerCase());
-
-    customBtn.innerHTML = '';
-    if(q.length > 0){
-      customBtn.style.display = 'flex';
-      customBtn.textContent = '+ Add "' + q + '" as custom item';
-      customBtn.onclick = () => addItemToCategory(cat, q);
-    } else {
-      customBtn.style.display = 'none';
-    }
-
-    resultsWrap.innerHTML = '';
-    if(q.length === 0){
-      const hint = document.createElement('div');
-      hint.className = 'picker-hint';
-      hint.textContent = 'Type to search the product list, or add a custom item.';
-      resultsWrap.appendChild(hint);
-      return;
-    }
-    const ql = q.toLowerCase();
-    const matches = CATALOG.filter(([name]) => name.toLowerCase().includes(ql)).slice(0, 8);
-    if(matches.length === 0){
-      const empty = document.createElement('div');
-      empty.className = 'picker-empty';
-      empty.textContent = 'No matching products — add it as custom above.';
-      resultsWrap.appendChild(empty);
-      return;
-    }
-    matches.forEach(([name, category]) => {
-      const row = document.createElement('div');
-      row.className = 'picker-result';
-      const already = existingNames.includes(name.toLowerCase());
-      if(already) row.style.opacity = '0.45';
-      const n = document.createElement('div');
-      n.className = 'picker-result-name';
-      n.textContent = name + (already ? '  ✓ added' : '');
-      const c = document.createElement('div');
-      c.className = 'picker-result-cat';
-      c.textContent = category;
-      row.appendChild(n);
-      row.appendChild(c);
-      if(!already){
-        row.addEventListener('click', () => addItemToCategory(cat, name));
-      }
-      resultsWrap.appendChild(row);
-    });
-  }
-
-  function addItemToCategory(cat, name){
-    const trimmed = name.trim();
-    if(!trimmed) return;
-    if(cat.items.some(i => i.name.toLowerCase() === trimmed.toLowerCase())){
-      pickerQuery = '';
+    toolbar.querySelector('#btnMarkAllReady').addEventListener('click', async () => {
+      const ok = await THDialog.confirm('Mark all items in this station as "In Stock / আছে"?', { title: 'Stock All Items', okText: 'Mark All Ready' });
+      if(!ok) return;
+      cats.forEach(c => {
+        (c.items || []).forEach(it => { it.status = 'yes'; });
+      });
+      save();
       render();
-      return;
-    }
-    cat.items.push({ id: uid(), name: trimmed, status: null });
-    pickerQuery = '';
-    save();
-    render();
-  }
+      showToast('All items marked as In Stock / আছে.');
+    });
 
-  function renderCategories(categoriesWrap){
-    categoriesWrap.innerHTML = '';
-    const cats = activeCats();
+    toolbar.querySelector('#btnAddCategoryTop').addEventListener('click', addCategory);
+
+    viewBodyEl.appendChild(toolbar);
+
+    // Categories Accordion Container
+    const catContainer = document.createElement('div');
+    catContainer.className = 'categories-list';
 
     if(cats.length === 0){
-      const empty = document.createElement('div');
-      empty.className = 'empty-hint';
-      empty.innerHTML = '<span>No categories yet</span>Add a category like "Aftershave Balm" to start checking items for this station';
-      categoriesWrap.appendChild(empty);
-      return;
+      catContainer.innerHTML = `
+        <div style="text-align:center;padding:48px 20px;border:1px dashed rgba(217,184,114,0.3);border-radius:20px;background:rgba(255,255,255,0.02);">
+          <div style="font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);margin-bottom:6px;">No Categories Yet</div>
+          <div style="font-size:12.5px;color:var(--ink-soft);max-width:380px;margin:0 auto 16px;">Add categories such as "Aftershave Balm", "Shaving Creams", or "Towels" to manage items for this station.</div>
+          <button class="primary-action-btn" id="btnEmptyAddCat">+ Add First Category</button>
+        </div>
+      `;
+      catContainer.querySelector('#btnEmptyAddCat').addEventListener('click', addCategory);
+    } else {
+      cats.forEach(cat => {
+        const catBlock = renderCategoryBlock(cat);
+        catContainer.appendChild(catBlock);
+      });
     }
 
-    cats.forEach(cat => {
-      const isExpanded = expandedCats.has(cat.id);
-      const card = document.createElement('div');
-      card.className = 'category' + (isExpanded ? ' expanded' : '');
+    viewBodyEl.appendChild(catContainer);
+  }
 
-      const header = document.createElement('div');
-      header.className = 'cat-header';
-      header.addEventListener('click', () => {
-        if(isExpanded){
-          expandedCats.delete(cat.id);
-          if(openPicker === cat.id) openPicker = null;
-        } else {
-          expandedCats.add(cat.id);
-        }
-        render();
-      });
+  // Render individual category accordion with items
+  function renderCategoryBlock(cat){
+    const isExpanded = expandedCats.has(cat.id);
+    const catBlock = document.createElement('div');
+    catBlock.className = 'cat-block' + (isExpanded ? ' expanded' : '');
 
-      const headerLeft = document.createElement('div');
-      headerLeft.className = 'cat-header-left';
+    const catItems = cat.items || [];
+    const catCounts = countsFor(catItems);
 
-      const chevron = document.createElement('div');
-      chevron.className = 'cat-chevron';
-      chevron.innerHTML = '<svg viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    // Filter items according to search query and active status filter
+    let visibleItems = catItems.filter(item => {
+      if(searchQuery && !item.name.toLowerCase().includes(searchQuery)) return false;
+      if(activeFilter === 'yes' && item.status !== 'yes') return false;
+      if(activeFilter === 'refill' && item.status !== 'refill') return false;
+      if(activeFilter === 'no' && item.status !== 'no') return false;
+      if(activeFilter === 'unset' && item.status) return false;
+      return true;
+    });
 
-      const titleWrap = document.createElement('div');
-      titleWrap.className = 'cat-title-wrap';
-      const title = document.createElement('div');
-      title.className = 'cat-title';
-      title.textContent = cat.title;
-      titleWrap.appendChild(title);
-
-      const counts = countsFor(cat.items);
-      const badges = document.createElement('div');
-      badges.className = 'cat-badges';
-      if(counts.yes) badges.appendChild(makeBadge('yes', counts.yes + ' there'));
-      if(counts.refill) badges.appendChild(makeBadge('refill', counts.refill + ' refill'));
-      if(counts.no) badges.appendChild(makeBadge('no', counts.no + ' missing'));
-      if(counts.unset) badges.appendChild(makeBadge('unset', counts.unset + ' unchecked'));
-      titleWrap.appendChild(badges);
-
-      headerLeft.appendChild(chevron);
-      headerLeft.appendChild(titleWrap);
-
-      const delCat = document.createElement('button');
-      delCat.className = 'cat-del';
-      delCat.innerHTML = '&times;';
-      delCat.title = 'Delete category';
-      delCat.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const ok = await THDialog.confirm('Delete "' + cat.title + '" and all its items?', { title: 'Delete category', okText: 'Delete', danger: true });
-        if(!ok) return;
-        const arr = activeCats();
-        const idx = arr.findIndex(c => c.id === cat.id);
-        if(idx > -1) arr.splice(idx, 1);
-        if(openPicker === cat.id) openPicker = null;
-        expandedCats.delete(cat.id);
-        save();
-        render();
-      });
-
-      header.appendChild(headerLeft);
-      header.appendChild(delCat);
-      card.appendChild(header);
-
+    // Header
+    const head = document.createElement('div');
+    head.className = 'cat-head';
+    head.addEventListener('click', () => {
       if(isExpanded){
-        const list = document.createElement('ul');
-        list.className = 'items';
-        if(cat.items.length === 0){
-          const li = document.createElement('li');
-          li.className = 'picker-hint';
-          li.style.padding = '4px 0 10px';
-          li.textContent = 'No items in this category yet.';
-          list.appendChild(li);
-        }
-        cat.items.forEach(item => {
-          const li = document.createElement('li');
-          li.className = 'item';
+        expandedCats.delete(cat.id);
+        if(openPicker === cat.id) openPicker = null;
+      } else {
+        expandedCats.add(cat.id);
+      }
+      render();
+    });
 
-          const top = document.createElement('div');
-          top.className = 'item-top';
-          const name = document.createElement('div');
-          name.className = 'item-name';
-          name.textContent = item.name;
-          const del = document.createElement('button');
-          del.className = 'item-del';
-          del.innerHTML = '&times;';
-          del.title = 'Remove item';
-          del.addEventListener('click', () => {
+    head.innerHTML = `
+      <div class="cat-head-left">
+        <div class="cat-toggle-arrow">
+          <svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>
+        </div>
+        <div class="cat-name-box">
+          <div class="cat-name">${escapeHtml(cat.title)}</div>
+          <div class="cat-badges-strip">
+            <span class="cat-status-tag yes">${catCounts.yes} In Stock</span>
+            ${catCounts.refill ? `<span class="cat-status-tag refill">${catCounts.refill} Refill</span>` : ''}
+            ${catCounts.no ? `<span class="cat-status-tag no">${catCounts.no} Missing</span>` : ''}
+            ${catCounts.unset ? `<span class="cat-status-tag unset">${catCounts.unset} Unchecked</span>` : ''}
+          </div>
+        </div>
+      </div>
+      <div class="cat-head-actions">
+        <button class="cat-quick-stock-btn" title="Mark all items in this category ready" data-act="stock-cat">Stock Category</button>
+        <button class="icon-btn" title="Rename Category" data-act="rename"><svg viewBox="0 0 24 24"><path d="M4 20l1-4.2L15.5 5.3a1.5 1.5 0 0 1 2.1 0l1.1 1.1a1.5 1.5 0 0 1 0 2.1L8.2 19 4 20z"/></svg></button>
+        <button class="icon-btn danger" title="Delete Category" data-act="delete"><svg viewBox="0 0 24 24"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0v12a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V7"/></svg></button>
+      </div>
+    `;
+
+    head.querySelector('[data-act="stock-cat"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      catItems.forEach(it => { it.status = 'yes'; });
+      save();
+      render();
+      showToast(`Category "${cat.title}" marked as In Stock.`);
+    });
+
+    head.querySelector('[data-act="rename"]').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const name = await THDialog.prompt('Rename category:', cat.title, { title: 'Rename Category' });
+      if(!name) return;
+      const trimmed = name.trim();
+      if(!trimmed || trimmed === cat.title) return;
+      cat.title = trimmed;
+      save();
+      render();
+    });
+
+    head.querySelector('[data-act="delete"]').addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const ok = await THDialog.confirm(`Delete "${cat.title}" and all its items?`, { title: 'Delete Category', okText: 'Delete', danger: true });
+      if(!ok) return;
+      const arr = activeCats();
+      const idx = arr.findIndex(c => c.id === cat.id);
+      if(idx > -1) arr.splice(idx, 1);
+      expandedCats.delete(cat.id);
+      if(openPicker === cat.id) openPicker = null;
+      save();
+      render();
+    });
+
+    catBlock.appendChild(head);
+
+    // Body (Items + Picker)
+    if(isExpanded){
+      const body = document.createElement('div');
+      body.className = 'cat-body';
+
+      if(visibleItems.length === 0){
+        const emptyMsg = document.createElement('div');
+        emptyMsg.style.cssText = 'padding:14px;text-align:center;font-size:12px;color:var(--ink-faint);';
+        emptyMsg.textContent = catItems.length === 0 ? 'No items in this category yet. Click "+ Add Item" below.' : 'No items match current filter.';
+        body.appendChild(emptyMsg);
+      } else {
+        const table = document.createElement('div');
+        table.className = 'items-table';
+
+        visibleItems.forEach(item => {
+          const row = document.createElement('div');
+          row.className = 'item-row';
+
+          row.innerHTML = `
+            <div class="item-main">
+              <div class="item-title">${escapeHtml(item.name)}</div>
+              <div class="item-controls">
+                <div class="status-toggle-group">
+                  <button class="status-toggle-btn yes ${item.status==='yes'?'active':''}" data-status="yes">
+                    <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    In Stock (আছে)
+                  </button>
+                  <button class="status-toggle-btn refill ${item.status==='refill'?'active':''}" data-status="refill">
+                    <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2.5"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                    Refill (রিফিল)
+                  </button>
+                  <button class="status-toggle-btn no ${item.status==='no'?'active':''}" data-status="no">
+                    <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    Missing (নাই)
+                  </button>
+                </div>
+                <button class="icon-btn danger" title="Remove item" data-act="del-item"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+              </div>
+            </div>
+            <input type="text" class="item-remark-input" placeholder="Add remark or quantity notes (e.g. 2 bottles remaining)…" value="${escapeHtml(item.remark || '')}">
+          `;
+
+          // Status Button Clicks
+          row.querySelectorAll('.status-toggle-btn').forEach(b => {
+            b.addEventListener('click', () => {
+              const val = b.dataset.status;
+              item.status = (item.status === val) ? null : val;
+              save();
+              render();
+            });
+          });
+
+          // Delete item
+          row.querySelector('[data-act="del-item"]').addEventListener('click', () => {
             const idx = cat.items.findIndex(i => i.id === item.id);
             if(idx > -1) cat.items.splice(idx, 1);
             save();
             render();
           });
-          top.appendChild(name);
-          top.appendChild(del);
 
-          const btns = document.createElement('div');
-          btns.className = 'status-btns';
-          [['yes','আছে'], ['no','নাই'], ['refill','রিফিল করতে হবে']].forEach(([val,label]) => {
-            const b = document.createElement('button');
-            b.className = 'status-btn ' + val + (item.status === val ? ' active' : '');
-            b.textContent = label;
-            b.addEventListener('click', () => {
-              item.status = (item.status === val) ? null : val;
-              save();
-              render();
-            });
-            btns.appendChild(b);
-          });
-
-          const remarkInput = document.createElement('input');
-          remarkInput.type = 'text';
-          remarkInput.className = 'remark-input';
-          remarkInput.placeholder = 'Add a remark…';
-          remarkInput.value = item.remark || '';
-          remarkInput.maxLength = 200;
-          remarkInput.addEventListener('input', () => {
-            item.remark = remarkInput.value;
+          // Remark Input
+          const remInput = row.querySelector('.item-remark-input');
+          remInput.addEventListener('input', () => {
+            item.remark = remInput.value;
             queueSave();
           });
 
-          li.appendChild(top);
-          li.appendChild(btns);
-          li.appendChild(remarkInput);
-          list.appendChild(li);
+          table.appendChild(row);
         });
-        card.appendChild(list);
 
-        if(openPicker === cat.id){
-          card.appendChild(renderPicker(cat));
-        } else {
-          const addBtn = document.createElement('button');
-          addBtn.className = 'add-item-btn';
-          addBtn.textContent = '+ Add item';
-          addBtn.addEventListener('click', () => {
-            openPicker = cat.id;
-            pickerQuery = '';
-            render();
-          });
-          card.appendChild(addBtn);
-        }
+        body.appendChild(table);
       }
 
-      categoriesWrap.appendChild(card);
-    });
+      // Add Item Picker or Button
+      if(openPicker === cat.id){
+        body.appendChild(renderPicker(cat));
+      } else {
+        const addBtn = document.createElement('button');
+        addBtn.className = 'add-item-trigger-btn';
+        addBtn.textContent = '+ Add Item to ' + cat.title;
+        addBtn.addEventListener('click', () => {
+          openPicker = cat.id;
+          pickerQuery = '';
+          render();
+        });
+        body.appendChild(addBtn);
+      }
+
+      catBlock.appendChild(body);
+    }
+
+    return catBlock;
   }
 
-  function makeBadge(cls, text){
-    const b = document.createElement('span');
-    b.className = 'cat-badge ' + cls;
-    b.textContent = text;
-    return b;
+  // Inline product search picker inside a category
+  function renderPicker(cat){
+    const box = document.createElement('div');
+    box.className = 'picker-box';
+
+    box.innerHTML = `
+      <div class="picker-input-row">
+        <input type="text" class="picker-input" id="pickerInputEl" placeholder="Search catalog or type a custom product name…" value="${escapeHtml(pickerQuery)}">
+        <button class="picker-close-btn" id="pickerCloseBtn">Close</button>
+      </div>
+      <div id="pickerCustomWrap"></div>
+      <div class="picker-results-list" id="pickerResultsWrap"></div>
+    `;
+
+    const input = box.querySelector('#pickerInputEl');
+    const closeBtn = box.querySelector('#pickerCloseBtn');
+    const customWrap = box.querySelector('#pickerCustomWrap');
+    const resultsWrap = box.querySelector('#pickerResultsWrap');
+
+    closeBtn.addEventListener('click', () => {
+      openPicker = null; pickerQuery = ''; render();
+    });
+
+    const updateResults = () => {
+      pickerQuery = input.value;
+      const q = pickerQuery.trim();
+      const existingNames = (cat.items || []).map(i => i.name.toLowerCase());
+
+      customWrap.innerHTML = '';
+      if(q.length > 0){
+        const customBtn = document.createElement('div');
+        customBtn.className = 'picker-add-custom';
+        customBtn.textContent = `+ Add "${q}" as custom item`;
+        customBtn.addEventListener('click', () => addItemToCategory(cat, q));
+        customWrap.appendChild(customBtn);
+      }
+
+      resultsWrap.innerHTML = '';
+      if(q.length === 0){
+        const hint = document.createElement('div');
+        hint.style.cssText = 'font-size:11.5px;color:var(--ink-faint);text-align:center;padding:8px;';
+        hint.textContent = 'Type above to search the salon catalog or add a custom item.';
+        resultsWrap.appendChild(hint);
+        return;
+      }
+
+      const ql = q.toLowerCase();
+      const matches = CATALOG.filter(([name]) => name.toLowerCase().includes(ql)).slice(0, 10);
+      if(matches.length === 0){
+        const empty = document.createElement('div');
+        empty.style.cssText = 'font-size:11.5px;color:var(--ink-faint);text-align:center;padding:8px;';
+        empty.textContent = 'No catalog products match. Use the custom add button above.';
+        resultsWrap.appendChild(empty);
+        return;
+      }
+
+      matches.forEach(([name, prodCat]) => {
+        const opt = document.createElement('div');
+        opt.className = 'picker-item-option';
+        const isAdded = existingNames.includes(name.toLowerCase());
+        if(isAdded) opt.style.opacity = '0.4';
+
+        opt.innerHTML = `
+          <div>
+            <div style="font-size:13px;font-weight:500;color:#ffffff;">${escapeHtml(name)} ${isAdded ? '<span style="font-size:10px;color:var(--green);">&check; Added</span>' : ''}</div>
+            <div style="font-size:11px;color:var(--ink-faint);">${escapeHtml(prodCat || '')}</div>
+          </div>
+          <span style="font-size:11px;color:var(--gold);">&plus; Add</span>
+        `;
+
+        if(!isAdded){
+          opt.addEventListener('click', () => addItemToCategory(cat, name));
+        }
+        resultsWrap.appendChild(opt);
+      });
+    };
+
+    input.addEventListener('input', updateResults);
+    setTimeout(() => input.focus(), 20);
+    updateResults();
+
+    return box;
+  }
+
+  function addItemToCategory(cat, name){
+    const trimmed = name.trim();
+    if(!trimmed) return;
+    if((cat.items || []).some(i => i.name.toLowerCase() === trimmed.toLowerCase())){
+      showToast(`"${trimmed}" is already in this category.`);
+      return;
+    }
+    cat.items.push({ id: uid(), name: trimmed, status: null, remark: '' });
+    pickerQuery = '';
+    save();
+    render();
+    showToast(`Added "${trimmed}" to ${cat.title}.`);
   }
 
   async function addCategory(){
-    if(!state){ await THDialog.alert('Still connecting to your account \u2014 please wait a moment.'); return; }
-    const name = await THDialog.prompt('Name for the new category:', '', { title: 'Add category', placeholder: 'e.g. Aftershave Balm' });
+    const name = await THDialog.prompt('Name for the new category:', '', { title: 'Add Category', placeholder: 'e.g. Aftershave Balm, Towels & Linens' });
     if(!name) return;
     const trimmed = name.trim();
     if(!trimmed) return;
@@ -1645,23 +1744,227 @@
     const newCat = { id: uid(), title: trimmed, items: [] };
     cats.push(newCat);
     expandedCats.add(newCat.id);
+    openPicker = newCat.id;
     save();
     render();
   }
 
-  // ---------- Excel export (with real borders, via ExcelJS) ----------
+  // ---------- Modal: "Add Item to Stations" (Batch) ----------
+  const modalOverlayEl = document.getElementById('everywhereModal');
+  const modalBoxEl = document.getElementById('everywhereModalBox');
+
+  function closeModal(){ modalOverlayEl.classList.remove('open'); }
+  modalOverlayEl.addEventListener('click', (e) => { if(e.target === modalOverlayEl) closeModal(); });
+
+  function unionCategoriesInfo(){
+    const map = new Map();
+    state.stations.forEach(st => {
+      categoriesForStation(st.id).forEach(cat => {
+        const k = cat.title.toLowerCase();
+        if(!map.has(k)) map.set(k, { title: cat.title, stationIds: new Set() });
+        map.get(k).stationIds.add(st.id);
+      });
+    });
+    return [...map.values()].sort((a, b) => a.title.localeCompare(b.title));
+  }
+
+  function allKnownProductNames(){
+    const set = new Set();
+    CATALOG.forEach(p => { if(p[0]) set.add(p[0]); });
+    state.stations.forEach(st => {
+      categoriesForStation(st.id).forEach(cat => {
+        (cat.items || []).forEach(it => { if(it.name) set.add(it.name); });
+      });
+    });
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }
+
+  function addItemToAllStations(){
+    if(!state.stations.length){ showToast('Add a station first.'); return; }
+    openCategoryStep();
+    modalOverlayEl.classList.add('open');
+  }
+
+  function openCategoryStep(){
+    const cats = unionCategoriesInfo();
+    const totalStations = state.stations.length;
+
+    modalBoxEl.innerHTML = `
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Batch Add Item to Stations</div>
+          <div class="modal-subtitle">Step 1 of 2 &mdash; Choose or create target category</div>
+        </div>
+        <button class="modal-close-btn" id="modalCloseBtn">&times;</button>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;font-weight:600;">Existing Categories</div>
+        <div class="picker-results-list" id="catPickList" style="max-height:190px;">
+          ${cats.length === 0 ? '<div style="font-size:12px;color:var(--ink-faint);padding:10px;text-align:center;">No categories yet. Create one below.</div>' : ''}
+          ${cats.map(c => `
+            <div class="picker-item-option" data-cat="${escapeHtml(c.title)}" style="padding:10px 14px;">
+              <span style="font-weight:600;color:var(--gold);">${escapeHtml(c.title)}</span>
+              <span style="font-size:11px;color:var(--ink-soft);">${c.stationIds.size} of ${totalStations} stations</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div>
+        <div style="font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;font-weight:600;">Or Create New Category</div>
+        <div class="picker-input-row">
+          <input type="text" class="picker-input" id="newCatModalInput" placeholder="e.g. Shaving Creams, Aftershave Balm">
+          <button class="primary-action-btn" id="btnUseNewCat" style="border-radius:999px;">Use This</button>
+        </div>
+      </div>
+    `;
+
+    modalBoxEl.querySelector('#modalCloseBtn').addEventListener('click', closeModal);
+
+    modalBoxEl.querySelectorAll('#catPickList .picker-item-option').forEach(row => {
+      row.addEventListener('click', () => {
+        const catTitle = row.dataset.cat;
+        const info = cats.find(c => c.title.toLowerCase() === catTitle.toLowerCase());
+        openStationStep(catTitle, info ? info.stationIds : new Set());
+      });
+    });
+
+    const newIn = modalBoxEl.querySelector('#newCatModalInput');
+    const newBtn = modalBoxEl.querySelector('#btnUseNewCat');
+    const submitNew = () => {
+      const trimmed = newIn.value.trim();
+      if(!trimmed) return;
+      openStationStep(trimmed, new Set());
+    };
+    newBtn.addEventListener('click', submitNew);
+    newIn.addEventListener('keydown', (e) => { if(e.key === 'Enter') submitNew(); });
+  }
+
+  function openStationStep(catTitle, stationIdsWithCat){
+    modalBoxEl.innerHTML = `
+      <div class="modal-header">
+        <div>
+          <div style="font-size:11px;color:var(--gold);cursor:pointer;margin-bottom:4px;" id="modalBackCat">&lsaquo; Back to Category</div>
+          <div class="modal-title">${escapeHtml(catTitle)}</div>
+          <div class="modal-subtitle">Step 2 of 2 &mdash; Select destination stations & product</div>
+        </div>
+        <button class="modal-close-btn" id="modalCloseBtn2">&times;</button>
+      </div>
+
+      <div style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--ink-faint);font-weight:600;">Stations</span>
+          <div style="display:flex;gap:6px;">
+            <button class="strip-btn" id="btnSelectAllSt">All</button>
+            <button class="strip-btn" id="btnSelectMissingSt">Missing Only</button>
+            <button class="strip-btn" id="btnSelectNoneSt">None</button>
+          </div>
+        </div>
+
+        <div class="picker-results-list" style="max-height:160px;" id="stCheckList">
+          ${state.stations.map(st => {
+            const hasCat = stationIdsWithCat.has(st.id);
+            return `
+              <label class="picker-item-option" style="cursor:pointer;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <input type="checkbox" value="${st.id}" ${!hasCat ? 'checked' : ''} style="width:16px;height:16px;accent-color:var(--gold);cursor:pointer;">
+                  <span style="font-size:13px;font-weight:500;color:#ffffff;">${escapeHtml(st.title)}</span>
+                </div>
+                ${hasCat ? '<span style="font-size:10px;color:var(--amber);">has category</span>' : ''}
+              </label>
+            `;
+          }).join('')}
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <div style="font-size:11px;letter-spacing:0.5px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px;font-weight:600;">Product / Item Name</div>
+        <input type="text" class="picker-input" id="batchProductInput" placeholder="Search catalog or type custom name…" style="width:100%;">
+        <div class="picker-results-list" id="batchSuggestBox" style="display:none;margin-top:6px;max-height:140px;"></div>
+      </div>
+
+      <button class="primary-action-btn" id="btnConfirmBatchAdd" style="width:100%;justify-content:center;padding:12px;">
+        Add Item to Selected Stations
+      </button>
+    `;
+
+    modalBoxEl.querySelector('#modalCloseBtn2').addEventListener('click', closeModal);
+    modalBoxEl.querySelector('#modalBackCat').addEventListener('click', openCategoryStep);
+
+    const cbs = Array.from(modalBoxEl.querySelectorAll('#stCheckList input[type="checkbox"]'));
+    modalBoxEl.querySelector('#btnSelectAllSt').addEventListener('click', () => cbs.forEach(c => c.checked = true));
+    modalBoxEl.querySelector('#btnSelectNoneSt').addEventListener('click', () => cbs.forEach(c => c.checked = false));
+    modalBoxEl.querySelector('#btnSelectMissingSt').addEventListener('click', () => cbs.forEach(c => { c.checked = !stationIdsWithCat.has(c.value); }));
+
+    // Product search typeahead
+    const pIn = modalBoxEl.querySelector('#batchProductInput');
+    const suggestBox = modalBoxEl.querySelector('#batchSuggestBox');
+    const knownNames = allKnownProductNames();
+
+    const renderSuggest = () => {
+      const q = pIn.value.trim().toLowerCase();
+      suggestBox.innerHTML = '';
+      if(!q){ suggestBox.style.display = 'none'; return; }
+      const matches = knownNames.filter(n => n.toLowerCase().includes(q)).slice(0, 8);
+      if(!matches.length){ suggestBox.style.display = 'none'; return; }
+      matches.forEach(name => {
+        const item = document.createElement('div');
+        item.className = 'picker-item-option';
+        item.textContent = name;
+        item.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          pIn.value = name;
+          suggestBox.style.display = 'none';
+        });
+        suggestBox.appendChild(item);
+      });
+      suggestBox.style.display = 'flex';
+    };
+
+    pIn.addEventListener('input', renderSuggest);
+    pIn.addEventListener('focus', renderSuggest);
+    pIn.addEventListener('blur', () => setTimeout(() => { suggestBox.style.display = 'none'; }, 150));
+
+    modalBoxEl.querySelector('#btnConfirmBatchAdd').addEventListener('click', () => {
+      const itemName = pIn.value.trim();
+      if(!itemName){ pIn.focus(); return; }
+      const selectedIds = cbs.filter(c => c.checked).map(c => c.value);
+      if(!selectedIds.length){ showToast('Select at least one station.'); return; }
+
+      let count = 0;
+      selectedIds.forEach(stId => {
+        const cats = categoriesForStation(stId);
+        let cat = cats.find(c => c.title.toLowerCase() === catTitle.toLowerCase());
+        if(!cat){
+          cat = { id: uid(), title: catTitle, items: [] };
+          cats.push(cat);
+        }
+        if(!cat.items.some(i => i.name.toLowerCase() === itemName.toLowerCase())){
+          cat.items.push({ id: uid(), name: itemName, status: null, remark: '' });
+          count++;
+        }
+      });
+
+      save();
+      render();
+      closeModal();
+      showToast(`Added "${itemName}" to ${count} of ${selectedIds.length} station(s).`);
+    });
+  }
+
+  // ---------- Excel Export (ExcelJS) ----------
   async function exportStationExcel(stationId){
-    if(!state){ await THDialog.alert('Still connecting to your account \u2014 please wait a moment.'); return; }
     if(typeof ExcelJS === 'undefined'){
-      await THDialog.alert('Excel export library failed to load. Check your internet connection and try again.');
+      await THDialog.alert('Excel export library is loading. Please check connection and try again.');
       return;
     }
     const st = stationById(stationId);
     if(!st) return;
     const g = groupById(st.groupId);
-    const cats = (state.data[stationId] || []).filter(c => c.items.length > 0);
-    if(cats.length === 0){
-      await THDialog.alert('This station has no items yet \u2014 add some before printing a checklist.');
+    const cats = (state.data[stationId] || []).filter(c => (c.items || []).length > 0);
+    if(!cats.length){
+      await THDialog.alert('This station has no items to export yet.');
       return;
     }
 
@@ -1669,9 +1972,9 @@
     const cellBorder = { top: thin, left: thin, bottom: thin, right: thin };
 
     const wb = new ExcelJS.Workbook();
-    const sheetName = (st.title || 'Station').replace(/[\\\/\?\*\[\]:]/g, '').slice(0, 31) || 'Station';
+    const sheetName = (st.title || 'Station').replace(/[\\\/\?\*\[\]:]/g, '').slice(0, 31) || 'Checklist';
     const ws = wb.addWorksheet(sheetName);
-    ws.columns = [{ width: 42 }, { width: 24 }, { width: 32 }, { width: 16 }];
+    ws.columns = [{ width: 42 }, { width: 24 }, { width: 34 }, { width: 18 }];
 
     // Title
     ws.mergeCells('A1:D1');
@@ -1681,19 +1984,17 @@
     titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
     ws.getRow(1).height = 26;
 
-    // Date / Staff row
-    const infoRowNum = 3;
-    ws.getCell('A' + infoRowNum).value = 'Date:';
-    ws.getCell('A' + infoRowNum).font = { bold: true, size: 11 };
-    ws.getCell('D' + infoRowNum).value = 'Staff Name:';
-    ws.getCell('D' + infoRowNum).font = { bold: true, size: 11 };
-    ['A', 'B', 'C', 'D'].forEach(col => { ws.getCell(col + infoRowNum).border = cellBorder; });
-    ws.getRow(infoRowNum).height = 20;
+    // Header info
+    ws.getCell('A3').value = 'Date: ' + new Date().toLocaleDateString();
+    ws.getCell('A3').font = { bold: true, size: 11 };
+    ws.getCell('D3').value = 'Staff Checked:';
+    ws.getCell('D3').font = { bold: true, size: 11 };
+    ['A', 'B', 'C', 'D'].forEach(col => { ws.getCell(col + '3').border = cellBorder; });
+    ws.getRow(3).height = 20;
 
-    let rowNum = infoRowNum + 2;
+    let rowNum = 5;
 
     cats.forEach(cat => {
-      // Category header row (merged, filled)
       ws.mergeCells('A' + rowNum + ':D' + rowNum);
       const catCell = ws.getCell('A' + rowNum);
       catCell.value = cat.title;
@@ -1704,8 +2005,7 @@
       ws.getRow(rowNum).height = 20;
       rowNum++;
 
-      // Column header row
-      const headers = ['Item', 'Present / Missing / Refill', 'Remarks', ''];
+      const headers = ['Item', 'Status (Present / Refill / Missing)', 'Remarks / Notes', 'Sign'];
       headers.forEach((h, i) => {
         const cell = ws.getCell(rowNum, i + 1);
         cell.value = h;
@@ -1717,19 +2017,24 @@
       rowNum++;
 
       cat.items.forEach(item => {
-        const nameCell = ws.getCell(rowNum, 1);
-        nameCell.value = item.name;
-        nameCell.alignment = { vertical: 'middle', wrapText: true };
+        const c1 = ws.getCell(rowNum, 1);
+        c1.value = item.name;
+        c1.alignment = { vertical: 'middle', wrapText: true };
+
         const c2 = ws.getCell(rowNum, 2);
+        c2.value = item.status === 'yes' ? 'Present (আছে)' : item.status === 'refill' ? 'Refill (রিফিল)' : item.status === 'no' ? 'Missing (নাই)' : 'Unchecked';
+        c2.alignment = { vertical: 'middle', horizontal: 'center' };
+
         const c3 = ws.getCell(rowNum, 3);
         c3.value = item.remark || '';
         c3.alignment = { vertical: 'middle', wrapText: true };
+
         const c4 = ws.getCell(rowNum, 4);
-        [nameCell, c2, c3, c4].forEach(cell => { cell.border = cellBorder; });
+        [c1, c2, c3, c4].forEach(c => { c.border = cellBorder; });
         rowNum++;
       });
 
-      rowNum++; // spacer row between categories (no border)
+      rowNum++;
     });
 
     const buffer = await wb.xlsx.writeBuffer();
@@ -1739,73 +2044,59 @@
     const safeName = (st.title || 'station').replace(/[\\/:*?"<>|]/g, '').trim() || 'station';
     const stamp = new Date().toISOString().slice(0, 10);
     a.href = url;
-    a.download = 'th-checklist-' + safeName + '-' + stamp + '.xlsx';
+    a.download = `th-station-checklist-${safeName}-${stamp}.xlsx`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    showToast('Checklist downloaded as Excel.');
   }
 
-  // ---------- Backup import / reset ----------
-  async function importData(file){
-    if(!state){ await THDialog.alert('Still connecting to your account \u2014 please wait a moment.'); return; }
-    const reader = new FileReader();
-    reader.onload = async function(e){
-      try{
-        const parsed = JSON.parse(e.target.result);
-        const incoming = parsed && parsed.state ? parsed.state : parsed;
-        const migrated = migrateIfNeeded(incoming);
-        if(!migrated || !Array.isArray(migrated.groups) || typeof migrated.data !== 'object'){
-          await THDialog.alert('This file does not look like a valid station checklist backup.');
-          return;
-        }
-        const ok = await THDialog.confirm('Import this file? It will replace your current checklist data on this device.', { title: 'Import backup', okText: 'Import' });
-        if(!ok) return;
-        state = migrated;
-        state.view = 'groups';
-        state.activeGroup = null;
-        state.activeStation = null;
-        openPicker = null;
-        expandedCats = new Set();
-        save();
-        render();
-      }catch(err){
-        await THDialog.alert('Could not read that file. Make sure it is a JSON backup exported from this app.');
-      }
-    };
-    reader.readAsText(file);
-  }
-
-  async function resetAll(){
-    if(!state){ await THDialog.alert('Still connecting to your account \u2014 please wait a moment.'); return; }
-    const ok = await THDialog.confirm('Reset all groups, stations and categories? This cannot be undone.', { title: 'Reset everything', okText: 'Reset', danger: true });
-    if(!ok) return;
-    state = JSON.parse(JSON.stringify(DEFAULT_STATE));
-    openPicker = null;
-    expandedCats = new Set();
-    save();
-    render();
-  }
-
-  function loadCatalog(){
-    window.thAuthReady.then(function(){
-      window.thDB.collection(DOC_COLLECTION).doc('products').onSnapshot(function(snap){
-        if(snap.exists && Array.isArray(snap.data().items)){
-          CATALOG = snap.data().items.map(p => [p.name, p.category || '']);
-          if(openPicker) render();
-        }
-      }, function(err){ console.error('Product catalog sync error', err); });
-    });
-  }
-
+  // Backup support
   window.THBackup = {
-    note: 'Your checklists sync automatically to your account in real time. Use Import to restore a previously exported backup file.',
-    importFile: importData,
-    reset: resetAll
+    note: 'Your checklists sync to salon cloud in real-time. Use Import to restore a backup file.',
+    importFile: async function(file){
+      const reader = new FileReader();
+      reader.onload = async function(e){
+        try{
+          const parsed = JSON.parse(e.target.result);
+          const incoming = parsed && parsed.state ? parsed.state : parsed;
+          const migrated = migrateIfNeeded(incoming);
+          if(!migrated || !Array.isArray(migrated.groups) || typeof migrated.data !== 'object'){
+            await THDialog.alert('Invalid checklist backup format.');
+            return;
+          }
+          const ok = await THDialog.confirm('Import backup? This will replace your current checklist data.', { title: 'Import Backup', okText: 'Import' });
+          if(!ok) return;
+          state = migrated;
+          goToGroups();
+          showToast('Backup restored successfully.');
+        }catch(err){
+          await THDialog.alert('Could not parse file.');
+        }
+      };
+      reader.readAsText(file);
+    },
+    reset: async function(){
+      const ok = await THDialog.confirm('Reset all groups, stations, and checklist items? This cannot be undone.', { title: 'Reset Checklist', okText: 'Reset All', danger: true });
+      if(!ok) return;
+      state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+      goToGroups();
+      showToast('Checklist reset.');
+    }
   };
 
+  // Sync live products
+  window.thAuthReady.then(function(){
+    window.thDB.collection(DOC_COLLECTION).doc('products').onSnapshot(function(snap){
+      if(snap.exists && Array.isArray(snap.data().items)){
+        CATALOG = snap.data().items.map(p => [p.name, p.category || '']);
+        if(openPicker) render();
+      }
+    });
+  });
+
   load();
-  loadCatalog();
 })();
 </script>
 <script src="nav.js"></script>

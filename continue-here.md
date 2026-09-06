@@ -1,38 +1,31 @@
 # Continue here
 
-## Done
-1. ✅ **Task Manager card redesign** — `task-manager.html`
-   - New markup: `#cardsPanel` (category cards + "Add category") and `#detailPanel`
-     (back button, rename/delete icons, add-task input, task list), toggled by a
-     local `currentView` variable ('cards' | 'detail'). Firestore data model unchanged.
-   - Old pill-tab CSS (`.tabs`, `.tab`, `.tab-add`, `.tab-manage`) left in the stylesheet
-     unused — harmless, can be deleted later if you want a cleanup pass.
-   - Verified JS parses (`new Function()` check passed).
+## Completed Audits & Fixes
+1. ✅ **Unified Navigation & Drawer Directory** — `nav.js` & `shared.js`
+   - Added instant "More" salon drawer trigger and direct Queue navigation to capsule bottom nav.
+   - Dynamic `reserveSpace` calculation preventing bottom bar overlap with checkout bars on mobile.
+   - Salon Tools directory with active state indicator and grouped tools across all pages.
 
-2. ✅ **Requirements Excel** — `requirements.html`
-   - `autoCounts()` now also builds `byStation: { stationName: qty }` per item,
-     using a station id → title lookup from `checklistState.stations`.
-   - `combinedList()` passes that through as `entry.byStation`.
-   - Excel export is now 4 columns: Item · Qty Needed · Station · Remarks.
-     Station cell is multi-line (`wrapText:true`), one line per station + qty,
-     plus a `Manually added: N` line if there's a manual quantity. Row height
-     grows with the number of lines. Borders kept (`borderRow(row, 4)`).
-   - On-screen list view (the "X from checklist + Y added manually" line) is
-     untouched — only the Excel file changed, as asked.
-   - Verified JS parses.
+2. ✅ **Direct Companion Workflow Switchers**
+   - Products (`products.html`) $\leftrightarrow$ Product Requests (`product-requests.html`)
+   - Station Checklist (`station-checklist.html`) $\leftrightarrow$ Station Requirements (`requirements.html`)
 
-## Still to do
-3. ✅ **Nav trim** — `nav.js`: `NAV_ITEMS` now only has Home · Calculator · Tasks ·
-   Stations. Notes/Products/Requirements stay reachable from the Home page list
-   (unchanged). Those three pages still load `nav.js`, so the capsule still shows
-   on them for getting back — it just no longer has their own icon in it.
+3. ✅ **Full Light Mode Theme Consistency**
+   - High-contrast Mayfair navy & brass theme across all pages: `serial-queue.html`, `products.html`, `product-requests.html`, `station-checklist.html`, `requirements.html`, `task-manager.html`, and `notes.html`.
 
-## All three items in this round are done.
-Remaining pages (products.html, requirements.html, notes.html) still include
-`nav.js`/`shared.js` as before — nothing else needed there.
+4. ✅ **Touch & Mobile Accessibility**
+   - Resolved hidden delete controls on mobile/touch screens in `task-manager.html` using `@media (hover: none)`.
 
-## Notes / assumptions (see plan.md for full detail)
-- Manual (non-station) requirement items will show `Manually added: N` in the
-  Station column.
-- Rename/Delete category now live in the Task Manager detail-screen header, not
-  on the card itself.
+5. ✅ **404 Page Enhancement** — `404.html`
+   - Replaced generic error with branded Truefitt & Hill 404 page, quick link to return to Staff Hub, and shared navigation scripts.
+
+6. ✅ **Full Station Checklist Design Remake** — `station-checklist.html`
+   - Replaced cramped 560px column layout with a spacious, atelier-grade responsive surface (up to 1040px max-width).
+   - Added live metric cards (Total Stations, In Stock, Needs Refill, Missing).
+   - Redesigned Stations and Groups with status-accented cards, progress slices, and direct action menus.
+   - Built an in-station search & status filter bar ("All", "Missing", "Refill", "Ready", "Unchecked").
+   - Added quick bulk-actions: "Mark All In Stock" and "Stock Category" (1-tap stocking).
+   - Added in-station quick station switcher dropdown for rapid room-to-room auditing.
+   - Upgraded item row controls with bilingual pills (`In Stock (আছে)`, `Refill (রিফিল)`, `Missing (নাই)`).
+   - Re-architected batch "Add Item to Every Station" modal with 2-step category selection and product typeahead.
+   - Fully compatible with Firestore schema and `requirements.html`.
