@@ -24,8 +24,248 @@
 
   function mark(el, text){
     if(!el || el.nodeType !== 1) return;
+    if(window.THFeatures && !window.THFeatures.isEnabled('bangla-font')){
+      el.classList.remove('th-bn');
+      return;
+    }
     if(BN_RE.test(text || '')) el.classList.add('th-bn');
     else el.classList.remove('th-bn');
+  }
+
+  /* ---------------------------------------------------------------
+     2. Feature & Module Configuration Manager
+  --------------------------------------------------------------- */
+  var DEFAULT_FEATURES = {
+    // Core Salon Tools
+    'service-calculator': true,
+    'serial-queue': true,
+    'station-checklist': true,
+    'task-manager': true,
+    'requirements': true,
+    'products': true,
+    'product-requests': true,
+    'notes': true,
+    // Dashboard Components
+    'dash-kpi': true,
+    'dash-queue': true,
+    'dash-tasks': true,
+    'dash-notes': true,
+    'dash-launchpad': true,
+    // Operational Options
+    'sound-effects': false,
+    'live-sync': true,
+    'bangla-font': true
+  };
+
+  var FEATURE_META = {
+    'service-calculator': {
+      title: 'Service Calculator & POS',
+      desc: 'Billing POS, VAT breakdown, product additions, discount logic, and staff commission.',
+      category: 'tools',
+      href: 'service-calculator.html'
+    },
+    'serial-queue': {
+      title: 'Serial Chair Rotation Queue',
+      desc: 'Live turn rotation for barbers and therapists with check-in and active status tracking.',
+      category: 'tools',
+      href: 'serial-queue.html'
+    },
+    'station-checklist': {
+      title: 'Station Hygiene & Prep Checklist',
+      desc: 'Daily station inspection, hot towel steamer checks, barbicide trays, and Excel export.',
+      category: 'tools',
+      href: 'station-checklist.html'
+    },
+    'task-manager': {
+      title: 'Daily Shift Tasks Manager',
+      desc: 'Shift operational checklists, priority flags (urgent/priority/routine), and completion tracking.',
+      category: 'tools',
+      href: 'task-manager.html'
+    },
+    'requirements': {
+      title: 'Stock Requirements & Shortages',
+      desc: 'Aggregated product shortages from station inspections with manual restock ordering.',
+      category: 'tools',
+      href: 'requirements.html'
+    },
+    'products': {
+      title: 'Grooming Product Catalog',
+      desc: 'Directory of Truefitt & Hill signature retail products, pricing, barcodes, and stock.',
+      category: 'tools',
+      href: 'products.html'
+    },
+    'product-requests': {
+      title: 'Staff Product Requisitions',
+      desc: 'Internal product orders and consumables requested by floor staff.',
+      category: 'tools',
+      href: 'product-requests.html'
+    },
+    'notes': {
+      title: 'Shift Handover Logbook',
+      desc: 'Time-stamped shift handovers, operational remarks, and bilingual English/Bangla note logs.',
+      category: 'tools',
+      href: 'notes.html'
+    },
+    'dash-kpi': {
+      title: 'Dashboard KPI Quick Overview',
+      desc: 'Live metric tiles for queue turns, shift tasks, station prep, and inventory shortage counts.',
+      category: 'dashboard'
+    },
+    'dash-queue': {
+      title: 'Dashboard Chair Rotation Widget',
+      desc: 'Front-desk summary card of active barbers and therapists on rotation.',
+      category: 'dashboard'
+    },
+    'dash-tasks': {
+      title: 'Dashboard Daily Shift Tasks Widget',
+      desc: 'Interactive checklist widget directly on the main dashboard screen.',
+      category: 'dashboard'
+    },
+    'dash-notes': {
+      title: 'Dashboard Shift Handover Widget',
+      desc: 'Latest handover note card with direct link to write new notes.',
+      category: 'dashboard'
+    },
+    'dash-launchpad': {
+      title: 'Dashboard Operational Suites Tiles',
+      desc: 'Direct-access navigation cards for quick launch into atelier suites.',
+      category: 'dashboard'
+    },
+    'sound-effects': {
+      title: 'Audio Chime & Turn Alerts',
+      desc: 'Auditory chimes on turn completion and task checkoff.',
+      category: 'options'
+    },
+    'live-sync': {
+      title: 'Real-Time Firestore Live Sync',
+      desc: 'Continuous real-time multi-device synchronization via Firebase Firestore.',
+      category: 'options'
+    },
+    'bangla-font': {
+      title: 'Tiro Bangla Auto-Typography',
+      desc: 'Automatically render Bengali characters in authentic Tiro Bangla display serif font.',
+      category: 'options'
+    }
+  };
+
+  function loadStoredFeatures(){
+    try {
+      var raw = localStorage.getItem('th-features');
+      if(raw){
+        var parsed = JSON.parse(raw);
+        var res = Object.assign({}, DEFAULT_FEATURES);
+        for(var k in parsed){
+          if(typeof parsed[k] === 'boolean') res[k] = parsed[k];
+        }
+        return res;
+      }
+    } catch(e){}
+    return Object.assign({}, DEFAULT_FEATURES);
+  }
+
+  var currentFeatures = loadStoredFeatures();
+
+  window.THFeatures = {
+    DEFAULT_FEATURES: DEFAULT_FEATURES,
+    FEATURE_META: FEATURE_META,
+    getAll: function(){
+      return Object.assign({}, currentFeatures);
+    },
+    isEnabled: function(key){
+      if(currentFeatures[key] === undefined) return DEFAULT_FEATURES[key] !== false;
+      return currentFeatures[key] === true;
+    },
+    set: function(key, val){
+      currentFeatures[key] = !!val;
+      try { localStorage.setItem('th-features', JSON.stringify(currentFeatures)); } catch(e){}
+      window.dispatchEvent(new CustomEvent('th-features-changed', {
+        detail: { key: key, value: !!val, features: currentFeatures }
+      }));
+      if(window.thDB){
+        try {
+          window.thDB.collection('th-staff-tools').doc('settings').set({
+            features: currentFeatures,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true }).catch(function(){});
+        } catch(e){}
+      }
+    },
+    resetAll: function(){
+      currentFeatures = Object.assign({}, DEFAULT_FEATURES);
+      try { localStorage.setItem('th-features', JSON.stringify(currentFeatures)); } catch(e){}
+      window.dispatchEvent(new CustomEvent('th-features-changed', {
+        detail: { features: currentFeatures }
+      }));
+      if(window.thDB){
+        try {
+          window.thDB.collection('th-staff-tools').doc('settings').set({
+            features: currentFeatures,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true }).catch(function(){});
+        } catch(e){}
+      }
+    },
+    enableAll: function(){
+      for(var k in DEFAULT_FEATURES){
+        currentFeatures[k] = true;
+      }
+      try { localStorage.setItem('th-features', JSON.stringify(currentFeatures)); } catch(e){}
+      window.dispatchEvent(new CustomEvent('th-features-changed', {
+        detail: { features: currentFeatures }
+      }));
+      if(window.thDB){
+        try {
+          window.thDB.collection('th-staff-tools').doc('settings').set({
+            features: currentFeatures,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          }, { merge: true }).catch(function(){});
+        } catch(e){}
+      }
+    }
+  };
+
+  // Check if current page is disabled and show banner
+  var thisPageName = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
+  var pageFeatureKeyMap = {
+    'service-calculator.html': 'service-calculator',
+    'serial-queue.html': 'serial-queue',
+    'station-checklist.html': 'station-checklist',
+    'task-manager.html': 'task-manager',
+    'requirements.html': 'requirements',
+    'products.html': 'products',
+    'product-requests.html': 'product-requests',
+    'notes.html': 'notes'
+  };
+  var thisFeatKey = pageFeatureKeyMap[thisPageName];
+  if(thisFeatKey && !window.THFeatures.isEnabled(thisFeatKey)){
+    function injectDisabledNotice(){
+      if(document.getElementById('th-disabled-banner-el')) return;
+      var banner = document.createElement('div');
+      banner.id = 'th-disabled-banner-el';
+      banner.className = 'th-feature-disabled-banner';
+      banner.innerHTML =
+        '<div class="th-disabled-content">' +
+          '<div class="th-disabled-text">' +
+            '<span class="th-disabled-dot"></span>' +
+            '<span>This salon module (<strong>' + (FEATURE_META[thisFeatKey] ? FEATURE_META[thisFeatKey].title : thisFeatKey) + '</strong>) is currently <strong>toggled OFF</strong> in Atelier Settings.</span>' +
+          '</div>' +
+          '<div class="th-disabled-actions">' +
+            '<button type="button" class="th-disabled-btn primary" id="th-enable-this-feat-btn">Re-enable Feature</button>' +
+            '<a href="settings.html" class="th-disabled-btn">Open Settings</a>' +
+            '<a href="index.html" class="th-disabled-btn">Back to Dashboard</a>' +
+          '</div>' +
+        '</div>';
+      document.body.prepend(banner);
+      var eb = document.getElementById('th-enable-this-feat-btn');
+      if(eb){
+        eb.addEventListener('click', function(){
+          window.THFeatures.set(thisFeatKey, true);
+          location.reload();
+        });
+      }
+    }
+    if(document.readyState !== 'loading') injectDisabledNotice();
+    else document.addEventListener('DOMContentLoaded', injectDisabledNotice);
   }
 
   // Live typing in inputs / textareas
@@ -139,6 +379,9 @@
     if(localToggle) localToggle.checked = isLight;
     var drawerToggle = document.getElementById('th-theme-toggle');
     if(drawerToggle) drawerToggle.checked = isLight;
+
+    var sideThemeLabel = document.getElementById('th-side-theme-label');
+    if(sideThemeLabel) sideThemeLabel.textContent = isLight ? 'Light Mode' : 'Dark Mode';
 
     updateHeaderToggle(theme);
     updateThemeStatus();
@@ -311,7 +554,27 @@
       'color:rgba(238,242,255,0.4);border-top:1px solid rgba(217,184,114,0.16);}' +
     'body.light .th-drawer-foot{color:rgba(10,31,68,0.45);border-top-color:rgba(26,58,143,0.14);}' +
     '.th-drawer-foot span{color:#d9b872;}' +
-    'body.light .th-drawer-foot span{color:#1a3a8f;}';
+    'body.light .th-drawer-foot span{color:#1a3a8f;}' +
+
+    /* Disabled Feature Notice Banner */
+    '.th-feature-disabled-banner{position:sticky;top:0;left:0;right:0;z-index:9999;' +
+      'background:linear-gradient(135deg, rgba(30,15,10,0.96) 0%, rgba(20,8,6,0.98) 100%);' +
+      'border-bottom:1px solid rgba(239,68,68,0.45);box-shadow:0 8px 24px rgba(0,0,0,0.6);' +
+      'padding:12px 18px;font-family:"Poppins",sans-serif;color:#fecaca;}' +
+    'body.light .th-feature-disabled-banner{background:linear-gradient(135deg,#fff1f2 0%,#ffe4e6 100%);' +
+      'border-bottom-color:rgba(225,29,72,0.35);color:#9f1239;box-shadow:0 6px 18px rgba(159,18,57,0.08);}' +
+    '.th-disabled-content{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:12.5px;}' +
+    '.th-disabled-text{display:flex;align-items:center;gap:8px;}' +
+    '.th-disabled-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;box-shadow:0 0 8px #ef4444;flex-shrink:0;}' +
+    '.th-disabled-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}' +
+    '.th-disabled-btn{padding:6px 14px;border-radius:999px;font-size:11.5px;font-weight:600;letter-spacing:0.3px;' +
+      'border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.12);color:#fca5a5;text-decoration:none;cursor:pointer;transition:all .15s ease;}' +
+    '.th-disabled-btn:hover{background:rgba(239,68,68,0.25);color:#ffffff;border-color:#ef4444;transform:translateY(-1px);}' +
+    '.th-disabled-btn.primary{background:linear-gradient(135deg,#ef4444,#b91c1c);color:#ffffff;border-color:#ef4444;box-shadow:0 2px 8px rgba(239,68,68,0.4);}' +
+    '.th-disabled-btn.primary:hover{background:linear-gradient(135deg,#f87171,#dc2626);}' +
+    'body.light .th-disabled-btn{border-color:rgba(225,29,72,0.3);background:rgba(225,29,72,0.08);color:#9f1239;}' +
+    'body.light .th-disabled-btn:hover{background:rgba(225,29,72,0.15);color:#881337;}' +
+    'body.light .th-disabled-btn.primary{background:linear-gradient(135deg,#e11d48,#be123c);color:#ffffff;border-color:#e11d48;}';
   document.head.appendChild(style);
 
   var burger = document.createElement('div');
@@ -371,8 +634,9 @@
       ]
     },
     {
-      group: 'Staff Portal',
+      group: 'Settings & Config',
       items: [
+        { href: 'settings.html', label: 'App Settings', desc: 'Toggle features & atelier preferences', icon: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>' },
         { href: 'index.html', label: 'Staff Hub (Home)', desc: 'Main salon dashboard & overview', icon: '<path d="M4 11.5L12 4l8 7.5M6 10v9a1 1 0 0 0 1 1h3v-5a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v5h3a1 1 0 0 0 1-1v-9"/>' }
       ]
     }
@@ -381,7 +645,7 @@
   var currPage = (window.location.pathname.split('/').pop() || 'index.html').toLowerCase();
   if(currPage === '') currPage = 'index.html';
 
-  var navSectionHtml = '<div class="th-section-title">Salon Tools</div><div class="th-drawer-tools">';
+  var navSectionHtml = '<div class="th-section-title">Salon Tools</div><div class="th-drawer-tools" id="th-drawer-tools-list">';
   PORTAL_TOOLS.forEach(function(grp){
     navSectionHtml += '<div class="th-drawer-cat-label">' + grp.group + '</div>';
     grp.items.forEach(function(item){
@@ -406,6 +670,10 @@
     '</div>' +
     '<div class="th-drawer-body">' +
       navSectionHtml +
+      '<div class="th-section-title">Feature Toggles</div>' +
+      '<div class="th-note" style="margin:-4px 0 10px;">Toggle available salon features and options:</div>' +
+      '<div id="th-drawer-features-list"></div>' +
+      '<a href="settings.html" class="th-btn" style="text-align:center;text-decoration:none;display:block;margin:10px 0 16px;">Open Full Settings Page &rarr;</a>' +
       '<div class="th-section-title">Appearance</div>' +
       '<div class="th-row"><span>Light mode</span><label class="th-switch"><input type="checkbox" id="th-theme-toggle"><span class="th-slider"></span></label></div>' +
       '<div id="th-theme-status" class="th-note" style="margin:2px 0 6px;"></div>' +
@@ -415,6 +683,78 @@
     '</div>' +
     '<div class="th-drawer-foot">Staff Portal &nbsp;<span>&middot;</span>&nbsp; Truefitt &amp; Hill</div>';
 
+  function renderDrawerFeatureToggles(){
+    var container = document.getElementById('th-drawer-features-list');
+    if(!container) return;
+    container.innerHTML = '';
+
+    var keys = [
+      'service-calculator',
+      'serial-queue',
+      'station-checklist',
+      'task-manager',
+      'requirements',
+      'products',
+      'product-requests',
+      'notes',
+      'dash-kpi',
+      'dash-queue',
+      'sound-effects'
+    ];
+
+    keys.forEach(function(k){
+      var meta = FEATURE_META[k];
+      if(!meta) return;
+      var enabled = window.THFeatures ? window.THFeatures.isEnabled(k) : true;
+      var row = document.createElement('div');
+      row.className = 'th-row';
+      row.style.marginBottom = '6px';
+      row.style.padding = '8px 12px';
+
+      var labelCol = document.createElement('div');
+      labelCol.style.display = 'flex';
+      labelCol.style.flexDirection = 'column';
+      labelCol.style.gap = '2px';
+      labelCol.style.flex = '1 1 auto';
+      labelCol.style.minWidth = '0';
+
+      var nameSpan = document.createElement('span');
+      nameSpan.style.fontSize = '12px';
+      nameSpan.style.fontWeight = '600';
+      nameSpan.textContent = meta.title;
+
+      var descSpan = document.createElement('span');
+      descSpan.style.fontSize = '10px';
+      descSpan.style.opacity = '0.55';
+      descSpan.style.whiteSpace = 'nowrap';
+      descSpan.style.overflow = 'hidden';
+      descSpan.style.textOverflow = 'ellipsis';
+      descSpan.textContent = meta.desc;
+
+      labelCol.appendChild(nameSpan);
+      labelCol.appendChild(descSpan);
+
+      var switchLabel = document.createElement('label');
+      switchLabel.className = 'th-switch';
+      var inp = document.createElement('input');
+      inp.type = 'checkbox';
+      inp.checked = enabled;
+      inp.addEventListener('change', function(e){
+        if(window.THFeatures){
+          window.THFeatures.set(k, e.target.checked);
+        }
+      });
+      var slider = document.createElement('span');
+      slider.className = 'th-slider';
+      switchLabel.appendChild(inp);
+      switchLabel.appendChild(slider);
+
+      row.appendChild(labelCol);
+      row.appendChild(switchLabel);
+      container.appendChild(row);
+    });
+  }
+
   function ready(){
     document.body.appendChild(burger);
     document.body.appendChild(themeBtn);
@@ -423,6 +763,11 @@
 
     updateHeaderToggle(getTheme());
     updateThemeStatus();
+    renderDrawerFeatureToggles();
+
+    window.addEventListener('th-features-changed', function(){
+      renderDrawerFeatureToggles();
+    });
 
     var themeToggle = document.getElementById('th-theme-toggle');
     if(themeToggle){

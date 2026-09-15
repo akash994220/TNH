@@ -76,8 +76,32 @@
           icon: '<path d="M6 6h15l-1.5 9h-12z" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 6L4.5 3H2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>'
         }
       ]
+    },
+    {
+      group: 'CONFIGURATION',
+      items: [
+        {
+          href: 'settings.html',
+          label: 'App Settings',
+          desc: 'Feature toggles & salon config',
+          icon: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" stroke-linecap="round" stroke-linejoin="round"/>'
+        }
+      ]
     }
   ];
+
+  var HREF_TO_FEAT = {
+    'service-calculator.html': 'service-calculator',
+    'serial-queue.html': 'serial-queue',
+    'station-checklist.html': 'station-checklist',
+    'task-manager.html': 'task-manager',
+    'requirements.html': 'requirements',
+    'products.html': 'products',
+    'product-requests.html': 'product-requests',
+    'notes.html': 'notes',
+    'index.html': null,
+    'settings.html': null
+  };
 
   // Flat list for mobile capsule
   var MOBILE_NAV_ITEMS = [
@@ -292,6 +316,8 @@
       var link = document.createElement('a');
       link.href = item.href;
       link.className = 'th-side-item' + (isCur ? ' active' : '');
+      var featKey = HREF_TO_FEAT[item.href];
+      if(featKey) link.setAttribute('data-feat', featKey);
       if(isCur) link.setAttribute('aria-current', 'page');
       link.innerHTML = '<svg viewBox="0 0 24 24">' + item.icon + '</svg><span>' + item.label + '</span>';
       itemsList.appendChild(link);
@@ -312,13 +338,18 @@
   toggleBtn.className = 'th-side-toggle-btn';
   toggleBtn.innerHTML = '<span>Appearance</span><span id="th-side-theme-label">' + (document.body.classList.contains('light') ? 'Light Mode' : 'Dark Mode') + '</span>';
   toggleBtn.addEventListener('click', function(){
-    var isLight = document.body.classList.contains('light');
-    var newTheme = isLight ? 'dark' : 'light';
-    if(newTheme === 'light') document.body.classList.add('light');
-    else document.body.classList.remove('light');
-    try{ localStorage.setItem('th-theme', newTheme); }catch(e){}
+    if(window.THTheme && window.THTheme.toggle){
+      window.THTheme.toggle();
+    } else {
+      var isLight = document.body.classList.contains('light');
+      var newTheme = isLight ? 'dark' : 'light';
+      if(newTheme === 'light') document.body.classList.add('light');
+      else document.body.classList.remove('light');
+      try{ localStorage.setItem('th-theme', newTheme); }catch(e){}
+    }
+    var currentIsLight = document.body.classList.contains('light');
     var lbl = document.getElementById('th-side-theme-label');
-    if(lbl) lbl.textContent = (newTheme === 'light' ? 'Light Mode' : 'Dark Mode');
+    if(lbl) lbl.textContent = (currentIsLight ? 'Light Mode' : 'Dark Mode');
   });
   footerDiv.appendChild(toggleBtn);
 
@@ -352,11 +383,27 @@
       a.href = item.href;
       var isCur = (item.href.toLowerCase() === path);
       a.className = 'th-nav-item' + (isCur ? ' active' : '');
+      var featKey = HREF_TO_FEAT[item.href];
+      if(featKey) a.setAttribute('data-feat', featKey);
       if(isCur) a.setAttribute('aria-current', 'page');
       a.innerHTML = '<svg viewBox="0 0 24 24">' + item.icon + '</svg><span>' + item.label + '</span>';
       mobileNav.appendChild(a);
     }
   });
+
+  function updateNavVisibility(){
+    if(!window.THFeatures) return;
+    document.querySelectorAll('[data-feat]').forEach(function(el){
+      var f = el.getAttribute('data-feat');
+      if(!f) return;
+      var enabled = window.THFeatures.isEnabled(f);
+      el.style.display = enabled ? '' : 'none';
+    });
+    document.querySelectorAll('.th-side-grp').forEach(function(grp){
+      var visibleItems = grp.querySelectorAll('.th-side-item:not([style*="display: none"])');
+      grp.style.display = (visibleItems.length === 0) ? 'none' : '';
+    });
+  }
 
   // Inject both to DOM
   function mount(){
@@ -364,6 +411,8 @@
     document.body.appendChild(sidebar);
     document.body.appendChild(mobileNav);
     reserveSpace();
+    updateNavVisibility();
+    window.addEventListener('th-features-changed', updateNavVisibility);
   }
 
   function reserveSpace(){

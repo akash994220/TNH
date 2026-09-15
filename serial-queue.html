@@ -267,10 +267,28 @@
   const COLLECTION = 'th-staff-tools';
   const DOC_ID = 'serial-queue';
 
-  const STAFF_LISTS = {
-    barber: ["Ashutosh","Poritosh","Sushanto","Sanjit","Nasir","Kaium","Dipok","Nitol","Sumon"],
-    therapist: ["Rana","Rasel","Privan","Tipu","Arup","Maki","Hemar"]
+  let STAFF_LISTS = {
+    barber: [],
+    therapist: []
   };
+
+  try {
+    const saved = localStorage.getItem('th-serial-queue-staff');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed.barber)) STAFF_LISTS.barber = parsed.barber;
+      if (Array.isArray(parsed.therapist)) STAFF_LISTS.therapist = parsed.therapist;
+    }
+  } catch(e) {}
+
+  function saveStaffLists() {
+    try {
+      localStorage.setItem('th-serial-queue-staff', JSON.stringify(STAFF_LISTS));
+    } catch(e) {}
+    if (window.thDB) {
+      window.thDB.collection(COLLECTION).doc('queue-staff').set(STAFF_LISTS, { merge: true }).catch(function(){});
+    }
+  }
   const TAB_LABEL = { barber: 'barber', therapist: 'therapist' };
 
   let state = null;     // { barber: [{name,status,since}], therapist: [...] }
@@ -340,6 +358,26 @@
       }, function(err){
         console.error('Serial queue sync error', err);
         subtitleEl.textContent = 'Could not connect \u2014 check your internet connection.';
+      });
+
+      // Staff roster sync
+      db.collection(COLLECTION).doc('queue-staff').onSnapshot(function(qSnap){
+        if (qSnap.exists) {
+          const qData = qSnap.data();
+          if (Array.isArray(qData.barber)) STAFF_LISTS.barber = qData.barber;
+          if (Array.isArray(qData.therapist)) STAFF_LISTS.therapist = qData.therapist;
+          render();
+        } else {
+          db.collection(COLLECTION).doc('calculator-staff').get().then(function(cSnap){
+            if (cSnap.exists) {
+              const cData = cSnap.data();
+              if (Array.isArray(cData.barbers) && STAFF_LISTS.barber.length === 0) STAFF_LISTS.barber = cData.barbers;
+              if (Array.isArray(cData.therapists) && STAFF_LISTS.therapist.length === 0) STAFF_LISTS.therapist = cData.therapists;
+              saveStaffLists();
+              render();
+            }
+          }).catch(function(){});
+        }
       });
     });
   }
@@ -594,7 +632,9 @@
     if(available.length === 0){
       const empty = document.createElement('div');
       empty.className = 'picker-empty';
-      empty.textContent = 'Everyone is already clocked in.';
+      empty.textContent = STAFF_LISTS[currentTab].length === 0
+        ? 'No ' + TAB_LABEL[currentTab] + ' roster registered yet. Add a name below to clock in.'
+        : 'Everyone is already clocked in.';
       results.appendChild(empty);
     } else {
       available.forEach(name => {
@@ -610,6 +650,35 @@
       });
     }
     wrap.appendChild(results);
+
+    // Dynamic staff adder row
+    const addRow = document.createElement('div');
+    addRow.style.cssText = 'display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border,#262f40);';
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.placeholder = 'New ' + TAB_LABEL[currentTab] + ' name...';
+    nameInput.style.cssText = 'flex:1;background:var(--card,#131926);color:var(--text,#f0f4f8);border:1px solid var(--border,#262f40);border-radius:8px;padding:8px 12px;font-size:13px;outline:none;';
+    const addBtn = document.createElement('button');
+    addBtn.textContent = 'Add & Clock In';
+    addBtn.style.cssText = 'background:var(--gold,#c9a84c);color:#101520;font-weight:600;border:none;border-radius:8px;padding:8px 14px;font-size:12.5px;cursor:pointer;white-space:nowrap;';
+    
+    const handleNewName = () => {
+      const name = nameInput.value.trim();
+      if (!name) return;
+      if (!STAFF_LISTS[currentTab].includes(name)) {
+        STAFF_LISTS[currentTab].push(name);
+        saveStaffLists();
+      }
+      pendingAddName = name;
+      pendingAddTime = msToTimeStr(Date.now());
+      render();
+    };
+    addBtn.addEventListener('click', handleNewName);
+    nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleNewName(); });
+    addRow.appendChild(nameInput);
+    addRow.appendChild(addBtn);
+    wrap.appendChild(addRow);
+
     return wrap;
   }
 

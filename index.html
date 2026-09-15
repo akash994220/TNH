@@ -621,62 +621,62 @@
 
     <div class="kpi-grid">
       <!-- KPI 1: Queue -->
-      <a href="serial-queue.html" class="kpi-card">
+      <a href="serial-queue.html" class="kpi-card" id="kpiCardQueue">
         <div class="kpi-top">
           <div class="kpi-icon">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
           </div>
           <span class="kpi-tag" id="kpiQueueTag">Turn Active</span>
         </div>
-        <div class="kpi-value" id="kpiQueueCount">4 Barbers</div>
+        <div class="kpi-value" id="kpiQueueCount">0 Barbers</div>
         <div class="kpi-label">Active chair rotation on floor</div>
         <div class="kpi-progress">
-          <div class="kpi-progress-bar" style="width:80%;"></div>
+          <div class="kpi-progress-bar" id="kpiQueueBar" style="width:0%;"></div>
         </div>
       </a>
 
       <!-- KPI 2: Daily Tasks -->
-      <a href="task-manager.html" class="kpi-card">
+      <a href="task-manager.html" class="kpi-card" id="kpiCardTasks">
         <div class="kpi-top">
           <div class="kpi-icon">
             <svg viewBox="0 0 24 24"><path d="M9 11l2 2 4-4"/><rect x="3" y="4" width="18" height="16" rx="3"/></svg>
           </div>
-          <span class="kpi-tag" id="kpiTasksTag">Shift 80%</span>
+          <span class="kpi-tag" id="kpiTasksTag">Tasks Ready</span>
         </div>
-        <div class="kpi-value" id="kpiTasksCount">8 of 10</div>
+        <div class="kpi-value" id="kpiTasksCount">0 Tasks</div>
         <div class="kpi-label">Daily tasks &amp; checklist items done</div>
         <div class="kpi-progress">
-          <div class="kpi-progress-bar" id="kpiTasksBar" style="width:80%;"></div>
+          <div class="kpi-progress-bar" id="kpiTasksBar" style="width:0%;"></div>
         </div>
       </a>
 
       <!-- KPI 3: Stations -->
-      <a href="station-checklist.html" class="kpi-card">
+      <a href="station-checklist.html" class="kpi-card" id="kpiCardStations">
         <div class="kpi-top">
           <div class="kpi-icon">
             <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17 14.5v6M14 17.5h6"/></svg>
           </div>
-          <span class="kpi-tag">100% Prepped</span>
+          <span class="kpi-tag" id="kpiStationsTag">Floor Ready</span>
         </div>
-        <div class="kpi-value" id="kpiStationsCount">6 Stations</div>
+        <div class="kpi-value" id="kpiStationsCount">Stations</div>
         <div class="kpi-label">Sanitized, hot towels &amp; barbicide</div>
         <div class="kpi-progress">
-          <div class="kpi-progress-bar" style="width:100%;"></div>
+          <div class="kpi-progress-bar" id="kpiStationsBar" style="width:100%;"></div>
         </div>
       </a>
 
       <!-- KPI 4: Shortages -->
-      <a href="requirements.html" class="kpi-card">
+      <a href="requirements.html" class="kpi-card" id="kpiCardReqs">
         <div class="kpi-top">
           <div class="kpi-icon">
             <svg viewBox="0 0 24 24"><path d="M9 3h6l1 3H8l1-3z"/><path d="M5 6h14l-1.2 13.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8L5 6z"/></svg>
           </div>
-          <span class="kpi-tag" style="background:rgba(239,68,68,0.15); color:#fca5a5; border-color:rgba(239,68,68,0.3);">Alerts</span>
+          <span class="kpi-tag" id="kpiReqsTag" style="background:rgba(74,222,128,0.15); color:#4ade80; border-color:rgba(74,222,128,0.35);">Stocked</span>
         </div>
-        <div class="kpi-value" id="kpiReqsCount">2 Shortages</div>
+        <div class="kpi-value" id="kpiReqsCount">Stock Plentiful</div>
         <div class="kpi-label">Product requirements pending</div>
         <div class="kpi-progress">
-          <div class="kpi-progress-bar" style="width:40%; background:#f87171;"></div>
+          <div class="kpi-progress-bar" id="kpiReqsBar" style="width:100%;"></div>
         </div>
       </a>
     </div>
@@ -687,7 +687,7 @@
     <!-- Left / Center Column -->
     <div style="display:flex;flex-direction:column;gap:24px;">
       <!-- Interactive Task Manager Widget (Prodify Style) -->
-      <div class="panel-card">
+      <div class="panel-card" id="panelShiftTasks">
         <div class="panel-head">
           <div class="panel-title">
             <svg viewBox="0 0 24 24"><path d="M9 11l2 2 4-4"/><rect x="3" y="4" width="18" height="16" rx="3"/></svg>
@@ -709,7 +709,7 @@
       </div>
 
       <!-- Salon Operations Launchpad Tiles -->
-      <div class="panel-card">
+      <div class="panel-card" id="panelLaunchpad">
         <div class="panel-head">
           <div class="panel-title">
             <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
@@ -719,7 +719,7 @@
         </div>
 
         <div class="tools-subgrid">
-          <a href="service-calculator.html" class="tool-tile">
+          <a href="service-calculator.html" class="tool-tile" id="launchpadTileCalc">
             <div class="tool-tile-icon">
               <svg viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01"/></svg>
             </div>
@@ -727,7 +727,7 @@
             <div class="tool-tile-desc">Billing POS, VAT breakdown, custom discount calculation and commission splits.</div>
           </a>
 
-          <a href="serial-queue.html" class="tool-tile">
+          <a href="serial-queue.html" class="tool-tile" id="launchpadTileQueue">
             <div class="tool-tile-icon">
               <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
             </div>
@@ -735,7 +735,7 @@
             <div class="tool-tile-desc">Live barber &amp; therapist rotation queue ensuring equitable chair service turns.</div>
           </a>
 
-          <a href="station-checklist.html" class="tool-tile">
+          <a href="station-checklist.html" class="tool-tile" id="launchpadTileStation">
             <div class="tool-tile-icon">
               <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M17 14.5v6M14 17.5h6"/></svg>
             </div>
@@ -749,7 +749,7 @@
     <!-- Right Side Column -->
     <div class="right-col">
       <!-- Active Queue Rotation Card -->
-      <div class="panel-card">
+      <div class="panel-card" id="panelChairRotation">
         <div class="panel-head">
           <div class="panel-title">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
@@ -759,41 +759,14 @@
         </div>
 
         <div class="queue-list" id="dashQueueList">
-          <div class="queue-item">
-            <div class="queue-barber-info">
-              <div class="queue-turn-badge">1</div>
-              <div>
-                <div class="queue-name">James Sterling</div>
-                <div style="font-size:11px;color:var(--ink-faint);">Station #1 &bull; Master Barber</div>
-              </div>
-            </div>
-            <span class="queue-status-badge serving">In Service</span>
-          </div>
-          <div class="queue-item">
-            <div class="queue-barber-info">
-              <div class="queue-turn-badge">2</div>
-              <div>
-                <div class="queue-name">Arthur Pendelton</div>
-                <div style="font-size:11px;color:var(--ink-faint);">Station #2 &bull; Senior Barber</div>
-              </div>
-            </div>
-            <span class="queue-status-badge next">Next Turn</span>
-          </div>
-          <div class="queue-item">
-            <div class="queue-barber-info">
-              <div class="queue-turn-badge">3</div>
-              <div>
-                <div class="queue-name">William Drake</div>
-                <div style="font-size:11px;color:var(--ink-faint);">Station #3 &bull; Royal Stylist</div>
-              </div>
-            </div>
-            <span class="queue-status-badge waiting">Waiting</span>
+          <div id="dashQueueEmpty" style="padding:22px 16px;text-align:center;color:var(--ink-faint);font-size:12.5px;background:rgba(255,255,255,0.02);border:1px dashed var(--border);border-radius:14px;">
+            Connecting to salon rotation queue&hellip;
           </div>
         </div>
       </div>
 
       <!-- Shift Notes Handover Card -->
-      <div class="panel-card">
+      <div class="panel-card" id="panelShiftNotes">
         <div class="panel-head">
           <div class="panel-title">
             <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
@@ -802,17 +775,19 @@
           <a href="notes.html" class="panel-action-link">All Notes &rarr;</a>
         </div>
 
-        <div class="logbook-preview">
-          &ldquo;Morning opening completed. Linen hampers laundered. Hot towel steamers replenished with Truefitt &amp; Hill sandalwood scent. VIP client arriving at 2:30 PM for Royal Shave.&rdquo;
+        <div class="logbook-preview" id="dashLogPreview">
+          <div id="dashLogText" style="font-style:italic;color:var(--ink-faint);font-size:12.5px;line-height:1.6;">
+            No shift handover remarks logged yet today.
+          </div>
           <div class="logbook-meta">
-            <span>Floor Manager &bull; Today 09:15 AM</span>
-            <a href="notes.html" style="color:inherit;text-decoration:underline;">Reply &rarr;</a>
+            <span id="dashLogMeta">Shift Log &bull; Atelier Handover</span>
+            <a href="notes.html" style="color:inherit;text-decoration:underline;">All Notes &rarr;</a>
           </div>
         </div>
       </div>
 
       <!-- Inventory & Requisitions Card -->
-      <div class="panel-card">
+      <div class="panel-card" id="panelStockRequisitions">
         <div class="panel-head">
           <div class="panel-title">
             <svg viewBox="0 0 24 24"><path d="M21 8L12 3 3 8l9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg>
@@ -855,19 +830,9 @@
   let currentTasksData = {
     tabs: ['Salon Floor', 'Front Desk', 'Closing'],
     tasks: {
-      'Salon Floor': [
-        { id: 't1', text: 'Sterilize razors, shears and clipper guards', done: true, priority: 'urgent' },
-        { id: 't2', text: 'Stock warm scented towels in station steamers', done: true, priority: 'priority' },
-        { id: 't3', text: 'Wipe down leather barber chairs & mirror stations', done: false, priority: 'routine' }
-      ],
-      'Front Desk': [
-        { id: 't4', text: 'Verify appointments & stylist rotation list', done: true, priority: 'priority' },
-        { id: 't5', text: 'Inspect retail grooming display shelves', done: false, priority: 'routine' }
-      ],
-      'Closing': [
-        { id: 't6', text: 'Empty linen hampers & launder salon towels', done: false, priority: 'urgent' },
-        { id: 't7', text: 'Sanitize backwash basins & clean trap filters', done: false, priority: 'priority' }
-      ]
+      'Salon Floor': [],
+      'Front Desk': [],
+      'Closing': []
     }
   };
 
@@ -879,21 +844,29 @@
 
     let items = [];
     if(selectedCat === 'All'){
-      Object.keys(currentTasksData.tasks).forEach(cat => {
-        items = items.concat(currentTasksData.tasks[cat]);
+      Object.keys(currentTasksData.tasks || {}).forEach(cat => {
+        items = items.concat(currentTasksData.tasks[cat] || []);
       });
     } else {
-      items = currentTasksData.tasks[selectedCat] || [];
+      items = (currentTasksData.tasks && currentTasksData.tasks[selectedCat]) || [];
     }
 
     const total = items.length;
     const completed = items.filter(t => t.done).length;
     const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
 
-    document.getElementById('kpiTasksCount').textContent = completed + ' of ' + total;
-    document.getElementById('kpiTasksTag').textContent = 'Shift ' + pct + '%';
+    document.getElementById('kpiTasksCount').textContent = total === 0 ? '0 Tasks' : (completed + ' of ' + total);
+    document.getElementById('kpiTasksTag').textContent = total === 0 ? 'No Tasks' : ('Shift ' + pct + '%');
     const barEl = document.getElementById('kpiTasksBar');
     if(barEl) barEl.style.width = pct + '%';
+
+    if(items.length === 0){
+      const empty = document.createElement('li');
+      empty.style.cssText = 'padding:24px 16px;text-align:center;color:var(--ink-faint);font-size:13px;border:1px dashed var(--border);border-radius:12px;list-style:none;';
+      empty.innerHTML = 'No tasks logged in <strong>' + selectedCat + '</strong>. <a href="task-manager.html" style="color:var(--gold);text-decoration:underline;margin-left:4px;">Add tasks &rarr;</a>';
+      listEl.appendChild(empty);
+      return;
+    }
 
     items.slice(0, 5).forEach(task => {
       const li = document.createElement('li');
@@ -956,17 +929,167 @@
         }
       });
 
-      // Also listen to queue if available
+      // Also listen to serial queue
       window.thDB.collection('th-staff-tools').doc('serial-queue').onSnapshot(function(snap){
         if(snap.exists){
           const qData = snap.data();
-          if(qData && Array.isArray(qData.queue)){
-            const totalBarbers = qData.queue.length;
-            document.getElementById('kpiQueueCount').textContent = totalBarbers + ' Barbers';
+          const barbers = Array.isArray(qData.barber) ? qData.barber : (Array.isArray(qData.queue) ? qData.queue : []);
+          const therapists = Array.isArray(qData.therapist) ? qData.therapist : [];
+          const totalStaff = barbers.length + therapists.length;
+          
+          const queueCountEl = document.getElementById('kpiQueueCount');
+          if(queueCountEl){
+            queueCountEl.textContent = totalStaff > 0 ? (totalStaff + ' Active') : '0 Active';
+          }
+          const queueTagEl = document.getElementById('kpiQueueTag');
+          const waitingCount = barbers.filter(b => b.status === 'waiting').length;
+          if(queueTagEl){
+            queueTagEl.textContent = waitingCount > 0 ? (waitingCount + ' Waiting') : 'Queue Ready';
+          }
+
+          // Populate Chair Rotation widget with active barbers
+          const dashQueueList = document.getElementById('dashQueueList');
+          if(dashQueueList){
+            if(barbers.length > 0){
+              dashQueueList.innerHTML = '';
+              barbers.slice(0, 4).forEach((barber, i) => {
+                const item = document.createElement('div');
+                item.className = 'queue-item';
+                const statusClass = barber.status === 'busy' ? 'serving' : (i === 0 ? 'next' : 'waiting');
+                const statusText = barber.status === 'busy' ? 'In Service' : (i === 0 ? 'Next Turn' : 'Waiting');
+                item.innerHTML = 
+                  '<div class="queue-barber-info">' +
+                    '<div class="queue-turn-badge">' + (i + 1) + '</div>' +
+                    '<div>' +
+                      '<div class="queue-name">' + (barber.name || 'Barber') + '</div>' +
+                      '<div style="font-size:11px;color:var(--ink-faint);">Turn #' + (i + 1) + ' &bull; Floor Rotation</div>' +
+                    '</div>' +
+                  '</div>' +
+                  '<span class="queue-status-badge ' + statusClass + '">' + statusText + '</span>';
+                dashQueueList.appendChild(item);
+              });
+            } else {
+              dashQueueList.innerHTML = '<div id="dashQueueEmpty" style="padding:22px 16px;text-align:center;color:var(--ink-faint);font-size:12.5px;background:rgba(255,255,255,0.02);border:1px dashed var(--border);border-radius:14px;">No barbers clocked into rotation yet today. <a href="serial-queue.html" style="color:var(--gold);text-decoration:underline;margin-left:4px;">Clock in &rarr;</a></div>';
+            }
           }
         }
       });
+
+      // Listen to station checklist
+      window.thDB.collection('th-staff-tools').doc('station-checklist').onSnapshot(function(snap){
+        if(snap.exists){
+          const sData = snap.data();
+          const stations = Array.isArray(sData.stations) ? sData.stations : [];
+          const count = stations.length || 6;
+          const countEl = document.getElementById('kpiStationsCount');
+          if(countEl) countEl.textContent = count + ' Stations';
+        }
+      });
+
+      // Listen to product requirements
+      window.thDB.collection('th-staff-tools').doc('product-requirements').onSnapshot(function(snap){
+        if(snap.exists){
+          const rData = snap.data();
+          let count = 0;
+          if(rData.manual && typeof rData.manual === 'object'){
+            Object.values(rData.manual).forEach(q => { if(Number(q) > 0) count++; });
+          }
+          const reqsCountEl = document.getElementById('kpiReqsCount');
+          const reqsTagEl = document.getElementById('kpiReqsTag');
+          const reqsBarEl = document.getElementById('kpiReqsBar');
+          if(reqsCountEl) reqsCountEl.textContent = count > 0 ? (count + ' Shortages') : 'Stock Plentiful';
+          if(reqsTagEl){
+            if(count > 0){
+              reqsTagEl.textContent = count + ' Alerts';
+              reqsTagEl.style.background = 'rgba(239,68,68,0.15)';
+              reqsTagEl.style.color = '#fca5a5';
+              reqsTagEl.style.borderColor = 'rgba(239,68,68,0.3)';
+            } else {
+              reqsTagEl.textContent = 'All Stocked';
+              reqsTagEl.style.background = 'rgba(74,222,128,0.15)';
+              reqsTagEl.style.color = '#4ade80';
+              reqsTagEl.style.borderColor = 'rgba(74,222,128,0.35)';
+            }
+          }
+          if(reqsBarEl){
+            reqsBarEl.style.width = count > 0 ? Math.min(100, count * 25) + '%' : '100%';
+            reqsBarEl.style.background = count > 0 ? '#f87171' : 'linear-gradient(90deg,#fae6a2,#d9b872)';
+          }
+        }
+      });
+
+      // Listen to latest notes for Shift Handover Log
+      window.thDB.collection('th-staff-tools-notes').orderBy('createdAt', 'desc').limit(1).onSnapshot(function(snap){
+        const textEl = document.getElementById('dashLogText');
+        const metaEl = document.getElementById('dashLogMeta');
+        if(!snap.empty){
+          const doc = snap.docs[0];
+          const note = doc.data();
+          if(textEl && note.text){
+            const snippet = note.text.length > 160 ? (note.text.slice(0, 160) + '…') : note.text;
+            const timeStr = note.createdAt ? new Date(note.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Today';
+            textEl.textContent = '“' + snippet + '”';
+            textEl.style.fontStyle = 'normal';
+            textEl.style.color = 'var(--ink)';
+            if(metaEl){
+              metaEl.textContent = (note.title ? (note.title + ' • ') : '') + 'Shift Note • ' + timeStr;
+            }
+          }
+        } else if(textEl) {
+          textEl.textContent = 'No shift handover remarks logged yet today.';
+          textEl.style.fontStyle = 'italic';
+          textEl.style.color = 'var(--ink-faint)';
+        }
+      });
     });
+  }
+
+  function applyDashboardFeatureToggles(){
+    if(!window.THFeatures) return;
+    const isEn = window.THFeatures.isEnabled;
+
+    // KPI cards
+    const kpiQueue = document.getElementById('kpiCardQueue');
+    if(kpiQueue) kpiQueue.style.display = isEn('serial-queue') ? '' : 'none';
+
+    const kpiTasks = document.getElementById('kpiCardTasks');
+    if(kpiTasks) kpiTasks.style.display = isEn('task-manager') ? '' : 'none';
+
+    const kpiStations = document.getElementById('kpiCardStations');
+    if(kpiStations) kpiStations.style.display = isEn('station-checklist') ? '' : 'none';
+
+    const kpiReqs = document.getElementById('kpiCardReqs');
+    if(kpiReqs) kpiReqs.style.display = (isEn('product-requests') || isEn('products')) ? '' : 'none';
+
+    // Panels
+    const pTasks = document.getElementById('panelShiftTasks');
+    if(pTasks) pTasks.style.display = isEn('task-manager') ? '' : 'none';
+
+    const pQueue = document.getElementById('panelChairRotation');
+    if(pQueue) pQueue.style.display = isEn('serial-queue') ? '' : 'none';
+
+    const pNotes = document.getElementById('panelShiftNotes');
+    if(pNotes) pNotes.style.display = isEn('notes') ? '' : 'none';
+
+    const pStock = document.getElementById('panelStockRequisitions');
+    if(pStock) pStock.style.display = (isEn('products') || isEn('product-requests')) ? '' : 'none';
+
+    // Launchpad tiles
+    const tileCalc = document.getElementById('launchpadTileCalc');
+    if(tileCalc) tileCalc.style.display = isEn('service-calculator') ? '' : 'none';
+
+    const tileQueue = document.getElementById('launchpadTileQueue');
+    if(tileQueue) tileQueue.style.display = isEn('serial-queue') ? '' : 'none';
+
+    const tileStation = document.getElementById('launchpadTileStation');
+    if(tileStation) tileStation.style.display = isEn('station-checklist') ? '' : 'none';
+  }
+
+  window.addEventListener('th-features-changed', applyDashboardFeatureToggles);
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', applyDashboardFeatureToggles);
+  } else {
+    applyDashboardFeatureToggles();
   }
 
   renderTasks();

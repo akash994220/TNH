@@ -1634,8 +1634,29 @@ const STAFF_BY_CATEGORY = {
   "Nails": "therapist", "Massages": "therapist",
   "Facials": "both", "TFH Spa Massage": "therapist"
 };
-const BARBERS    = ["Ashutosh","Poritosh","Sushanto","Sanjit","Nasir","Kaium","Dipok","Nitol","Sumon"];
-const THERAPISTS = ["Rana","Rasel","Privan","Tipu","Arup","Maki","Hemar"];
+let BARBERS    = [];
+let THERAPISTS = [];
+
+try {
+  const sb = localStorage.getItem('th-calculator-barbers');
+  if (sb) BARBERS = JSON.parse(sb);
+  const st = localStorage.getItem('th-calculator-therapists');
+  if (st) THERAPISTS = JSON.parse(st);
+} catch(e) {}
+
+function saveStaff() {
+  try {
+    localStorage.setItem('th-calculator-barbers', JSON.stringify(BARBERS));
+    localStorage.setItem('th-calculator-therapists', JSON.stringify(THERAPISTS));
+  } catch(e) {}
+  if (window.thDB) {
+    window.thDB.collection('th-staff-tools').doc('calculator-staff').set({
+      barbers: BARBERS,
+      therapists: THERAPISTS,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).catch(function(err){ console.warn('Staff sync error', err); });
+  }
+}
 
 const hidden       = new Set();
 const selected     = new Map();
@@ -1975,6 +1996,13 @@ function renderMenu() {
 function renderStaffManager() {
   const renderGroup = (listEl, names, type) => {
     listEl.innerHTML = '';
+    if (names.length === 0) {
+      const emptyNotice = document.createElement('div');
+      emptyNotice.style.cssText = 'font-size:12px;color:var(--dim,#8892b0);font-style:italic;padding:4px 0 8px;';
+      emptyNotice.textContent = 'No ' + type + 's registered yet. Add team members below.';
+      listEl.appendChild(emptyNotice);
+      return;
+    }
     names.forEach((staffName, idx) => {
       const chip = document.createElement('div');
       chip.className = 'staff-chip';
@@ -1986,6 +2014,7 @@ function renderStaffManager() {
       removeBtn.title = 'Remove ' + staffName;
       removeBtn.onclick = () => {
         names.splice(idx, 1);
+        saveStaff();
         // Clear any current assignments that pointed at the removed name
         for (const [k, v] of assignments) { if (v === staffName) assignments.delete(k); }
         renderStaffManager();
@@ -2008,6 +2037,7 @@ function setupStaffAdder(inputId, btnId, namesArr) {
     if (!val) return;
     if (namesArr.some(n => n.toLowerCase() === val.toLowerCase())) { input.value = ''; return; }
     namesArr.push(val);
+    saveStaff();
     input.value = '';
     renderStaffManager();
   };
@@ -2285,6 +2315,22 @@ function loadLiveProductCatalog(){
       renderProductMenu();
       renderProductSearch();
     }, function(err){ console.error('Product catalog sync error', err); });
+
+    // Live staff sync
+    window.thDB.collection('th-staff-tools').doc('calculator-staff').onSnapshot(function(snap){
+      if(snap.exists){
+        const d = snap.data();
+        if(Array.isArray(d.barbers)) {
+          BARBERS = d.barbers;
+          try { localStorage.setItem('th-calculator-barbers', JSON.stringify(BARBERS)); } catch(e){}
+        }
+        if(Array.isArray(d.therapists)) {
+          THERAPISTS = d.therapists;
+          try { localStorage.setItem('th-calculator-therapists', JSON.stringify(THERAPISTS)); } catch(e){}
+        }
+        renderStaffManager();
+      }
+    }, function(err){ console.warn('Staff sync listener error', err); });
   });
 }
 loadLiveProductCatalog();
