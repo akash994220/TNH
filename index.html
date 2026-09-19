@@ -2,8 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Truefitt &amp; Hill — Staff Hub &amp; Operations Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#080d1e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>Truefitt &amp; Hill Staff Tools</title>
+<meta name="description" content="Staff tools portal for Truefitt &amp; Hill barbershop, including service calculator, task manager, station checklist, requirements, product catalog, requests, and serial queue.">
 <style>html,body{background:#080d1e;}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -840,6 +848,7 @@
 
   function renderTasks(){
     const listEl = document.getElementById('dashTasksList');
+    if(!listEl) return;
     listEl.innerHTML = '';
 
     let items = [];
@@ -855,8 +864,10 @@
     const completed = items.filter(t => t.done).length;
     const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
 
-    document.getElementById('kpiTasksCount').textContent = total === 0 ? '0 Tasks' : (completed + ' of ' + total);
-    document.getElementById('kpiTasksTag').textContent = total === 0 ? 'No Tasks' : ('Shift ' + pct + '%');
+    const countEl = document.getElementById('kpiTasksCount');
+    if(countEl) countEl.textContent = total === 0 ? '0 Tasks' : (completed + ' of ' + total);
+    const tagEl = document.getElementById('kpiTasksTag');
+    if(tagEl) tagEl.textContent = total === 0 ? 'No Tasks' : ('Shift ' + pct + '%');
     const barEl = document.getElementById('kpiTasksBar');
     if(barEl) barEl.style.width = pct + '%';
 
@@ -927,6 +938,8 @@
             renderTasks();
           }
         }
+      }, function(err){
+        console.warn('Dashboard task-manager sync notice:', err.message);
       });
 
       // Also listen to serial queue
@@ -973,6 +986,8 @@
             }
           }
         }
+      }, function(err){
+        console.warn('Dashboard serial-queue sync notice:', err.message);
       });
 
       // Listen to station checklist
@@ -984,6 +999,8 @@
           const countEl = document.getElementById('kpiStationsCount');
           if(countEl) countEl.textContent = count + ' Stations';
         }
+      }, function(err){
+        console.warn('Dashboard station-checklist sync notice:', err.message);
       });
 
       // Listen to product requirements
@@ -1016,6 +1033,8 @@
             reqsBarEl.style.background = count > 0 ? '#f87171' : 'linear-gradient(90deg,#fae6a2,#d9b872)';
           }
         }
+      }, function(err){
+        console.warn('Dashboard product-requirements sync notice:', err.message);
       });
 
       // Listen to latest notes for Shift Handover Log
@@ -1040,6 +1059,8 @@
           textEl.style.fontStyle = 'italic';
           textEl.style.color = 'var(--ink-faint)';
         }
+      }, function(err){
+        console.warn('Dashboard shift notes sync notice:', err.message);
       });
     });
   }

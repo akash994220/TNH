@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Poppins:wght@300;400;500;600;700&family=Tiro+Bangla:ital@0;1&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="brand.css">
 <style>
   :root {
     --bg: #070a14;
@@ -452,7 +451,7 @@
     position: fixed;
     bottom: 24px;
     right: 24px;
-    z-index: 10005;
+    z-index: 10050;
     background: rgba(14, 21, 48, 0.95);
     border: 1px solid var(--gold);
     color: var(--ink);
@@ -469,6 +468,15 @@
     opacity: 0;
     pointer-events: none;
     transition: all .25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @media (max-width: 1023px) {
+    .settings-toast {
+      bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+      right: 16px;
+      left: 16px;
+      max-width: calc(100vw - 32px);
+    }
   }
 
   body.light .settings-toast {
@@ -529,7 +537,7 @@
   }
 
   @media (max-width: 768px) {
-    body { padding: 20px 16px 90px; }
+    body { padding: 20px 16px 110px; }
     .settings-title { font-size: 24px; }
     .feature-grid { grid-template-columns: 1fr; }
     .search-box { max-width: 100%; }

@@ -9,6 +9,14 @@ const app = express();
 const PORT = 3000;
 const HOST = '0.0.0.0';
 
+// Service Worker scope & cache headers
+app.get('/sw.js', (req, res) => {
+  res.setHeader('Service-Worker-Allowed', '/');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Content-Type', 'application/javascript');
+  res.sendFile(path.join(__dirname, 'sw.js'));
+});
+
 // Serve static assets with html extension support
 app.use(express.static(__dirname, {
   extensions: ['html', 'htm']

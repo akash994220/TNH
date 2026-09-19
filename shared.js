@@ -463,6 +463,7 @@
     'body.light .th-theme-btn svg{stroke:#1a3a8f;}' +
     'body.light .th-theme-btn:hover{background:#ffffff;border-color:#1a3a8f;box-shadow:0 12px 28px -4px rgba(26,58,143,0.25);}' +
     '@media (max-width:520px){.th-theme-btn{width:42px;min-width:42px;padding:0;border-radius:50%;}.th-theme-btn .th-theme-label{display:none;}}' +
+    'body.th-has-top-bar .th-burger, body.th-has-top-bar .th-theme-btn{display:none !important;}' +
 
     '.th-overlay{position:fixed;inset:0;background:rgba(5,7,18,0.65);backdrop-filter:blur(4px);z-index:10002;' +
       'opacity:0;pointer-events:none;transition:opacity .25s ease;}' +
@@ -790,31 +791,38 @@
     window.THOpenDrawer = openDrawer;
     window.THCloseDrawer = closeDrawer;
 
-    burger.addEventListener('click', openDrawer);
-    overlay.addEventListener('click', closeDrawer);
-    document.getElementById('th-drawer-close').addEventListener('click', closeDrawer);
+    if(burger) burger.addEventListener('click', openDrawer);
+    if(overlay) overlay.addEventListener('click', closeDrawer);
+    var closeBtn = document.getElementById('th-drawer-close');
+    if(closeBtn) closeBtn.addEventListener('click', closeDrawer);
 
     // If an item in drawer links to the current page, close drawer smoothly instead of reloading
-    var curItems = drawer.querySelectorAll('.th-drawer-item.active');
-    curItems.forEach(function(el){
-      el.addEventListener('click', function(e){
-        e.preventDefault();
-        closeDrawer();
+    if(drawer){
+      var curItems = drawer.querySelectorAll('.th-drawer-item.active');
+      curItems.forEach(function(el){
+        el.addEventListener('click', function(e){
+          e.preventDefault();
+          closeDrawer();
+        });
       });
-    });
+    }
 
     if(window.THBackup && typeof window.THBackup.reset === 'function'){
       var importBtn = document.getElementById('th-import-btn');
       var importFile = document.getElementById('th-import-file');
       var resetBtn = document.getElementById('th-reset-btn');
-      importBtn.addEventListener('click', function(){ importFile.click(); });
-      importFile.addEventListener('change', function(){
-        if(importFile.files && importFile.files[0]){
-          window.THBackup.importFile(importFile.files[0]);
-          importFile.value = '';
-        }
-      });
-      resetBtn.addEventListener('click', function(){ window.THBackup.reset(); });
+      if(importBtn && importFile){
+        importBtn.addEventListener('click', function(){ importFile.click(); });
+        importFile.addEventListener('change', function(){
+          if(importFile.files && importFile.files[0]){
+            window.THBackup.importFile(importFile.files[0]);
+            importFile.value = '';
+          }
+        });
+      }
+      if(resetBtn){
+        resetBtn.addEventListener('click', function(){ window.THBackup.reset(); });
+      }
     }
   }
   if(document.readyState !== 'loading') ready();

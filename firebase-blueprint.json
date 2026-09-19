@@ -1,0 +1,34 @@
+{
+  "entities": {
+    "staffToolState": {
+      "title": "Staff Tool State Document",
+      "description": "Shared operational state document for salon tools such as serial queue, station checklist, task manager, product requests, and product catalog.",
+      "type": "object",
+      "properties": {
+        "updatedAt": { "type": "string", "description": "Server timestamp of last modification" }
+      }
+    },
+    "shiftNote": {
+      "title": "Shift Handover Note",
+      "description": "Daily shift handover memo or staff log.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Subject or title of note", "maxLength": 200 },
+        "text": { "type": "string", "description": "Body of shift note", "maxLength": 5000 },
+        "createdAt": { "type": "number", "description": "Timestamp note created" },
+        "updatedAt": { "type": "number", "description": "Timestamp note updated" }
+      },
+      "required": ["text"]
+    }
+  },
+  "firestore": {
+    "/th-staff-tools/{docId}": {
+      "schema": "staffToolState",
+      "description": "Shared salon tool state documents"
+    },
+    "/th-staff-tools-notes/{noteId}": {
+      "schema": "shiftNote",
+      "description": "Shift handover logs and remarks"
+    }
+  }
+}

@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#141c3d"/>
+      <stop offset="100%" stop-color="#070a18"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fae6a2"/>
+      <stop offset="45%" stop-color="#d9b872"/>
+      <stop offset="100%" stop-color="#aa8232"/>
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#19244d"/>
+      <stop offset="100%" stop-color="#0b1024"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Squircle / Android Icon Base -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGlow)"/>
+  <rect x="12" y="12" width="488" height="488" rx="104" fill="none" stroke="url(#goldGrad)" stroke-width="4" stroke-opacity="0.35"/>
+
+  <!-- Outer Ring with Filigree Dots -->
+  <circle cx="256" cy="256" r="200" fill="none" stroke="url(#goldGrad)" stroke-width="3" stroke-dasharray="4 8" stroke-opacity="0.6"/>
+  <circle cx="256" cy="256" r="185" fill="none" stroke="url(#goldGrad)" stroke-width="1.5" stroke-opacity="0.4"/>
+
+  <!-- Heraldic Shield -->
+  <path d="M256 90 L370 140 C370 270 290 350 256 390 C222 350 142 270 142 140 Z" 
+        fill="url(#shieldGrad)" stroke="url(#goldGrad)" stroke-width="8" stroke-linejoin="round"/>
+
+  <!-- Inner Crest Outline -->
+  <path d="M256 112 L350 152 C350 256 284 326 256 360 C228 326 162 256 162 152 Z" 
+        fill="none" stroke="url(#goldGrad)" stroke-width="2.5" stroke-opacity="0.5"/>
+
+  <!-- Royal Crown / Coronet on Top -->
+  <path d="M220 185 L228 205 L242 195 L256 215 L270 195 L284 205 L292 185 L286 225 L226 225 Z" 
+        fill="url(#goldGrad)"/>
+  <circle cx="220" cy="182" r="3.5" fill="#fae6a2"/>
+  <circle cx="256" cy="190" r="4" fill="#fae6a2"/>
+  <circle cx="292" cy="182" r="3.5" fill="#fae6a2"/>
+
+  <!-- Interlocking TH Monogram -->
+  <text x="256" y="295" 
+        font-family="'Playfair Display', Georgia, serif" 
+        font-size="78" 
+        font-weight="bold" 
+        fill="url(#goldGrad)" 
+        text-anchor="middle" 
+        letter-spacing="2">TH</text>
+
+  <!-- London 1805 Ribbon / Banner -->
+  <path d="M160 415 L256 405 L352 415 L335 435 L256 426 L177 435 Z" fill="url(#goldGrad)"/>
+  <text x="256" y="423" 
+        font-family="'Poppins', sans-serif" 
+        font-size="14" 
+        font-weight="700" 
+        fill="#140e03" 
+        text-anchor="middle" 
+        letter-spacing="3">EST. 1805</text>
+</svg>
