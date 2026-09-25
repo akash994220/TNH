@@ -283,7 +283,7 @@
     '@keyframes th-pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.8);}}' +
 
     /* Android Overflow Dropdown */
-    '.th-android-menu{position:fixed;top:62px;right:14px;z-index:9995;background:var(--th-m3-surface-card);border:1px solid var(--th-m3-outline);border-radius:18px;padding:6px;box-shadow:0 14px 40px rgba(0,0,0,0.6);display:none;flex-direction:column;min-width:210px;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);}' +
+    '.th-android-menu{position:fixed;top:calc(66px + env(safe-area-inset-top, 0px));right:14px;z-index:9995;background:var(--th-m3-surface-card);border:1px solid var(--th-m3-outline);border-radius:18px;padding:6px;box-shadow:0 14px 40px rgba(0,0,0,0.6);display:none;flex-direction:column;min-width:210px;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);}' +
     'body.light .th-android-menu{background:#ffffff;box-shadow:0 12px 36px rgba(12,27,51,0.18);}' +
     '.th-android-menu.open{display:flex;animation:th-menu-pop .18s cubic-bezier(0.16,1,0.3,1);}' +
     '@keyframes th-menu-pop{from{opacity:0;transform:scale(0.92) translateY(-6px);}to{opacity:1;transform:scale(1) translateY(0);}}' +
@@ -346,7 +346,7 @@
     '.th-m3-nav-item:active .th-m3-icon-pill{transform:scale(0.92);}' +
 
     /* --- Material Design 3 Floating Action Button (FAB) & Speed Dial --- */
-    '.th-android-fab-container{position:fixed;right:20px;bottom:84px;z-index:9985;display:flex;flex-direction:column;align-items:flex-end;gap:12px;pointer-events:none;}' +
+    '.th-android-fab-container{position:fixed;right:20px;bottom:calc(88px + env(safe-area-inset-bottom, 0px));z-index:9985;display:flex;flex-direction:column;align-items:flex-end;gap:12px;pointer-events:none;}' +
     '@media (min-width:1024px){.th-android-fab-container{display:none !important;}}' +
     '.th-fab-scrim{position:fixed;inset:0;background:rgba(5,8,20,0.55);backdrop-filter:blur(3px);z-index:9980;opacity:0;pointer-events:none;transition:opacity .22s ease;}' +
     '.th-fab-scrim.open{opacity:1;pointer-events:auto;}' +
@@ -427,13 +427,14 @@
 
     /* --- Material Design 3 Snackbar / Toast --- */
     '.th-m3-snackbar{' +
-      'position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(20px);z-index:10040;' +
+      'position:fixed;bottom:calc(88px + env(safe-area-inset-bottom, 0px));left:50%;transform:translateX(-50%) translateY(20px);z-index:10040;' +
       'display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;' +
       'border-radius:999px;background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);color:#f8fafc;' +
       'border:1px solid rgba(217,184,114,0.35);box-shadow:0 12px 36px rgba(0,0,0,0.65);' +
       'font-size:13px;font-weight:500;opacity:0;pointer-events:none;transition:all .25s cubic-bezier(0.16,1,0.3,1);' +
       'max-width:calc(100vw - 32px);white-space:nowrap;' +
     '}' +
+    '@media (min-width: 1024px){.th-m3-snackbar{bottom:32px !important;}}' +
     '.th-m3-snackbar.open{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto;}' +
     '.th-m3-snackbar-action{border:none;background:transparent;color:var(--th-gold);font-weight:700;cursor:pointer;font-size:12.5px;text-transform:uppercase;letter-spacing:0.5px;outline:none;padding:2px 6px;border-radius:6px;}' +
     '.th-m3-snackbar-action:hover{background:rgba(217,184,114,0.15);}' +
@@ -1132,36 +1133,7 @@
     if(window.innerWidth >= 1024){
       var spacers = document.querySelectorAll('.th-nav-spacer');
       spacers.forEach(function(s){ s.style.display = 'none'; });
-      var totalBlockDesktop = document.querySelector('.total-block');
-      if(totalBlockDesktop) totalBlockDesktop.style.bottom = '';
       return;
-    }
-    var navHeight = bottomNav.offsetHeight || 72;
-    var h = navHeight + 24;
-    var right = document.querySelector('.right');
-    var left = document.getElementById('left-panel') || document.querySelector('.left');
-
-    if(right || left){
-      [right, left].forEach(function(col){
-        if(!col) return;
-        var existing = col.querySelector(':scope > .th-nav-spacer');
-        if(!existing){
-          var spacer = document.createElement('div');
-          spacer.className = 'th-nav-spacer';
-          spacer.setAttribute('aria-hidden', 'true');
-          spacer.style.height = h + 'px';
-          spacer.style.flex = '0 0 auto';
-          col.appendChild(spacer);
-        } else {
-          existing.style.display = 'block';
-          existing.style.height = h + 'px';
-        }
-      });
-    }
-
-    var totalBlock = document.querySelector('.total-block');
-    if(totalBlock && window.innerWidth < 1024){
-      totalBlock.style.bottom = navHeight + 'px';
     }
   }
 
